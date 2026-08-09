@@ -12,14 +12,16 @@ const LoginPage = () => {
         setErrorMessage('');
         setLoading(true);
 
+        // Vercel'dagi VITE_API_URL o'qiladi, topilmasa Render havolasiga murojaat qiladi
+        const BASE_URL = import.meta.env.VITE_API_URL || 'https://sotuv-menejer-backend.onrender.com';
+
         try {
-            // Backend'dagi /api/login endpoint'iga yuboramiz
-            const res = await fetch('http://localhost:5000/api/login', {
+            // Dynamic API URL orqali so'rov yuboriladi
+            const res = await fetch(`${BASE_URL}/api/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                // IMPORTANT: Backend 'login' nomli kalit kutmoqda!
                 body: JSON.stringify({ login: username, password }),
             });
 
