@@ -143,7 +143,7 @@ const DashboardPage = () => {
                 });
             }
 
-            const prodRes = await fetch(`${API_URL}/api/dashboard/products`, {
+            const prodRes = await fetch(`${API_URL}/api/products`, {
                 headers: { Authorization: `Bearer ${currentToken}` },
             });
             if (!(await handleResponseStatus(prodRes))) return;
