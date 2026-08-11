@@ -4,6 +4,7 @@ import '../styles/login.css';
 const LoginPage = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false); // Parolni ko'rsatish/yashirish holati
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -12,11 +13,9 @@ const LoginPage = () => {
         setErrorMessage('');
         setLoading(true);
 
-        // Vercel'dagi VITE_API_URL o'qiladi, topilmasa Render havolasiga murojaat qiladi
         const BASE_URL = import.meta.env.VITE_API_URL || 'https://sotuv-menejer-backend.onrender.com';
 
         try {
-            // Dynamic API URL orqali so'rov yuboriladi
             const res = await fetch(`${BASE_URL}/api/login`, {
                 method: 'POST',
                 headers: {
@@ -61,7 +60,7 @@ const LoginPage = () => {
                     Tizimga kirish
                 </h2>
                 <p style={{ fontSize: '14px', color: '#64748b', textAlign: 'center', marginBottom: '24px' }}>
-                    Telegram bot bergan login va parolizni kiriting.
+                    Telegram bot bergan login va parolingizni kiriting.
                 </p>
 
                 {errorMessage && (
@@ -105,22 +104,44 @@ const LoginPage = () => {
                         <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#334155', marginBottom: '6px' }}>
                             Parol:
                         </label>
-                        <input
-                            type="password"
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            style={{
-                                width: '100%',
-                                padding: '10px 12px',
-                                borderRadius: '6px',
-                                border: '1px solid #cbd5e1',
-                                fontSize: '15px',
-                                outline: 'none',
-                                boxSizing: 'border-box'
-                            }}
-                        />
+                        <div style={{ position: 'relative', width: '100%', boxSizing: 'border-box' }}>
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                style={{
+                                    width: '100%',
+                                    padding: '10px 40px 10px 12px', // O'ng tarafdan ikonka sig'ishi uchun joy qoldirildi
+                                    borderRadius: '6px',
+                                    border: '1px solid #cbd5e1',
+                                    fontSize: '15px',
+                                    outline: 'none',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                style={{
+                                    position: 'absolute',
+                                    right: '10px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontSize: '16px',
+                                    padding: '0',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                {showPassword ? "👁️‍🗨️" : "👁️"}
+                            </button>
+                        </div>
                     </div>
 
                     <button
