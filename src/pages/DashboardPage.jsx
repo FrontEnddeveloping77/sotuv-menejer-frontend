@@ -169,6 +169,15 @@ const DashboardPage = () => {
     // React yoki JS komponentingiz ichidagi funksiya:
     const handleAddProduct = async (e) => {
         e.preventDefault();
+
+        const formattedCategory = newProduct.category ? newProduct.category.trim().toUpperCase() : 'UMUMIY';
+
+        // Serverga yuboriladigan obyekt
+        const productToSend = {
+            ...newProduct,
+            category: formattedCategory // Shu yerda formatlangani ketadi
+        };
+
         const currentToken = localStorage.getItem('token');
         if (!currentToken) return handleAuthError();
 
@@ -442,7 +451,7 @@ const DashboardPage = () => {
             {/* KATEGORIYALAR BO'LIMI */}
             <div className="box-card category-box">
                 <div className="category-header">
-                    <h1>📁 Kategoriya Bo‘yicha Ko‘rish</h1>
+                    <h2>📁 Kategoriya Bo‘yicha Ko‘rish</h2>
                     {selectedCategory && (
                         <button onClick={() => setSelectedCategory(null)} className="btn btn-close">
                             ✖ Yopish
