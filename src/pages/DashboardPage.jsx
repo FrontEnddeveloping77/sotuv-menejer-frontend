@@ -162,42 +162,55 @@ const DashboardPage = () => {
         fetchData();
     }, []);
 
-// React yoki JS komponentingiz ichidagi funksiya:
-const handleAddProduct = async (e) => {
-    e.preventDefault();
+    // React yoki JS komponentingiz ichidagi funksiya:
+    const handleAddProduct = async (e) => {
+        e.preventDefault();
+        const currentToken = localStorage.getItem('token');
+        if (!currentToken) return handleAuthError();
 
-    const token = localStorage.getItem('token');
+        try {
+            const res = await fetch(`${API_URL}/api/products`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${currentToken}`
+                },
+                body: JSON.stringify({
+                    category: newProduct.category,
+                    title: newProduct.title,
+                    cost_price: parseFloat(newProduct.cost_price) || 0,
+                    color: newProduct.color,
+                    size: newProduct.size,
+                    quantity: parseInt(newProduct.quantity) || 1
+                })
+            });
 
-    try {
-        const response = await fetch('https://sotuv-menejer-backend.onrender.com/api/products', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                category: categoryInput, // Modaldagi kiritilgan Kategoriya
-                name: nameInput,         // Tovar nomi
-                cost_price: costPriceInput, // Kelgan narxi (Tannarx)
-                color: colorInput,       // Rangi
-                size: sizeInput,         // O'lchami
-                quantity: quantityInput  // Soni (Sklad)
-            })
-        });
+            if (!(await handleResponseStatus(res))) return;
 
-        const data = await response.json();
-
-        if (response.ok) {
-            alert("Tovar muvaffaqiyatli qo'shildi!");
-            // Formani tozalash va modalni yopish kodi
-        } else {
-            alert(data.message || "Xatolik yuz berdi!");
+            const data = await res.json();
+            if (res.ok) {
+                alert("Tovar muvaffaqiyatli qo'shildi!");
+                setAddProductModal(false);
+                // Formani tozalash
+                setNewProduct({
+                    title: '',
+                    category: '',
+                    cost_price: '',
+                    color: '',
+                    size: '',
+                    quantity: '1',
+                    description: '',
+                });
+                // Ma'lumotlarni yangilash
+                fetchData();
+            } else {
+                alert(data.message || "Xatolik yuz berdi!");
+            }
+        } catch (err) {
+            console.error("So'rov yuborishda xatolik:", err);
+            alert("Server bilan bog'lanishda xatolik yuz berdi!");
         }
-    } catch (error) {
-        console.error("So'rov yuborishda xatolik:", error);
-        alert("Server bilan bog'lanishda xatolik yuz berdi!");
-    }
-};
+    };
 
     const handleSellProduct = async (e) => {
         e.preventDefault();
