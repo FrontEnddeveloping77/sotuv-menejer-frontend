@@ -169,17 +169,13 @@ const DashboardPage = () => {
     // React yoki JS komponentingiz ichidagi funksiya:
     const handleAddProduct = async (e) => {
         e.preventDefault();
-
-        const formattedCategory = newProduct.category ? newProduct.category.trim().toUpperCase() : 'UMUMIY';
-
-        // Serverga yuboriladigan obyekt
-        const productToSend = {
-            ...newProduct,
-            category: formattedCategory // Shu yerda formatlangani ketadi
-        };
-
         const currentToken = localStorage.getItem('token');
         if (!currentToken) return handleAuthError();
+
+        // Kategoriya kiritilgan bo'lsa, uni to'liq katta harfga o'tkazib olamiz (katta-kichik harf farqlanmasligi uchun)
+        const formattedCategory = newProduct.category
+            ? newProduct.category.trim().toUpperCase()
+            : 'UMUMIY';
 
         try {
             const res = await fetch(`${API_URL}/api/products`, {
@@ -189,9 +185,9 @@ const DashboardPage = () => {
                     'Authorization': `Bearer ${currentToken}`
                 },
                 body: JSON.stringify({
-                    category: newProduct.category,
-                    title: newProduct.title,      // Agar backend 'title' ni kutsa
-                    name: newProduct.title,       // Agar backend 'name' ni kutsa (ikkalasini ham birga yuborgan ma'qul)
+                    category: formattedCategory, // Formatlangan kategoriya ketadi
+                    title: newProduct.title,
+                    name: newProduct.title,
                     cost_price: parseFloat(newProduct.cost_price) || 0,
                     color: newProduct.color,
                     size: newProduct.size,
@@ -223,6 +219,7 @@ const DashboardPage = () => {
             alert("Server bilan bog'lanishda xatolik yuz berdi!");
         }
     };
+    
     const handleSellProduct = async (e) => {
         e.preventDefault();
         if (!sellForm.productId) {
