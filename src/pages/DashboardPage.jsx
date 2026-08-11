@@ -177,7 +177,8 @@ const DashboardPage = () => {
                 },
                 body: JSON.stringify({
                     category: newProduct.category,
-                    title: newProduct.title,
+                    title: newProduct.title,      // Agar backend 'title' ni kutsa
+                    name: newProduct.title,       // Agar backend 'name' ni kutsa (ikkalasini ham birga yuborgan ma'qul)
                     cost_price: parseFloat(newProduct.cost_price) || 0,
                     color: newProduct.color,
                     size: newProduct.size,
@@ -191,7 +192,6 @@ const DashboardPage = () => {
             if (res.ok) {
                 alert("Tovar muvaffaqiyatli qo'shildi!");
                 setAddProductModal(false);
-                // Formani tozalash
                 setNewProduct({
                     title: '',
                     category: '',
@@ -201,7 +201,6 @@ const DashboardPage = () => {
                     quantity: '1',
                     description: '',
                 });
-                // Ma'lumotlarni yangilash
                 fetchData();
             } else {
                 alert(data.message || "Xatolik yuz berdi!");
@@ -211,7 +210,6 @@ const DashboardPage = () => {
             alert("Server bilan bog'lanishda xatolik yuz berdi!");
         }
     };
-
     const handleSellProduct = async (e) => {
         e.preventDefault();
         if (!sellForm.productId) {
