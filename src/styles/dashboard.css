@@ -408,3 +408,27 @@
     width: 100%;
     margin-top: 16px;
 }
+
+/* Chiqish (Logout) tugmasi stili */
+.btn-logout {
+    background-color: #6c757d;
+    color: #ffffff;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-logout:hover {
+    background-color: #495057;
+}
+
+.btn-logout:active {
+    transform: scale(0.98);
+}

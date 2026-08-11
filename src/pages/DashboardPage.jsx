@@ -91,6 +91,11 @@ const DashboardPage = () => {
         window.location.href = '/login';
     };
 
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+    };
+
     const handleResponseStatus = async (res) => {
         if (res.status === 402) {
             setSubscriptionExpired(true);
@@ -108,7 +113,7 @@ const DashboardPage = () => {
         if (!currentToken) return handleAuthError();
 
         try {
-            const statsRes = await fetch('${API_URL}/api/dashboard/stats', {
+            const statsRes = await fetch(`${API_URL}/api/dashboard/stats`, {
                 headers: { Authorization: `Bearer ${currentToken}` },
             });
             if (!(await handleResponseStatus(statsRes))) return;
@@ -137,7 +142,7 @@ const DashboardPage = () => {
                 });
             }
 
-            const prodRes = await fetch('${API_URL}/api/dashboard/products', {
+            const prodRes = await fetch(`${API_URL}/api/dashboard/products`, {
                 headers: { Authorization: `Bearer ${currentToken}` },
             });
             if (!(await handleResponseStatus(prodRes))) return;
@@ -195,7 +200,7 @@ const DashboardPage = () => {
                 setAddProductModal(false);
                 fetchData();
             } else {
-                alert(`Saqlashda xatolik: ${data.message || 'Ma\'lumot kiritishda xato'}`);
+                alert(`Saqlashda xatolik: ${data.message || "Ma'lumot kiritishda xato"}`);
             }
         } catch (err) {
             alert('Server bilan bog‘lanishda xatolik yuz berdi!');
@@ -212,7 +217,7 @@ const DashboardPage = () => {
         const currentToken = localStorage.getItem('token');
 
         try {
-            const res = await fetch('${API_URL}/api/dashboard/sell', {
+            const res = await fetch(`${API_URL}/api/dashboard/sell`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -251,7 +256,7 @@ const DashboardPage = () => {
         const currentToken = localStorage.getItem('token');
 
         try {
-            const res = await fetch('${API_URL}/api/dashboard/delete-product', {
+            const res = await fetch(`${API_URL}/api/dashboard/delete-product`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -285,7 +290,7 @@ const DashboardPage = () => {
         const currentToken = localStorage.getItem('token');
 
         try {
-            const res = await fetch('${API_URL}/api/dashboard/expenses', {
+            const res = await fetch(`${API_URL}/api/dashboard/expenses`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -368,6 +373,9 @@ const DashboardPage = () => {
                     </button>
                     <button className="btn btn-success" onClick={() => setSellModalOpen(true)}>
                         🛒 Sotildi (Sotish)
+                    </button>
+                    <button className="btn btn-logout" onClick={handleLogout}>
+                        🚪 Chiqish
                     </button>
                 </div>
             </div>
@@ -738,13 +746,20 @@ const DashboardPage = () => {
                                     {sellForm.category ? '-- Tovarni tanlang --' : '-- Avval kategoriyani tanlang --'}
                                 </option>
                                 {sellModalProducts.map((p) => (
-                                    <option key={p.id} value={p.id} disabled={(p.quantity || 0) <= 0}>
-                                        {p.title} ({p.quantity || 0} ta bor | Tannarx: {formatSum(p.cost_price)} so'm)
+                                    <option key={p.id} value={p.id}>
+                                        {p.title} (Omborda {p.quantity || 0} ta bor)
                                     </option>
                                 ))}
                             </select>
 
-                            <label>Nechta sotildi?</label>
+                            {selectedProductToSell && (
+                                <div className="info-box">
+                                    <p>Tannarx (Kelgan narxi): <b>{formatSum(selectedProductToSell.cost_price)} so'm</b></p>
+                                    <p>Omborda qoldiq: <b>{selectedProductToSell.quantity} ta</b></p>
+                                </div>
+                            )}
+
+                            <label>3. Sotuv soni:</label>
                             <input
                                 type="number"
                                 min="1"
@@ -755,19 +770,19 @@ const DashboardPage = () => {
                                 className="form-input"
                             />
 
-                            <label>Necha puldan sotildi? (Donasi)</label>
+                            <label>4. Sotish narxi (Dona uchun so'm):</label>
                             <input
                                 type="number"
-                                placeholder="150000"
+                                placeholder="Masalan: 180000"
                                 value={sellForm.sellPrice}
                                 onChange={(e) => setSellForm({ ...sellForm, sellPrice: e.target.value })}
                                 required
                                 className="form-input"
                             />
 
-                            {selectedProductToSell && sellForm.sellPrice && (
-                                <div className={`profit-badge ${calculatedProfit >= 0 ? 'positive' : 'negative'}`}>
-                                    Kutilayotgan sof foyda: {formatSum(calculatedProfit)} so'm
+                            {sellForm.sellPrice && selectedProductToSell && (
+                                <div className="profit-preview">
+                                    Kutilayotgan sof foyda: <b className={calculatedProfit >= 0 ? 'text-profit-positive' : 'text-profit-negative'}>{formatSum(calculatedProfit)} so'm</b>
                                 </div>
                             )}
 
@@ -789,10 +804,10 @@ const DashboardPage = () => {
                 </div>
             )}
 
-            {/* TEPAGA CHIQISH TUGMASI */}
+            {/* Scroll To Top Button */}
             {showScrollTop && (
                 <button onClick={scrollToTop} className="scroll-top-btn">
-                    ▲
+                    ⬆️
                 </button>
             )}
         </div>
