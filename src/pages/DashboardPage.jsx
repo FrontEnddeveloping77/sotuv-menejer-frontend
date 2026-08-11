@@ -220,7 +220,7 @@ const DashboardPage = () => {
         }
     };
 
-    /// 1. TOVARNI SOTISH
+    // 1. TOVARNI SOTISH
     const handleSellProduct = async (e) => {
         e.preventDefault();
         if (!sellForm.productId) {
@@ -262,7 +262,7 @@ const DashboardPage = () => {
         }
     };
 
-    // 2. TOVARNI O'CHIRISH (Hammasini o'chirish belgilansa, son so'ramaydi)
+    // 2. TOVARNI O'CHIRISH
     const handleDeleteProduct = async (e) => {
         e.preventDefault();
         if (!deleteForm.productId) {
@@ -283,7 +283,6 @@ const DashboardPage = () => {
                 body: JSON.stringify({
                     product_id: parseInt(deleteForm.productId),
                     remove_all: deleteForm.removeAll,
-                    // Agar hammasi o'chirish belgili bo'lsa, sonini yuborish shart emas
                     quantity_to_remove: deleteForm.removeAll ? 0 : (parseInt(deleteForm.quantityToRemove) || 1),
                 }),
             });
@@ -305,8 +304,8 @@ const DashboardPage = () => {
         }
     };
 
-    // 3. RASXOD QO'SHISH
-    consthandleAddExpense = async (e) => {
+    // 3. RASXOD QO'SHISH (const va handle orasida bo'sh joy to'g'irlandi)
+    const handleAddExpense = async (e) => {
         e.preventDefault();
         const currentToken = localStorage.getItem('token');
         if (!currentToken) return handleAuthError();
