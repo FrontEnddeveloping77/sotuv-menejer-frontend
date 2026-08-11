@@ -120,7 +120,27 @@ const DashboardPage = () => {
             if (!(await handleResponseStatus(statsRes))) return;
             if (statsRes.ok) {
                 const data = await statsRes.json();
-                // ... stats set qilish ...
+                setStats({
+                    storeName: data.storeName || '',
+                    totalProducts: data.totalProducts || 0,
+                    totalStock: data.totalStock || 0,
+                    totalSold: data.totalSold || 0,
+                    totalRevenue: data.totalRevenue || 0,
+                    totalProfit: data.totalProfit || 0,
+                    totalExpense: data.totalExpense || 0,
+                    dailySold: data.dailySold || 0,
+                    dailyRevenue: data.dailyRevenue || 0,
+                    dailyProfit: data.dailyProfit || 0,
+                    dailyExpense: data.dailyExpense || 0,
+                    monthlySold: data.monthlySold || 0,
+                    monthlyRevenue: data.monthlyRevenue || 0,
+                    monthlyProfit: data.monthlyProfit || 0,
+                    monthlyExpense: data.monthlyExpense || 0,
+                    yearlySold: data.yearlySold || 0,
+                    yearlyRevenue: data.yearlyRevenue || 0,
+                    yearlyProfit: data.yearlyProfit || 0,
+                    yearlyExpense: data.yearlyExpense || 0,
+                });
             }
 
             const prodRes = await fetch(`${API_URL}/api/products`, {
