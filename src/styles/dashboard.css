@@ -208,7 +208,7 @@
     background-color: #ffffff;
     color: #334155;
     font-size: 15px !important;
-    font-weight: 500;
+    font-weight: 600;
     padding: 8px 12px;
     cursor: pointer;
     text-transform: uppercase;
@@ -221,8 +221,9 @@
 }
 
 .category-count {
-    font-size: 12px;
+    font-size: 15px !important;
     opacity: 0.8;
+    font-weight: 600;
 }
 
 .empty-text {

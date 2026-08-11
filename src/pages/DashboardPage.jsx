@@ -442,7 +442,7 @@ const DashboardPage = () => {
             {/* KATEGORIYALAR BO'LIMI */}
             <div className="box-card category-box">
                 <div className="category-header">
-                    <h3>📁 Kategoriya Bo‘yicha Ko‘rish</h3>
+                    <h1>📁 Kategoriya Bo‘yicha Ko‘rish</h1>
                     {selectedCategory && (
                         <button onClick={() => setSelectedCategory(null)} className="btn btn-close">
                             ✖ Yopish
@@ -474,7 +474,7 @@ const DashboardPage = () => {
             {/* TANLANGAN KATEGORIYA TOVARLARI JADVALI */}
             {selectedCategory && (
                 <div className="box-card">
-                    <h1>📦 "{selectedCategory}" Kategoriya Tovar Ro'yxati</h1>
+                    <h3>📦 "{selectedCategory}" Kategoriya Tovar Ro'yxati</h3>
                     <div className="table-wrapper">
                         <table className="products-table">
                             <thead>
