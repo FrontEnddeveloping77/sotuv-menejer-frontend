@@ -220,7 +220,7 @@ const DashboardPage = () => {
         }
     };
 
-    // 1. TOVARNI SOTISH (Sotildi)
+    /// 1. TOVARNI SOTISH
     const handleSellProduct = async (e) => {
         e.preventDefault();
         if (!sellForm.productId) {
@@ -252,17 +252,17 @@ const DashboardPage = () => {
                 alert("Tovar muvaffaqiyatli sotildi!");
                 setSellModalOpen(false);
                 setSellForm({ category: '', productId: '', quantity: 1, sellPrice: '' });
-                fetchData(); // Ma'lumotlar va qoldiqlar yangilanadi
+                fetchData();
             } else {
                 alert(data.message || 'Sotishda xatolik yuz berdi');
             }
         } catch (err) {
-            console.error("Sotishda xatolik:", err);
+            console.error(err);
             alert('Server bilan bog‘lanishda xatolik yuz berdi!');
         }
     };
 
-    // 2. TOVARNI O'CHIRISH (Ombordan olib tashlash)
+    // 2. TOVARNI O'CHIRISH (Hammasini o'chirish belgilansa, son so'ramaydi)
     const handleDeleteProduct = async (e) => {
         e.preventDefault();
         if (!deleteForm.productId) {
@@ -283,7 +283,8 @@ const DashboardPage = () => {
                 body: JSON.stringify({
                     product_id: parseInt(deleteForm.productId),
                     remove_all: deleteForm.removeAll,
-                    quantity_to_remove: parseInt(deleteForm.quantityToRemove) || 1,
+                    // Agar hammasi o'chirish belgili bo'lsa, sonini yuborish shart emas
+                    quantity_to_remove: deleteForm.removeAll ? 0 : (parseInt(deleteForm.quantityToRemove) || 1),
                 }),
             });
 
@@ -294,18 +295,18 @@ const DashboardPage = () => {
                 alert("Tovar muvaffaqiyatli o'chirildi!");
                 setDeleteModalOpen(false);
                 setDeleteForm({ category: '', productId: '', quantityToRemove: 1, removeAll: false });
-                fetchData(); // Jadval va qoldiqlar yangilanadi
+                fetchData();
             } else {
                 alert(data.message || 'O‘chirishda xatolik yuz berdi');
             }
         } catch (err) {
-            console.error("O'chirishda xatolik:", err);
+            console.error(err);
             alert('Server bilan bog‘lanishda xatolik yuz berdi!');
         }
     };
 
     // 3. RASXOD QO'SHISH
-    const handleAddExpense = async (e) => {
+    consthandleAddExpense = async (e) => {
         e.preventDefault();
         const currentToken = localStorage.getItem('token');
         if (!currentToken) return handleAuthError();
@@ -317,7 +318,11 @@ const DashboardPage = () => {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${currentToken}`,
                 },
-                body: JSON.stringify(expenseForm),
+                body: JSON.stringify({
+                    title: expenseForm.title,
+                    amount: parseFloat(expenseForm.amount) || 0,
+                    expense_type: expenseForm.expense_type || 'daily'
+                }),
             });
 
             if (!(await handleResponseStatus(res))) return;
@@ -327,12 +332,12 @@ const DashboardPage = () => {
                 alert("Rasxod muvaffaqiyatli qo'shildi!");
                 setExpenseModalOpen(false);
                 setExpenseForm({ title: '', amount: '', expense_type: 'daily' });
-                fetchData(); // Analitika yangilanadi
+                fetchData();
             } else {
                 alert(data.message || 'Rasxod saqlashda xatolik');
             }
         } catch (err) {
-            console.error("Rasxod qo'shishda xatolik:", err);
+            console.error(err);
             alert('Server bilan bog‘lanishda xatolik!');
         }
     };
