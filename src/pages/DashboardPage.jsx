@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/dashboard.css';
 
+// Vite Environment Variable bo'lmasa, avtomatik Render backend'ga yo'naltiradi
 const API_URL = import.meta.env.VITE_API_URL || 'https://sotuv-menejer-backend.onrender.com';
 
 // Sonlarni xavfsiz formatlash uchun yordamchi funksiya
