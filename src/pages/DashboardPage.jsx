@@ -131,7 +131,7 @@ const DashboardPage = () => {
                 const prodData = await prodRes.json();
                 console.log("Serverdan kelgan mahsulotlar:", prodData);
 
-                // Server obyekt qaytargani uchun prodData.products ni olamiz:
+                // Serverdan kelgan ma'lumot obyekt ichidagi products massivi ekanligini hisobga olamiz
                 const productsArray = Array.isArray(prodData) ? prodData : (prodData.products || []);
                 setProducts(productsArray);
             }
