@@ -391,11 +391,11 @@ const DashboardPage = () => {
             <div className="stats-grid stats-grid-top">
                 <div className="stat-card">
                     <h4>📦 TOVAR TURLARI</h4>
-                    <h3>{stats.totalProducts || 0} ta</h3>
+                    <h3>{products.length} ta</h3>
                 </div>
                 <div className="stat-card">
                     <h4>🏭 OMBORDA QOLDIQ</h4>
-                    <h3>{stats.totalStock || 0} ta</h3>
+                    <h3>{products.reduce((sum, p) => sum + (parseInt(p.quantity) || 0), 0)} ta</h3>
                 </div>
             </div>
 
