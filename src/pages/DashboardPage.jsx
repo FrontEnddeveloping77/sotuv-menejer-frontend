@@ -127,13 +127,13 @@ const DashboardPage = () => {
                 headers: { Authorization: `Bearer ${currentToken}` },
             });
             if (!(await handleResponseStatus(prodRes))) return;
-            if (prodRes.prodRes || prodRes.ok) {
+            if (prodRes.ok) {
                 const prodData = await prodRes.json();
-                
-                // SHU YERGA CONSOLE.LOG QO'SHAMIZ:
                 console.log("Serverdan kelgan mahsulotlar:", prodData);
 
-                setProducts(Array.isArray(prodData) ? prodData : []);
+                // Server obyekt qaytargani uchun prodData.products ni olamiz:
+                const productsArray = Array.isArray(prodData) ? prodData : (prodData.products || []);
+                setProducts(productsArray);
             }
         } catch (err) {
             console.error('Xatolik:', err);
