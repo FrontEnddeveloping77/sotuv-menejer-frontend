@@ -219,7 +219,8 @@ const DashboardPage = () => {
             alert("Server bilan bog'lanishda xatolik yuz berdi!");
         }
     };
-    
+
+    // 1. TOVARNI SOTISH (Sotildi)
     const handleSellProduct = async (e) => {
         e.preventDefault();
         if (!sellForm.productId) {
@@ -228,6 +229,7 @@ const DashboardPage = () => {
         }
 
         const currentToken = localStorage.getItem('token');
+        if (!currentToken) return handleAuthError();
 
         try {
             const res = await fetch(`${API_URL}/api/dashboard/sell`, {
@@ -247,18 +249,20 @@ const DashboardPage = () => {
 
             const data = await res.json();
             if (res.ok) {
+                alert("Tovar muvaffaqiyatli sotildi!");
                 setSellModalOpen(false);
                 setSellForm({ category: '', productId: '', quantity: 1, sellPrice: '' });
-                fetchData();
+                fetchData(); // Ma'lumotlar va qoldiqlar yangilanadi
             } else {
                 alert(data.message || 'Sotishda xatolik yuz berdi');
             }
         } catch (err) {
-            console.error(err);
-            alert('Sotishda xatolik yuz berdi!');
+            console.error("Sotishda xatolik:", err);
+            alert('Server bilan bog‘lanishda xatolik yuz berdi!');
         }
     };
 
+    // 2. TOVARNI O'CHIRISH (Ombordan olib tashlash)
     const handleDeleteProduct = async (e) => {
         e.preventDefault();
         if (!deleteForm.productId) {
@@ -267,6 +271,7 @@ const DashboardPage = () => {
         }
 
         const currentToken = localStorage.getItem('token');
+        if (!currentToken) return handleAuthError();
 
         try {
             const res = await fetch(`${API_URL}/api/dashboard/delete-product`, {
@@ -286,21 +291,24 @@ const DashboardPage = () => {
 
             const data = await res.json();
             if (res.ok) {
+                alert("Tovar muvaffaqiyatli o'chirildi!");
                 setDeleteModalOpen(false);
                 setDeleteForm({ category: '', productId: '', quantityToRemove: 1, removeAll: false });
-                fetchData();
+                fetchData(); // Jadval va qoldiqlar yangilanadi
             } else {
                 alert(data.message || 'O‘chirishda xatolik yuz berdi');
             }
         } catch (err) {
-            console.error(err);
+            console.error("O'chirishda xatolik:", err);
             alert('Server bilan bog‘lanishda xatolik yuz berdi!');
         }
     };
 
+    // 3. RASXOD QO'SHISH
     const handleAddExpense = async (e) => {
         e.preventDefault();
         const currentToken = localStorage.getItem('token');
+        if (!currentToken) return handleAuthError();
 
         try {
             const res = await fetch(`${API_URL}/api/dashboard/expenses`, {
@@ -316,14 +324,15 @@ const DashboardPage = () => {
 
             const data = await res.json();
             if (res.ok) {
+                alert("Rasxod muvaffaqiyatli qo'shildi!");
                 setExpenseModalOpen(false);
                 setExpenseForm({ title: '', amount: '', expense_type: 'daily' });
-                fetchData();
+                fetchData(); // Analitika yangilanadi
             } else {
                 alert(data.message || 'Rasxod saqlashda xatolik');
             }
         } catch (err) {
-            console.error(err);
+            console.error("Rasxod qo'shishda xatolik:", err);
             alert('Server bilan bog‘lanishda xatolik!');
         }
     };
