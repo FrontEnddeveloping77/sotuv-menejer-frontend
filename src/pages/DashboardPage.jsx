@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/dashboard.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://sotuv-menejer-backend.onrender.com';
 
 // Sonlarni xavfsiz formatlash uchun yordamchi funksiya
 const formatSum = (val) => {
