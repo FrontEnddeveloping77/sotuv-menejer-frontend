@@ -249,9 +249,17 @@ const DashboardPage = () => {
 
             const data = await res.json();
             if (res.ok) {
-                alert("Tovar muvaffaqiyatli sotildi!");
+                alert("Muvaffaqiyatli bajarildi!");
                 setSellModalOpen(false);
+                setDeleteModalOpen(false);
+
+                // Formani tozalash
                 setSellForm({ category: '', productId: '', quantity: 1, sellPrice: '' });
+                setDeleteForm({ category: '', productId: '', quantityToRemove: 1, removeAll: false });
+
+                // MUHIM: Tovar tugab, kategoriya bo'shab qolganda filtrni ham tozalab yuboramiz
+                setSelectedCategory(null); // yoki kategoriyani ko'rsatuvchi state'ingizni tozalang
+
                 fetchData();
             } else {
                 alert(data.message || 'Sotishda xatolik yuz berdi');
