@@ -143,12 +143,11 @@ const DashboardPage = () => {
         try {
             await axios.post('/api/sales', {
                 product_id: Number(sellForm.productId),
-                size: sellForm.size,
                 quantity: Number(sellForm.quantity),
                 sell_price: Number(sellForm.sellPrice)
             });
             setSellModalOpen(false);
-            setSellForm({ category: '', productId: '', size: '', quantity: 1, sellPrice: '' });
+            setSellForm({ category: '', productId: '', quantity: 1, sellPrice: '' });
             fetchData();
             alert("Sotuv muvaffaqiyatli amalga oshirildi! 🎉");
         } catch (err) {
@@ -452,6 +451,7 @@ const DashboardPage = () => {
             )}
 
             {/* 🗑️ TOVARNI OLIB TASHLASH MODALI */}
+            {/* 🗑️ TOVARNI OLIB TASHLASH / O'CHIRISH MODALI */}
             {deleteModalOpen && (
                 <div className="modal-overlay">
                     <div className="modal-box">
@@ -461,7 +461,7 @@ const DashboardPage = () => {
                             <select
                                 className="form-input"
                                 value={deleteForm.category}
-                                onChange={(e) => setDeleteForm({ ...deleteForm, category: e.target.value, productId: '', size: '' })}
+                                onChange={(e) => setDeleteForm({ ...deleteForm, category: e.target.value, productId: '' })}
                                 required
                             >
                                 <option value="">-- Kategoriyani tanlang --</option>
@@ -474,38 +474,19 @@ const DashboardPage = () => {
                             <select
                                 className="form-input"
                                 value={deleteForm.productId}
-                                onChange={(e) => setDeleteForm({ ...deleteForm, productId: e.target.value, size: '' })}
+                                onChange={(e) => setDeleteForm({ ...deleteForm, productId: e.target.value })}
                                 disabled={!deleteForm.category}
                                 required
                             >
                                 <option value="">{deleteForm.category ? '-- Tovarni tanlang --' : '-- Avval kategoriyani tanlang --'}</option>
                                 {deleteModalProducts.map((p) => (
                                     <option key={p.id} value={p.id}>
-                                        {p.title} (Jami {getTotalQuantity(p)} ta bor)
+                                        {p.name || p.title} (Omborda qoldiq: {getTotalQuantity(p)} ta)
                                     </option>
                                 ))}
                             </select>
 
-                            {selectedProductToDelete && Array.isArray(selectedProductToDelete.sizes) && (
-                                <>
-                                    <label>3. O'lchamni tanlang:</label>
-                                    <select
-                                        className="form-input"
-                                        value={deleteForm.size}
-                                        onChange={(e) => setDeleteForm({ ...deleteForm, size: e.target.value })}
-                                        required
-                                    >
-                                        <option value="">-- O'lchamni tanlang --</option>
-                                        {selectedProductToDelete.sizes.map((s, idx) => (
-                                            <option key={idx} value={s.size}>
-                                                O'lcham: {s.size} (Omborda: {s.quantity} ta)
-                                            </option>
-                                        ))}
-                                    </select>
-                                </>
-                            )}
-
-                            <div className="checkbox-container">
+                            <div className="checkbox-container" style={{ margin: '15px 0' }}>
                                 <input
                                     type="checkbox"
                                     id="removeAllCheck"
@@ -513,14 +494,14 @@ const DashboardPage = () => {
                                     onChange={(e) => setDeleteForm({ ...deleteForm, removeAll: e.target.checked })}
                                     className="checkbox-input"
                                 />
-                                <label htmlFor="removeAllCheck" className="checkbox-label">
-                                    ⚠️ Tanlangan o'lchamni butunlay o'chirish
+                                <label htmlFor="removeAllCheck" className="checkbox-label" style={{ marginLeft: '8px' }}>
+                                    ⚠️ Tovarni bazadan to'g'ridan-to'g'ri butunlay o'chirish
                                 </label>
                             </div>
 
                             {!deleteForm.removeAll && (
                                 <>
-                                    <label>Nechta olib tashlansin?</label>
+                                    <label>Olib tashlanadigan miqdor (dona):</label>
                                     <input
                                         type="number"
                                         min="1"
@@ -533,12 +514,12 @@ const DashboardPage = () => {
                             )}
 
                             <div className="modal-actions">
-                                <button type="submit" className="btn btn-danger">O'chirishni tasdiqlash</button>
+                                <button type="submit" className="btn btn-danger">Tasdiqlash</button>
                                 <button
                                     type="button"
                                     onClick={() => {
                                         setDeleteModalOpen(false);
-                                        setDeleteForm({ category: '', productId: '', size: '', quantityToRemove: 1, removeAll: false });
+                                        setDeleteForm({ category: '', productId: '', quantityToRemove: 1, removeAll: false });
                                     }}
                                     className="btn btn-secondary"
                                 >
@@ -560,7 +541,7 @@ const DashboardPage = () => {
                             <select
                                 className="form-input"
                                 value={sellForm.category}
-                                onChange={(e) => setSellForm({ ...sellForm, category: e.target.value, productId: '', size: '' })}
+                                onChange={(e) => setSellForm({ ...sellForm, category: e.target.value, productId: '' })}
                                 required
                             >
                                 <option value="">-- Kategoriyani tanlang --</option>
@@ -573,44 +554,26 @@ const DashboardPage = () => {
                             <select
                                 className="form-input"
                                 value={sellForm.productId}
-                                onChange={(e) => setSellForm({ ...sellForm, productId: e.target.value, size: '' })}
+                                onChange={(e) => setSellForm({ ...sellForm, productId: e.target.value })}
                                 disabled={!sellForm.category}
                                 required
                             >
                                 <option value="">{sellForm.category ? '-- Tovarni tanlang --' : '-- Avval kategoriyani tanlang --'}</option>
                                 {sellModalProducts.map((p) => (
                                     <option key={p.id} value={p.id}>
-                                        {p.title} (Jami {getTotalQuantity(p)} ta bor)
+                                        {p.name || p.title} (Omborda jami: {getTotalQuantity(p)} ta bor)
                                     </option>
                                 ))}
                             </select>
 
-                            {selectedProductToSell && Array.isArray(selectedProductToSell.sizes) && (
-                                <>
-                                    <label>3. O'lchamni tanlang:</label>
-                                    <select
-                                        className="form-input"
-                                        value={sellForm.size}
-                                        onChange={(e) => setSellForm({ ...sellForm, size: e.target.value })}
-                                        required
-                                    >
-                                        <option value="">-- O'lchamni tanlang --</option>
-                                        {selectedProductToSell.sizes.map((s, idx) => (
-                                            <option key={idx} value={s.size} disabled={s.quantity <= 0}>
-                                                O'lcham: {s.size} (Qoldiq: {s.quantity} ta)
-                                            </option>
-                                        ))}
-                                    </select>
-                                </>
-                            )}
-
                             {selectedProductToSell && (
-                                <div className="info-box">
+                                <div className="info-box" style={{ margin: '10px 0', padding: '10px', background: '#f5f5f5', borderRadius: '6px' }}>
                                     <p>Tannarx (Kelgan narxi): <b>{formatSum(selectedProductToSell.cost_price)} so'm</b></p>
+                                    <p>Ombordagi qoldiq: <b>{getTotalQuantity(selectedProductToSell)} ta</b></p>
                                 </div>
                             )}
 
-                            <label>4. Sotuv soni:</label>
+                            <label>3. Sotuv soni:</label>
                             <input
                                 type="number"
                                 min="1"
@@ -620,7 +583,7 @@ const DashboardPage = () => {
                                 className="form-input"
                             />
 
-                            <label>5. Sotish narxi (Dona uchun so'm):</label>
+                            <label>4. Sotish narxi (Dona uchun so'm):</label>
                             <input
                                 type="number"
                                 placeholder="Masalan: 180000"
@@ -631,7 +594,7 @@ const DashboardPage = () => {
                             />
 
                             {sellForm.sellPrice && selectedProductToSell && (
-                                <div className="profit-preview">
+                                <div className="profit-preview" style={{ margin: '10px 0' }}>
                                     Kutilayotgan sof foyda: <b className={calculatedProfit >= 0 ? 'text-profit-positive' : 'text-profit-negative'}>
                                         {formatSum(calculatedProfit)} so'm
                                     </b>
@@ -644,7 +607,7 @@ const DashboardPage = () => {
                                     type="button"
                                     onClick={() => {
                                         setSellModalOpen(false);
-                                        setSellForm({ category: '', productId: '', size: '', quantity: 1, sellPrice: '' });
+                                        setSellForm({ category: '', productId: '', quantity: 1, sellPrice: '' });
                                     }}
                                     className="btn btn-danger"
                                 >
