@@ -278,7 +278,7 @@ const DashboardPage = () => {
 
             {/* TANLANGAN KATEGORIYA TOVARLARI JADVALI */}
             {selectedCategory && (
-                <div className="box-card">
+                <div className="box-card box-card2">
                     <h3>📦 "{selectedCategory}" Kategoriya Tovar Ro'yxati</h3>
                     <div className="table-wrapper">
                         <table className="products-table">
