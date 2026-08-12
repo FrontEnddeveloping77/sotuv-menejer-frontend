@@ -14,13 +14,13 @@ const DashboardPage = () => {
     const [expenseModalOpen, setExpenseModalOpen] = useState(false);
     const [showScrollTop, setShowScrollTop] = useState(false);
 
-    // Yangi Tovar Formasi (sizes massivi bilan)
+    // Yangi Tovar Formasi (title o'rniga name ishlatamiz)
     const [newProduct, setNewProduct] = useState({
         category: '',
-        title: '',
+        name: '', // title -> name qilindi
         cost_price: '',
         color: '',
-        sizesInput: [{ size: '', quantity: '' }] // Dinamik o'lchamlar va miqdorlar
+        sizesInput: [{ size: '', quantity: '' }]
     });
 
     // Sotish Formasi (size qo'shildi)
@@ -112,18 +112,19 @@ const DashboardPage = () => {
 
             await axios.post('/api/products', {
                 category: newProduct.category || 'Umumiy',
-                title: newProduct.title,
+                name: newProduct.name, // name yuborilyapti
                 cost_price: Number(newProduct.cost_price),
                 color: newProduct.color,
                 sizes: formattedSizes
             });
 
             setAddProductModal(false);
-            setNewProduct({ category: '', title: '', cost_price: '', color: '', sizesInput: [{ size: '', quantity: '' }] });
+            setNewProduct({ category: '', name: '', cost_price: '', color: '', sizesInput: [{ size: '', quantity: '' }] });
             fetchData();
+            alert("Tovar muvaffaqiyatli qo'shildi! 🎉");
         } catch (err) {
             console.error("Tovar qo'shishda xatolik:", err);
-            alert("Tovar qo'shishda xatolik yuz berdi!");
+            alert(err.response?.data?.message || "Tovar qo'shishda xatolik yuz berdi!");
         }
     };
 
@@ -397,8 +398,8 @@ const DashboardPage = () => {
                             <input
                                 type="text"
                                 placeholder="Nike Air Max"
-                                value={newProduct.title}
-                                onChange={(e) => setNewProduct({ ...newProduct, title: e.target.value })}
+                                value={newProduct.name} // newProduct.title o'rniga name
+                                onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} // title -> name
                                 required
                                 className="form-input"
                             />
