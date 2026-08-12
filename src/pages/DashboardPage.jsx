@@ -379,7 +379,7 @@ const DashboardPage = () => {
                 </div>
             )}
 
-            {/* ➕ TOVAR QO'SHISH MODALI (Dinamik o'lchamlar bilan) */}
+            {/* ➕ TOVAR QO'SHISH MODALI */}
             {addProductModal && (
                 <div className="modal-overlay">
                     <div className="modal-box">
@@ -388,7 +388,7 @@ const DashboardPage = () => {
                             <label>Kategoriya (Ixtiyoriy):</label>
                             <input
                                 type="text"
-                                placeholder="Divan, Krossovka, Tufli..."
+                                placeholder="Krasovka, Divan..."
                                 value={newProduct.category}
                                 onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
                                 className="form-input"
@@ -397,9 +397,9 @@ const DashboardPage = () => {
                             <label>Tovar Nomi * :</label>
                             <input
                                 type="text"
-                                placeholder="Nike Air Max"
-                                value={newProduct.name} // newProduct.title o'rniga name
-                                onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} // title -> name
+                                placeholder="Nike"
+                                value={newProduct.name}
+                                onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
                                 required
                                 className="form-input"
                             />
@@ -407,7 +407,7 @@ const DashboardPage = () => {
                             <label>Kelgan Narxi (Tannarx) * :</label>
                             <input
                                 type="number"
-                                placeholder="140000"
+                                placeholder="120000"
                                 value={newProduct.cost_price}
                                 onChange={(e) => setNewProduct({ ...newProduct, cost_price: e.target.value })}
                                 required
@@ -417,18 +417,18 @@ const DashboardPage = () => {
                             <label>Rangi:</label>
                             <input
                                 type="text"
-                                placeholder="Qora"
+                                placeholder="yashil"
                                 value={newProduct.color}
                                 onChange={(e) => setNewProduct({ ...newProduct, color: e.target.value })}
                                 className="form-input"
                             />
 
-                            <label>O'lchamlar va Miqdorlar:</label>
+                            <label>O'lchamlar va Ularning Miqdori:</label>
                             {newProduct.sizesInput.map((item, index) => (
                                 <div key={index} className="size-input-row" style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
                                     <input
                                         type="text"
-                                        placeholder="O'lcham (masalan: 41)"
+                                        placeholder="O'lcham (masalan: 39)"
                                         value={item.size}
                                         onChange={(e) => handleSizeInputChange(index, 'size', e.target.value)}
                                         required
@@ -436,7 +436,7 @@ const DashboardPage = () => {
                                     />
                                     <input
                                         type="number"
-                                        placeholder="Miqdori"
+                                        placeholder="Soni"
                                         value={item.quantity}
                                         onChange={(e) => handleSizeInputChange(index, 'quantity', e.target.value)}
                                         required
@@ -447,8 +447,8 @@ const DashboardPage = () => {
                                     )}
                                 </div>
                             ))}
-                            <button type="button" onClick={addSizeInputRow} className="btn btn-secondary" style={{ marginBottom: '15px' }}>
-                                + O'lcham qo'shish
+                            <button type="button" onClick={addSizeInputRow} className="btn btn-secondary" style={{ marginBottom: '15px', width: '100%' }}>
+                                + Yana o'lcham qo'shish
                             </button>
 
                             <div className="modal-actions">
