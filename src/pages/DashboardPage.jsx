@@ -105,26 +105,17 @@ const DashboardPage = () => {
     const handleAddProduct = async (e) => {
         e.preventDefault();
         try {
-            const formattedSizes = newProduct.sizesInput.map(item => ({
-                size: item.size,
-                quantity: Number(item.quantity)
-            }));
-
             await axios.post('/api/products', {
-                category: newProduct.category || 'Umumiy',
-                name: newProduct.name, // name yuborilyapti
-                cost_price: Number(newProduct.cost_price),
+                category: newProduct.category,
+                name: newProduct.name,
+                cost_price: newProduct.cost_price,
                 color: newProduct.color,
-                sizes: formattedSizes
+                size: newProduct.size,      // Bitta matnli qiymat
+                quantity: newProduct.quantity // Bitta raqamli qiymat
             });
-
-            setAddProductModal(false);
-            setNewProduct({ category: '', name: '', cost_price: '', color: '', sizesInput: [{ size: '', quantity: '' }] });
-            fetchData();
-            alert("Tovar muvaffaqiyatli qo'shildi! 🎉");
+            // ... success logic
         } catch (err) {
-            console.error("Tovar qo'shishda xatolik:", err);
-            alert(err.response?.data?.message || "Tovar qo'shishda xatolik yuz berdi!");
+            alert(err.response?.data?.message || "Xatolik yuz berdi!");
         }
     };
 
