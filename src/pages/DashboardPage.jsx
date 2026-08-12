@@ -200,9 +200,9 @@ const DashboardPage = () => {
     // Jami ombardagi qoldiqni hisoblash (sizes massividan kelib chiqib)
     const getTotalQuantity = (p) => {
         if (Array.isArray(p.sizes)) {
-            return p.sizes.reduce((sum, s) => sum + (s.quantity || 0), 0);
+            return p.sizes.reduce((sum, s) => sum + (Number(s.quantity) || 0), 0);
         }
-        return p.quantity || 0;
+        return Number(p.quantity) || 0;
     };
 
     const calculatedProfit = selectedProductToSell
@@ -303,9 +303,9 @@ const DashboardPage = () => {
                                         <td>{formatSum(p.cost_price)} so'm</td>
                                         <td>
                                             {p.color || '-'} / {
-                                                Array.isArray(p.sizes)
+                                                Array.isArray(p.sizes) && p.sizes.length > 0
                                                     ? p.sizes.map(s => `${s.size} (${s.quantity}ta)`).join(', ')
-                                                    : (p.size || '-')
+                                                    : (p.size || 'Standart')
                                             }
                                         </td>
                                         <td><b>{getTotalQuantity(p)} ta</b></td>
