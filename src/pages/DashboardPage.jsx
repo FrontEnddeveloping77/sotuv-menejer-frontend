@@ -8,56 +8,20 @@ const DashboardPage = () => {
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [stats, setStats] = useState({ totalRevenue: 0, totalSold: 0, totalProfit: 0, totalExpense: 0 });
 
+    // Modal holatlari
     const [addProductModal, setAddProductModal] = useState(false);
     const [sellModalOpen, setSellModalOpen] = useState(false);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [expenseModalOpen, setExpenseModalOpen] = useState(false);
-    const [showScrollTop, setShowScrollTop] = useState(false);
 
-    // Tovar qo'shish formasi
-    const [newProduct, setNewProduct] = useState({
-        category: '',
-        name: '',
-        cost_price: '',
-        color: '',
-        size: '',
-        quantity: ''
-    });
-
-    // Tovar sotish formasi
-    const [sellForm, setSellForm] = useState({
-        category: '',
-        productId: '',
-        quantity: 1,
-        sellPrice: ''
-    });
-
-    // Tovar o'chirish / kamaytirish formasi
-    const [deleteForm, setDeleteForm] = useState({
-        category: '',
-        productId: '',
-        quantityToRemove: 1,
-        removeAll: false
-    });
-
-    // Rasxod formasi
-    const [expenseForm, setExpenseForm] = useState({
-        title: '',
-        amount: '',
-        expense_type: 'daily'
-    });
+    // Formlar
+    const [newProduct, setNewProduct] = useState({ category: '', name: '', cost_price: '', color: '', size: '', quantity: '' });
+    const [sellForm, setSellForm] = useState({ category: '', productId: '', quantity: 1, sellPrice: '' });
+    const [deleteForm, setDeleteForm] = useState({ category: '', productId: '', quantityToRemove: 1, removeAll: false });
+    const [expenseForm, setExpenseForm] = useState({ title: '', amount: '', expense_type: 'daily' });
 
     useEffect(() => {
         fetchData();
-        const handleScroll = () => {
-            if (window.scrollY > 300) {
-                setShowScrollTop(true);
-            } else {
-                setShowScrollTop(false);
-            }
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
     const fetchData = async () => {
@@ -77,12 +41,10 @@ const DashboardPage = () => {
         }
     };
 
-    const formatSum = (num) => {
-        return Number(num || 0).toLocaleString('uz-UZ');
-    };
+    const formatSum = (num) => Number(num || 0).toLocaleString('uz-UZ');
 
     const getTotalQuantity = (p) => {
-        if (Array.isArray(p.sizes)) {
+        if (Array.isArray(p.sizes) && p.sizes.length > 0) {
             return p.sizes.reduce((sum, s) => sum + (Number(s.quantity) || 0), 0);
         }
         return Number(p.quantity) || 0;
@@ -100,13 +62,11 @@ const DashboardPage = () => {
                 size: newProduct.size || 'Standart',
                 quantity: Number(newProduct.quantity) || 0
             });
-
             setAddProductModal(false);
             setNewProduct({ category: '', name: '', cost_price: '', color: '', size: '', quantity: '' });
             fetchData();
             alert("Tovar muvaffaqiyatli qo'shildi! 🎉");
         } catch (err) {
-            console.error("Tovar qo'shishda xatolik:", err);
             alert(err.response?.data?.message || "Tovar qo'shishda xatolik yuz berdi!");
         }
     };
@@ -125,7 +85,6 @@ const DashboardPage = () => {
             fetchData();
             alert("Rasxod qo'shildi!");
         } catch (err) {
-            console.error("Rasxod qo'shishda xatolik:", err);
             alert("Rasxod qo'shishda xatolik yuz berdi!");
         }
     };
@@ -144,12 +103,11 @@ const DashboardPage = () => {
             fetchData();
             alert("Sotuv muvaffaqiyatli amalga oshirildi! 🎉");
         } catch (err) {
-            console.error("Sotishda xatolik:", err);
             alert(err.response?.data?.message || "Sotish jarayonida xatolik yuz berdi!");
         }
     };
 
-    // Tovarni o'chirish / kamaytirish
+    // Tovarni o'chirish
     const handleDeleteProduct = async (e) => {
         e.preventDefault();
         try {
@@ -164,13 +122,8 @@ const DashboardPage = () => {
             fetchData();
             alert("Tovar muvaffaqiyatli yangilandi/o'chirildi!");
         } catch (err) {
-            console.error("O'chirishda xatolik:", err);
             alert(err.response?.data?.message || "O'chirishda xatolik yuz berdi!");
         }
-    };
-
-    const scrollToTop = () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const filteredProducts = selectedCategory
@@ -266,7 +219,7 @@ const DashboardPage = () => {
                                     <tr key={p.id}>
                                         <td>{p.id}</td>
                                         <td><span className="category-badge">{p.category || 'Umumiy'}</span></td>
-                                        <td><b>{p.name || p.title}</b></td>
+                                        <td><b>{p.name}</b></td>
                                         <td>{formatSum(p.cost_price)} so'm</td>
                                         <td>
                                             {p.color || '-'} / {
@@ -423,7 +376,7 @@ const DashboardPage = () => {
                                 <option value="">{deleteForm.category ? '-- Tovarni tanlang --' : '-- Avval kategoriyani tanlang --'}</option>
                                 {deleteModalProducts.map((p) => (
                                     <option key={p.id} value={p.id}>
-                                        {p.name || p.title} (Omborda: {getTotalQuantity(p)} ta)
+                                        {p.name} (Omborda: {getTotalQuantity(p)} ta)
                                     </option>
                                 ))}
                             </select>
@@ -490,7 +443,7 @@ const DashboardPage = () => {
                                 <option value="">{sellForm.category ? '-- Tovarni tanlang --' : '-- Avval kategoriyani tanlang --'}</option>
                                 {sellModalProducts.map((p) => (
                                     <option key={p.id} value={p.id}>
-                                        {p.name || p.title} (Omborda: {getTotalQuantity(p)} ta)
+                                        {p.name} (Omborda: {getTotalQuantity(p)} ta)
                                     </option>
                                 ))}
                             </select>
@@ -532,11 +485,6 @@ const DashboardPage = () => {
                         </form>
                     </div>
                 </div>
-            )}
-
-            {/* Scroll To Top Button */}
-            {showScrollTop && (
-                <button onClick={scrollToTop} className="scroll-top-btn">⬆️</button>
             )}
         </div>
     );
