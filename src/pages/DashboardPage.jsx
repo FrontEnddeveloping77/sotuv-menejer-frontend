@@ -267,7 +267,7 @@ const DashboardPage = () => {
                 </table>
             </section>
 
-            {/* 1. TOVAR QO'SHISH MODALI */}
+            {/* ➕ YANGI TOVAR QO'SHISH MODALI (O'LCHAM UMUMAN YO'Q) */}
             {addProductModal && (
                 <div className="modal-overlay">
                     <div className="modal-box">
@@ -276,7 +276,7 @@ const DashboardPage = () => {
                             <label>Kategoriya (Ixtiyoriy):</label>
                             <input
                                 type="text"
-                                placeholder="Masalan: Erkaklar kiyimi"
+                                placeholder="Masalan: noutbuk"
                                 value={newProduct.category}
                                 onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
                                 className="form-input"
@@ -285,37 +285,38 @@ const DashboardPage = () => {
                             <label>Tovar Nomi * :</label>
                             <input
                                 type="text"
-                                placeholder="Masalan: Klassik Shim"
+                                placeholder="Masalan: Acer core i 5"
                                 value={newProduct.name}
                                 onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
                                 required
                                 className="form-input"
                             />
 
-                            <label>Rangi (Ixtiyoriy):</label>
-                            <input
-                                type="text"
-                                placeholder="Masalan: Qora, To'q ko'k..."
-                                value={newProduct.color}
-                                onChange={(e) => setNewProduct({ ...newProduct, color: e.target.value })}
-                                className="form-input"
-                            />
-
                             <label>Kelgan Narxi (Tannarx) * :</label>
                             <input
                                 type="number"
-                                placeholder="120000"
+                                placeholder="1000000"
                                 value={newProduct.cost_price}
                                 onChange={(e) => setNewProduct({ ...newProduct, cost_price: e.target.value })}
                                 required
                                 className="form-input"
                             />
 
-                            <label>Soni (Pachkadagi umumiy dona) * :</label>
+                            {/* FAQAT RANGI BOR - O'LCHAMI (SIZE) UMUMAN OLIB TASHALDI */}
+                            <label>Rangi:</label>
+                            <input
+                                type="text"
+                                placeholder="Masalan: Qora"
+                                value={newProduct.color}
+                                onChange={(e) => setNewProduct({ ...newProduct, color: e.target.value })}
+                                className="form-input"
+                            />
+
+                            <label>Soni (Sklad):</label>
                             <input
                                 type="number"
                                 min="1"
-                                placeholder="Masalan: 5"
+                                placeholder="10"
                                 value={newProduct.quantity}
                                 onChange={(e) => setNewProduct({ ...newProduct, quantity: e.target.value })}
                                 required
