@@ -2,6 +2,20 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './DashboardPage.css'; // O'zingizning CSS faylingiz
 
+// MUHIM: Avval axios so'rovlarida na manzil (baseURL), na Authorization token
+// yuborilmagan edi - shuning uchun barcha so'rovlar backendga yetib bormasdi.
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://sotuv-menejer-backend.onrender.com';
+
+const api = axios.create({ baseURL: BASE_URL });
+
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
 const DashboardPage = () => {
     // Statik va ma'lumotlar holatlari
     const [stats, setStats] = useState({
@@ -68,11 +82,11 @@ const DashboardPage = () => {
         try {
             setLoading(true);
             const [statsRes, productsRes] = await Promise.all([
-                axios.get('/api/stats'),
-                axios.get('/api/products')
+                api.get('/api/dashboard/stats'),
+                api.get('/api/products')
             ]);
             setStats(statsRes.data);
-            setProducts(productsRes.data);
+            setProducts(productsRes.data.products || productsRes.data);
         } catch (err) {
             console.error("Ma'lumotlarni yuklashda xatolik:", err);
         } finally {
@@ -93,7 +107,7 @@ const DashboardPage = () => {
     const handleAddProduct = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.post('/api/products', {
+            const res = await api.post('/api/products', {
                 category: newProduct.category || 'Umumiy',
                 name: newProduct.name,
                 color: newProduct.color,
@@ -104,7 +118,7 @@ const DashboardPage = () => {
             setAddProductModal(false);
             setNewProduct({ category: '', name: '', color: '', cost_price: '', quantity: 1 });
             fetchData();
-            alert(`Tovar saqlandi! Biriktirilgan ID: #${res.data.product_id}`);
+            alert(`Tovar saqlandi! Biriktirilgan ID: #${res.data.product?.id}`);
         } catch (err) {
             alert(err.response?.data?.message || "Tovar qo'shishda xatolik yuz berdi!");
         }
@@ -114,7 +128,7 @@ const DashboardPage = () => {
     const handleSellProduct = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('/api/sell', {
+            await api.post('/api/dashboard/sell', {
                 product_id: Number(sellData.product_id),
                 sell_quantity: Number(sellData.sell_quantity),
                 selling_price: Number(sellData.selling_price)
@@ -133,7 +147,7 @@ const DashboardPage = () => {
     const handleAddExpense = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('/api/expenses', {
+            await api.post('/api/dashboard/expenses', {
                 title: expenseData.title,
                 amount: Number(expenseData.amount),
                 expense_type: expenseData.expense_type
@@ -152,7 +166,7 @@ const DashboardPage = () => {
     const handleDeleteProduct = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('/api/delete-product', {
+            await api.post('/api/dashboard/delete-product', {
                 product_id: Number(deleteData.product_id),
                 remove_all: deleteData.remove_all,
                 quantity_to_remove: Number(deleteData.quantity_to_remove)
