@@ -1,458 +1,226 @@
 import React, { useState, useEffect } from 'react';
-import '../styles/dashboard.css';
-
-// Vite Environment Variable bo'lmasa, avtomatik Render backend'ga yo'naltiradi
-const API_URL = import.meta.env.VITE_API_URL || 'https://sotuv-menejer-backend.onrender.com';
-
-// Sonlarni xavfsiz formatlash uchun yordamchi funksiya
-const formatSum = (val) => {
-    return Number(val || 0).toLocaleString('uz-UZ');
-};
+import axios from 'axios';
+import './DashboardPage.css';
 
 const DashboardPage = () => {
-    const [stats, setStats] = useState({
-        storeName: '',
-        totalProducts: 0,
-        totalStock: 0,
-        totalSold: 0,
-        totalRevenue: 0,
-        totalProfit: 0,
-        totalExpense: 0,
-        dailySold: 0,
-        dailyRevenue: 0,
-        dailyProfit: 0,
-        dailyExpense: 0,
-        monthlySold: 0,
-        monthlyRevenue: 0,
-        monthlyProfit: 0,
-        monthlyExpense: 0,
-        yearlySold: 0,
-        yearlyRevenue: 0,
-        yearlyProfit: 0,
-        yearlyExpense: 0,
-    });
-
     const [products, setProducts] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(null);
-    const [subscriptionExpired, setSubscriptionExpired] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [showScrollTop, setShowScrollTop] = useState(false);
+    const [stats, setStats] = useState({ totalRevenue: 0, totalSold: 0, totalProfit: 0, totalExpense: 0 });
 
-    // Modallar
     const [addProductModal, setAddProductModal] = useState(false);
     const [sellModalOpen, setSellModalOpen] = useState(false);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [expenseModalOpen, setExpenseModalOpen] = useState(false);
+    const [showScrollTop, setShowScrollTop] = useState(false);
 
-    // Formalar
+    // Yangi Tovar Formasi (sizes massivi bilan)
     const [newProduct, setNewProduct] = useState({
-        title: '',
         category: '',
+        title: '',
         cost_price: '',
         color: '',
-        size: '',
-        quantity: '1',
-        description: '',
+        sizesInput: [{ size: '', quantity: '' }] // Dinamik o'lchamlar va miqdorlar
     });
 
+    // Sotish Formasi (size qo'shildi)
     const [sellForm, setSellForm] = useState({
         category: '',
         productId: '',
+        size: '',
         quantity: 1,
-        sellPrice: '',
+        sellPrice: ''
     });
 
+    // O'chirish / Kamaytirish Formasi (size qo'shildi)
     const [deleteForm, setDeleteForm] = useState({
         category: '',
         productId: '',
+        size: '',
         quantityToRemove: 1,
-        removeAll: false,
+        removeAll: false
     });
 
+    // Rasxod Formasi
     const [expenseForm, setExpenseForm] = useState({
         title: '',
         amount: '',
-        expense_type: 'daily',
+        expense_type: 'daily'
     });
 
     useEffect(() => {
+        fetchData();
         const handleScroll = () => {
-            setShowScrollTop(window.scrollY > 200);
+            if (window.scrollY > 300) {
+                setShowScrollTop(true);
+            } else {
+                setShowScrollTop(false);
+            }
         };
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    const fetchData = async () => {
+        try {
+            const [prodRes, statsRes] = await Promise.all([
+                axios.get('/api/products'),
+                axios.get('/api/stats')
+            ]);
+            setProducts(prodRes.data.products || prodRes.data);
+            setStats(statsRes.data);
+
+            // Unikal kategoriyalarni yig'ish
+            const cats = [...new Set((prodRes.data.products || prodRes.data).map(p => p.category || 'Umumiy'))];
+            setCategories(cats);
+        } catch (err) {
+            console.error("Ma'lumotlarni olishda xatolik:", err);
+        }
+    };
+
+    const formatSum = (num) => {
+        return Number(num || 0).toLocaleString('uz-UZ');
+    };
+
+    // Dinamik o'lchamlar inputlarini boshqarish
+    const handleSizeInputChange = (index, field, value) => {
+        const updatedSizes = [...newProduct.sizesInput];
+        updatedSizes[index][field] = value;
+        setNewProduct({ ...newProduct, sizesInput: updatedSizes });
+    };
+
+    const addSizeInputRow = () => {
+        setNewProduct({
+            ...newProduct,
+            sizesInput: [...newProduct.sizesInput, { size: '', quantity: '' }]
+        });
+    };
+
+    const removeSizeInputRow = (index) => {
+        const updatedSizes = newProduct.sizesInput.filter((_, i) => i !== index);
+        setNewProduct({ ...newProduct, sizesInput: updatedSizes });
+    };
+
+    // Tovar qo'shish
+    const handleAddProduct = async (e) => {
+        e.preventDefault();
+        try {
+            const formattedSizes = newProduct.sizesInput.map(item => ({
+                size: item.size,
+                quantity: Number(item.quantity)
+            }));
+
+            await axios.post('/api/products', {
+                category: newProduct.category || 'Umumiy',
+                title: newProduct.title,
+                cost_price: Number(newProduct.cost_price),
+                color: newProduct.color,
+                sizes: formattedSizes
+            });
+
+            setAddProductModal(false);
+            setNewProduct({ category: '', title: '', cost_price: '', color: '', sizesInput: [{ size: '', quantity: '' }] });
+            fetchData();
+        } catch (err) {
+            console.error("Tovar qo'shishda xatolik:", err);
+            alert("Tovar qo'shishda xatolik yuz berdi!");
+        }
+    };
+
+    // Rasxod qo'shish
+    const handleAddExpense = async (e) => {
+        e.preventDefault();
+        try {
+            await axios.post('/api/expenses', {
+                title: expenseForm.title,
+                amount: Number(expenseForm.amount),
+                expense_type: expenseForm.expense_type
+            });
+            setExpenseModalOpen(false);
+            setExpenseForm({ title: '', amount: '', expense_type: 'daily' });
+            fetchData();
+        } catch (err) {
+            console.error("Rasxod qo'shishda xatolik:", err);
+            alert("Rasxod qo'shishda xatolik yuz berdi!");
+        }
+    };
+
+    // Tovar sotish
+    const handleSellProduct = async (e) => {
+        e.preventDefault();
+        try {
+            await axios.post('/api/sales', {
+                product_id: Number(sellForm.productId),
+                size: sellForm.size,
+                quantity: Number(sellForm.quantity),
+                sell_price: Number(sellForm.sellPrice)
+            });
+            setSellModalOpen(false);
+            setSellForm({ category: '', productId: '', size: '', quantity: 1, sellPrice: '' });
+            fetchData();
+            alert("Sotuv muvaffaqiyatli amalga oshirildi! 🎉");
+        } catch (err) {
+            console.error("Sotishda xatolik:", err);
+            alert(err.response?.data?.message || "Sotish jarayonida xatolik yuz berdi!");
+        }
+    };
+
+    // Tovarni o'chirish / kamaytirish
+    const handleDeleteProduct = async (e) => {
+        e.preventDefault();
+        try {
+            await axios.delete(`/api/products/${deleteForm.productId}`, {
+                data: {
+                    size: deleteForm.size,
+                    quantity: Number(deleteForm.quantityToRemove),
+                    remove_all: deleteForm.removeAll
+                }
+            });
+            setDeleteModalOpen(false);
+            setDeleteForm({ category: '', productId: '', size: '', quantityToRemove: 1, removeAll: false });
+            fetchData();
+            alert("Tovar muvaffaqiyatli yangilandi/o'chirildi!");
+        } catch (err) {
+            console.error("O'chirishda xatolik:", err);
+            alert(err.response?.data?.message || "O'chirishda xatolik yuz berdi!");
+        }
+    };
+
     const scrollToTop = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    const handleAuthError = () => {
-        localStorage.removeItem('token');
-        window.location.href = '/login';
-    };
-
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        window.location.href = '/login';
-    };
-
-    const handleResponseStatus = async (res) => {
-        if (res.status === 402) {
-            setSubscriptionExpired(true);
-            return false;
-        }
-        if (res.status === 401 || res.status === 403) {
-            handleAuthError();
-            return false;
-        }
-        return true;
-    };
-
-    const fetchData = async () => {
-        const currentToken = localStorage.getItem('token');
-        if (!currentToken) return handleAuthError();
-
-        try {
-            const statsRes = await fetch(`${API_URL}/api/dashboard/stats`, {
-                headers: { Authorization: `Bearer ${currentToken}` },
-            });
-            if (!(await handleResponseStatus(statsRes))) return;
-            if (statsRes.ok) {
-                const data = await statsRes.json();
-                setStats({
-                    storeName: data.storeName || '',
-                    totalProducts: data.totalProducts || 0,
-                    totalStock: data.totalStock || 0,
-                    totalSold: data.totalSold || 0,
-                    totalRevenue: data.totalRevenue || 0,
-                    totalProfit: data.totalProfit || 0,
-                    totalExpense: data.totalExpense || 0,
-                    dailySold: data.dailySold || 0,
-                    dailyRevenue: data.dailyRevenue || 0,
-                    dailyProfit: data.dailyProfit || 0,
-                    dailyExpense: data.dailyExpense || 0,
-                    monthlySold: data.monthlySold || 0,
-                    monthlyRevenue: data.monthlyRevenue || 0,
-                    monthlyProfit: data.monthlyProfit || 0,
-                    monthlyExpense: data.monthlyExpense || 0,
-                    yearlySold: data.yearlySold || 0,
-                    yearlyRevenue: data.yearlyRevenue || 0,
-                    yearlyProfit: data.yearlyProfit || 0,
-                    yearlyExpense: data.yearlyExpense || 0,
-                });
-            }
-
-            const prodRes = await fetch(`${API_URL}/api/products`, {
-                headers: { Authorization: `Bearer ${currentToken}` },
-            });
-            if (!(await handleResponseStatus(prodRes))) return;
-            if (prodRes.ok) {
-                const prodData = await prodRes.json();
-                console.log("Serverdan kelgan mahsulotlar:", prodData);
-
-                // Serverdan kelgan ma'lumot obyekt ichidagi products massivi ekanligini hisobga olamiz
-                const productsArray = Array.isArray(prodData) ? prodData : (prodData.products || []);
-                setProducts(productsArray);
-            }
-        } catch (err) {
-            console.error('Xatolik:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    // React yoki JS komponentingiz ichidagi funksiya:
-    const handleAddProduct = async (e) => {
-        e.preventDefault();
-        const currentToken = localStorage.getItem('token');
-        if (!currentToken) return handleAuthError();
-
-        // Kategoriya kiritilgan bo'lsa, uni to'liq katta harfga o'tkazib olamiz (katta-kichik harf farqlanmasligi uchun)
-        const formattedCategory = newProduct.category
-            ? newProduct.category.trim().toUpperCase()
-            : 'UMUMIY';
-
-        try {
-            const res = await fetch(`${API_URL}/api/products`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${currentToken}`
-                },
-                body: JSON.stringify({
-                    category: formattedCategory, // Formatlangan kategoriya ketadi
-                    title: newProduct.title,
-                    name: newProduct.title,
-                    cost_price: parseFloat(newProduct.cost_price) || 0,
-                    color: newProduct.color,
-                    size: newProduct.size,
-                    quantity: parseInt(newProduct.quantity) || 1
-                })
-            });
-
-            if (!(await handleResponseStatus(res))) return;
-
-            const data = await res.json();
-            if (res.ok) {
-                alert("Tovar muvaffaqiyatli qo'shildi!");
-                setAddProductModal(false);
-                setNewProduct({
-                    title: '',
-                    category: '',
-                    cost_price: '',
-                    color: '',
-                    size: '',
-                    quantity: '1',
-                    description: '',
-                });
-                fetchData();
-            } else {
-                alert(data.message || "Xatolik yuz berdi!");
-            }
-        } catch (err) {
-            console.error("So'rov yuborishda xatolik:", err);
-            alert("Server bilan bog'lanishda xatolik yuz berdi!");
-        }
-    };
-
-    // 1. TOVARNI SOTISH
-    const handleSellProduct = async (e) => {
-        e.preventDefault();
-        if (!sellForm.productId) {
-            alert('Iltimos, tovarni tanlang!');
-            return;
-        }
-
-        const currentToken = localStorage.getItem('token');
-        if (!currentToken) return handleAuthError();
-
-        try {
-            const res = await fetch(`${API_URL}/api/dashboard/sell`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${currentToken}`,
-                },
-                body: JSON.stringify({
-                    product_id: parseInt(sellForm.productId),
-                    sell_quantity: parseInt(sellForm.quantity) || 1,
-                    selling_price: parseFloat(sellForm.sellPrice) || 0,
-                }),
-            });
-
-            if (!(await handleResponseStatus(res))) return;
-
-            const data = await res.json();
-            if (res.ok) {
-                alert("Muvaffaqiyatli bajarildi!");
-                setSellModalOpen(false);
-                setDeleteModalOpen(false);
-
-                // Formani tozalash
-                setSellForm({ category: '', productId: '', quantity: 1, sellPrice: '' });
-                setDeleteForm({ category: '', productId: '', quantityToRemove: 1, removeAll: false });
-
-                // MUHIM: Tovar tugab, kategoriya bo'shab qolganda filtrni ham tozalab yuboramiz
-                setSelectedCategory(null); // yoki kategoriyani ko'rsatuvchi state'ingizni tozalang
-
-                fetchData();
-            } else {
-                alert(data.message || 'Sotishda xatolik yuz berdi');
-            }
-        } catch (err) {
-            console.error(err);
-            alert('Server bilan bog‘lanishda xatolik yuz berdi!');
-        }
-    };
-
-    // 2. TOVARNI O'CHIRISH
-    const handleDeleteProduct = async (e) => {
-        e.preventDefault();
-        if (!deleteForm.productId) {
-            alert('Iltimos, tovarni tanlang!');
-            return;
-        }
-
-        const currentToken = localStorage.getItem('token');
-        if (!currentToken) return handleAuthError();
-
-        try {
-            const res = await fetch(`${API_URL}/api/dashboard/delete-product`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${currentToken}`,
-                },
-                body: JSON.stringify({
-                    product_id: parseInt(deleteForm.productId),
-                    remove_all: deleteForm.removeAll,
-                    quantity_to_remove: deleteForm.removeAll ? 0 : (parseInt(deleteForm.quantityToRemove) || 1),
-                }),
-            });
-
-            if (!(await handleResponseStatus(res))) return;
-
-            const data = await res.json();
-            if (res.ok) {
-                alert("Tovar muvaffaqiyatli o'chirildi!");
-                setDeleteModalOpen(false);
-                setDeleteForm({ category: '', productId: '', quantityToRemove: 1, removeAll: false });
-                fetchData();
-            } else {
-                alert(data.message || 'O‘chirishda xatolik yuz berdi');
-            }
-        } catch (err) {
-            console.error(err);
-            alert('Server bilan bog‘lanishda xatolik yuz berdi!');
-        }
-    };
-
-    // 3. RASXOD QO'SHISH (const va handle orasida bo'sh joy to'g'irlandi)
-    const handleAddExpense = async (e) => {
-        e.preventDefault();
-        const currentToken = localStorage.getItem('token');
-        if (!currentToken) return handleAuthError();
-
-        try {
-            const res = await fetch(`${API_URL}/api/dashboard/expenses`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${currentToken}`,
-                },
-                body: JSON.stringify({
-                    title: expenseForm.title,
-                    amount: parseFloat(expenseForm.amount) || 0,
-                    expense_type: expenseForm.expense_type || 'daily'
-                }),
-            });
-
-            if (!(await handleResponseStatus(res))) return;
-
-            const data = await res.json();
-            if (res.ok) {
-                alert("Rasxod muvaffaqiyatli qo'shildi!");
-                setExpenseModalOpen(false);
-                setExpenseForm({ title: '', amount: '', expense_type: 'daily' });
-                fetchData();
-            } else {
-                alert(data.message || 'Rasxod saqlashda xatolik');
-            }
-        } catch (err) {
-            console.error(err);
-            alert('Server bilan bog‘lanishda xatolik!');
-        }
-    };
-
-    const categories = Array.from(new Set((products || []).map((p) => p.category || 'Umumiy')));
-
     const filteredProducts = selectedCategory
-        ? (products || []).filter((p) => (p.category || 'Umumiy') === selectedCategory)
-        : [];
+        ? products.filter(p => (p.category || 'Umumiy') === selectedCategory)
+        : products;
 
     const sellModalProducts = sellForm.category
-        ? (products || []).filter((p) => (p.category || 'Umumiy') === sellForm.category)
+        ? products.filter(p => (p.category || 'Umumiy') === sellForm.category)
         : [];
 
     const deleteModalProducts = deleteForm.category
-        ? (products || []).filter((p) => (p.category || 'Umumiy') === deleteForm.category)
+        ? products.filter(p => (p.category || 'Umumiy') === deleteForm.category)
         : [];
 
-    const selectedProductToSell = (products || []).find((p) => p.id === parseInt(sellForm.productId));
-    const selectedProductToDelete = (products || []).find((p) => p.id === parseInt(deleteForm.productId));
+    const selectedProductToSell = sellModalProducts.find(p => p.id === Number(sellForm.productId));
+    const selectedProductToDelete = deleteModalProducts.find(p => p.id === Number(deleteForm.productId));
 
-    const calculatedProfit =
-        selectedProductToSell && sellForm.sellPrice && sellForm.quantity
-            ? (parseFloat(sellForm.sellPrice || 0) - parseFloat(selectedProductToSell.cost_price || 0)) *
-            parseInt(sellForm.quantity || 1)
-            : 0;
+    // Jami ombardagi qoldiqni hisoblash (sizes massividan kelib chiqib)
+    const getTotalQuantity = (p) => {
+        if (Array.isArray(p.sizes)) {
+            return p.sizes.reduce((sum, s) => sum + (s.quantity || 0), 0);
+        }
+        return p.quantity || 0;
+    };
 
-    if (loading) {
-        return <div className="loading-state">Yuklanmoqda...</div>;
-    }
-
-    if (subscriptionExpired) {
-        return (
-            <div className="expired-container">
-                <div className="expired-card">
-                    <h2>⚠️ To'lov muddati tugagan!</h2>
-                    <p>Tizimdan foydalanishni davom ettirish uchun Telegram bot orqali obunani uzaytiring.</p>
-                    <button onClick={() => window.location.reload()} className="btn btn-primary btn-full">
-                        🔄 Qayta tekshirish
-                    </button>
-                </div>
-            </div>
-        );
-    }
+    const calculatedProfit = selectedProductToSell
+        ? (Number(sellForm.sellPrice || 0) - Number(selectedProductToSell.cost_price)) * Number(sellForm.quantity || 0)
+        : 0;
 
     return (
         <div className="dashboard-container">
-            {/* Sarlavha va Tugmalar */}
-            <div className="dashboard-header">
-                <h2>🏪 {stats.storeName || 'Mening Do‘konim'} — Analitika Paneli</h2>
-                <div className="header-actions">
-                    <button className="btn btn-primary" onClick={() => setAddProductModal(true)}>
-                        ➕ Tovar Qo‘shish
-                    </button>
-                    <button className="btn btn-danger" onClick={() => setDeleteModalOpen(true)}>
-                        🗑️ Tovarni Olib Tashlash
-                    </button>
-                    <button className="btn btn-expense" onClick={() => setExpenseModalOpen(true)}>
-                        💸 Rasxod Qo'shish
-                    </button>
-                    <button className="btn btn-success" onClick={() => setSellModalOpen(true)}>
-                        🛒 Sotildi (Sotish)
-                    </button>
-                    <button className="btn btn-logout" onClick={handleLogout}>
-                        🚪 Chiqish
-                    </button>
-                </div>
-            </div>
-
-            {/* OMBOR VA TOVAR KO'RSATKICHLARI */}
-            <div className="stats-grid stats-grid-top">
-                <div className="stat-card">
-                    <h4>📦 TOVAR TURLARI</h4>
-                    <h3>{products.length} ta</h3>
-                </div>
-                <div className="stat-card">
-                    <h4>🏭 OMBORDA QOLDIQ</h4>
-                    <h3>{products.reduce((sum, p) => sum + (parseInt(p.quantity) || 0), 0)} ta</h3>
-                </div>
-            </div>
-
-            {/* 📊 DAVRIY SOTUV VA FOYDA STATISTIKASI */}
-            <h3 className="stats-title">📊 Sotuv va Foyda Analitikasi</h3>
+            {/* Statistika kartochkalari */}
             <div className="stats-grid">
-                <div className="stat-card">
-                    <h4>📅 BUGUN SOTILDI</h4>
-                    <h3>{stats.dailySold || 0} ta</h3>
-                    <p>Tushum: <b>{formatSum(stats.dailyRevenue)} so'm</b></p>
-                    <p>Rasxod: <b className="text-expense">{formatSum(stats.dailyExpense)} so'm</b></p>
-                    <p>Sof Foyda: <b className={(stats.dailyProfit || 0) >= 0 ? 'text-profit-positive' : 'text-profit-negative'}>{formatSum(stats.dailyProfit)} so'm</b></p>
-                </div>
-
-                <div className="stat-card">
-                    <h4>🗓️ SHU OY SOTILDI</h4>
-                    <h3>{stats.monthlySold || 0} ta</h3>
-                    <p>Tushum: <b>{formatSum(stats.monthlyRevenue)} so'm</b></p>
-                    <p>Rasxod: <b className="text-expense">{formatSum(stats.monthlyExpense)} so'm</b></p>
-                    <p>Sof Foyda: <b className={(stats.monthlyProfit || 0) >= 0 ? 'text-profit-positive' : 'text-profit-negative'}>{formatSum(stats.monthlyProfit)} so'm</b></p>
-                </div>
-
-                <div className="stat-card">
-                    <h4>📆 SHU YIL SOTILDI</h4>
-                    <h3>{stats.yearlySold || 0} ta</h3>
-                    <p>Tushum: <b>{formatSum(stats.yearlyRevenue)} so'm</b></p>
-                    <p>Rasxod: <b className="text-expense">{formatSum(stats.yearlyExpense)} so'm</b></p>
-                    <p>Sof Foyda: <b className={(stats.yearlyProfit || 0) >= 0 ? 'text-profit-positive' : 'text-profit-negative'}>{formatSum(stats.yearlyProfit)} so'm</b></p>
-                </div>
-
                 <div className="stat-card">
                     <h4>💰 JAMI TUSHUM</h4>
                     <h3>{formatSum(stats.totalRevenue)} so'm</h3>
@@ -461,9 +229,27 @@ const DashboardPage = () => {
 
                 <div className="stat-card">
                     <h4>📈 JAMI SOF FOYDA</h4>
-                    <h3 className={(stats.totalProfit || 0) >= 0 ? 'text-profit-positive' : 'text-profit-negative'}>{formatSum(stats.totalProfit)} so'm</h3>
+                    <h3 className={(stats.totalProfit || 0) >= 0 ? 'text-profit-positive' : 'text-profit-negative'}>
+                        {formatSum(stats.totalProfit)} so'm
+                    </h3>
                     <p>Jami Rasxod: <b className="text-expense">{formatSum(stats.totalExpense)} so'm</b></p>
                 </div>
+            </div>
+
+            {/* ASOSIY BOSHQARUV TUGMALARI */}
+            <div className="action-buttons-grid" style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                <button onClick={() => setAddProductModal(true)} className="btn btn-primary">
+                    ➕ Tovar Qo'shish
+                </button>
+                <button onClick={() => setSellModalOpen(true)} className="btn btn-success">
+                    🛒 Tovar Sotish
+                </button>
+                <button onClick={() => setDeleteModalOpen(true)} className="btn btn-danger">
+                    🗑️ Tovar O'chirish / Kamaytirish
+                </button>
+                <button onClick={() => setExpenseModalOpen(true)} className="btn btn-expense" style={{ background: '#ff9800', color: '#fff' }}>
+                    💸 Rasxod Qo'shish
+                </button>
             </div>
 
             {/* KATEGORIYALAR BO'LIMI */}
@@ -510,8 +296,8 @@ const DashboardPage = () => {
                                     <th>Kategoriya</th>
                                     <th>Nomi</th>
                                     <th>Tannarx (Kelgan)</th>
-                                    <th>Rangi / O'lchami</th>
-                                    <th>Ombordagi Qoldiq</th>
+                                    <th>Rangi / O'lchamlari</th>
+                                    <th>Ombordagi Jami Qoldiq</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -523,8 +309,14 @@ const DashboardPage = () => {
                                         </td>
                                         <td><b>{p.title}</b></td>
                                         <td>{formatSum(p.cost_price)} so'm</td>
-                                        <td>{p.color || '-'} / {p.size || '-'}</td>
-                                        <td>{p.quantity || 0} ta</td>
+                                        <td>
+                                            {p.color || '-'} / {
+                                                Array.isArray(p.sizes)
+                                                    ? p.sizes.map(s => `${s.size} (${s.quantity}ta)`).join(', ')
+                                                    : (p.size || '-')
+                                            }
+                                        </td>
+                                        <td><b>{getTotalQuantity(p)} ta</b></td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -586,7 +378,7 @@ const DashboardPage = () => {
                 </div>
             )}
 
-            {/* ➕ TOVAR QO'SHISH MODALI */}
+            {/* ➕ TOVAR QO'SHISH MODALI (Dinamik o'lchamlar bilan) */}
             {addProductModal && (
                 <div className="modal-overlay">
                     <div className="modal-box">
@@ -621,37 +413,42 @@ const DashboardPage = () => {
                                 className="form-input"
                             />
 
-                            <div className="form-row">
-                                <div>
-                                    <label>Rangi:</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Qora"
-                                        value={newProduct.color}
-                                        onChange={(e) => setNewProduct({ ...newProduct, color: e.target.value })}
-                                        className="form-input"
-                                    />
-                                </div>
-                                <div>
-                                    <label>O'lchami:</label>
-                                    <input
-                                        type="text"
-                                        placeholder="41, 42"
-                                        value={newProduct.size}
-                                        onChange={(e) => setNewProduct({ ...newProduct, size: e.target.value })}
-                                        className="form-input"
-                                    />
-                                </div>
-                            </div>
-
-                            <label>Soni (Sklad):</label>
+                            <label>Rangi:</label>
                             <input
-                                type="number"
-                                placeholder="1"
-                                value={newProduct.quantity}
-                                onChange={(e) => setNewProduct({ ...newProduct, quantity: e.target.value })}
+                                type="text"
+                                placeholder="Qora"
+                                value={newProduct.color}
+                                onChange={(e) => setNewProduct({ ...newProduct, color: e.target.value })}
                                 className="form-input"
                             />
+
+                            <label>O'lchamlar va Miqdorlar:</label>
+                            {newProduct.sizesInput.map((item, index) => (
+                                <div key={index} className="size-input-row" style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                                    <input
+                                        type="text"
+                                        placeholder="O'lcham (masalan: 41)"
+                                        value={item.size}
+                                        onChange={(e) => handleSizeInputChange(index, 'size', e.target.value)}
+                                        required
+                                        className="form-input"
+                                    />
+                                    <input
+                                        type="number"
+                                        placeholder="Miqdori"
+                                        value={item.quantity}
+                                        onChange={(e) => handleSizeInputChange(index, 'quantity', e.target.value)}
+                                        required
+                                        className="form-input"
+                                    />
+                                    {newProduct.sizesInput.length > 1 && (
+                                        <button type="button" onClick={() => removeSizeInputRow(index)} className="btn btn-danger">✖</button>
+                                    )}
+                                </div>
+                            ))}
+                            <button type="button" onClick={addSizeInputRow} className="btn btn-secondary" style={{ marginBottom: '15px' }}>
+                                + O'lcham qo'shish
+                            </button>
 
                             <div className="modal-actions">
                                 <button type="submit" className="btn btn-primary">Saqlash</button>
@@ -672,14 +469,12 @@ const DashboardPage = () => {
                             <select
                                 className="form-input"
                                 value={deleteForm.category}
-                                onChange={(e) => setDeleteForm({ ...deleteForm, category: e.target.value, productId: '' })}
+                                onChange={(e) => setDeleteForm({ ...deleteForm, category: e.target.value, productId: '', size: '' })}
                                 required
                             >
                                 <option value="">-- Kategoriyani tanlang --</option>
                                 {categories.map((cat) => (
-                                    <option key={cat} value={cat}>
-                                        📁 {cat}
-                                    </option>
+                                    <option key={cat} value={cat}>📁 {cat}</option>
                                 ))}
                             </select>
 
@@ -687,19 +482,36 @@ const DashboardPage = () => {
                             <select
                                 className="form-input"
                                 value={deleteForm.productId}
-                                onChange={(e) => setDeleteForm({ ...deleteForm, productId: e.target.value })}
+                                onChange={(e) => setDeleteForm({ ...deleteForm, productId: e.target.value, size: '' })}
                                 disabled={!deleteForm.category}
                                 required
                             >
-                                <option value="">
-                                    {deleteForm.category ? '-- Tovarni tanlang --' : '-- Avval kategoriyani tanlang --'}
-                                </option>
+                                <option value="">{deleteForm.category ? '-- Tovarni tanlang --' : '-- Avval kategoriyani tanlang --'}</option>
                                 {deleteModalProducts.map((p) => (
                                     <option key={p.id} value={p.id}>
-                                        {p.title} (Omborda {p.quantity || 0} ta bor)
+                                        {p.title} (Jami {getTotalQuantity(p)} ta bor)
                                     </option>
                                 ))}
                             </select>
+
+                            {selectedProductToDelete && Array.isArray(selectedProductToDelete.sizes) && (
+                                <>
+                                    <label>3. O'lchamni tanlang:</label>
+                                    <select
+                                        className="form-input"
+                                        value={deleteForm.size}
+                                        onChange={(e) => setDeleteForm({ ...deleteForm, size: e.target.value })}
+                                        required
+                                    >
+                                        <option value="">-- O'lchamni tanlang --</option>
+                                        {selectedProductToDelete.sizes.map((s, idx) => (
+                                            <option key={idx} value={s.size}>
+                                                O'lcham: {s.size} (Omborda: {s.quantity} ta)
+                                            </option>
+                                        ))}
+                                    </select>
+                                </>
+                            )}
 
                             <div className="checkbox-container">
                                 <input
@@ -710,7 +522,7 @@ const DashboardPage = () => {
                                     className="checkbox-input"
                                 />
                                 <label htmlFor="removeAllCheck" className="checkbox-label">
-                                    ⚠️ Hammasini o'chirish
+                                    ⚠️ Tanlangan o'lchamni butunlay o'chirish
                                 </label>
                             </div>
 
@@ -720,7 +532,6 @@ const DashboardPage = () => {
                                     <input
                                         type="number"
                                         min="1"
-                                        max={selectedProductToDelete ? selectedProductToDelete.quantity : 1}
                                         value={deleteForm.quantityToRemove}
                                         onChange={(e) => setDeleteForm({ ...deleteForm, quantityToRemove: e.target.value })}
                                         required
@@ -735,7 +546,7 @@ const DashboardPage = () => {
                                     type="button"
                                     onClick={() => {
                                         setDeleteModalOpen(false);
-                                        setDeleteForm({ category: '', productId: '', quantityToRemove: 1, removeAll: false });
+                                        setDeleteForm({ category: '', productId: '', size: '', quantityToRemove: 1, removeAll: false });
                                     }}
                                     className="btn btn-secondary"
                                 >
@@ -757,14 +568,12 @@ const DashboardPage = () => {
                             <select
                                 className="form-input"
                                 value={sellForm.category}
-                                onChange={(e) => setSellForm({ ...sellForm, category: e.target.value, productId: '' })}
+                                onChange={(e) => setSellForm({ ...sellForm, category: e.target.value, productId: '', size: '' })}
                                 required
                             >
                                 <option value="">-- Kategoriyani tanlang --</option>
                                 {categories.map((cat) => (
-                                    <option key={cat} value={cat}>
-                                        📁 {cat}
-                                    </option>
+                                    <option key={cat} value={cat}>📁 {cat}</option>
                                 ))}
                             </select>
 
@@ -772,39 +581,54 @@ const DashboardPage = () => {
                             <select
                                 className="form-input"
                                 value={sellForm.productId}
-                                onChange={(e) => setSellForm({ ...sellForm, productId: e.target.value })}
+                                onChange={(e) => setSellForm({ ...sellForm, productId: e.target.value, size: '' })}
                                 disabled={!sellForm.category}
                                 required
                             >
-                                <option value="">
-                                    {sellForm.category ? '-- Tovarni tanlang --' : '-- Avval kategoriyani tanlang --'}
-                                </option>
+                                <option value="">{sellForm.category ? '-- Tovarni tanlang --' : '-- Avval kategoriyani tanlang --'}</option>
                                 {sellModalProducts.map((p) => (
                                     <option key={p.id} value={p.id}>
-                                        {p.title} (Omborda {p.quantity || 0} ta bor)
+                                        {p.title} (Jami {getTotalQuantity(p)} ta bor)
                                     </option>
                                 ))}
                             </select>
 
+                            {selectedProductToSell && Array.isArray(selectedProductToSell.sizes) && (
+                                <>
+                                    <label>3. O'lchamni tanlang:</label>
+                                    <select
+                                        className="form-input"
+                                        value={sellForm.size}
+                                        onChange={(e) => setSellForm({ ...sellForm, size: e.target.value })}
+                                        required
+                                    >
+                                        <option value="">-- O'lchamni tanlang --</option>
+                                        {selectedProductToSell.sizes.map((s, idx) => (
+                                            <option key={idx} value={s.size} disabled={s.quantity <= 0}>
+                                                O'lcham: {s.size} (Qoldiq: {s.quantity} ta)
+                                            </option>
+                                        ))}
+                                    </select>
+                                </>
+                            )}
+
                             {selectedProductToSell && (
                                 <div className="info-box">
                                     <p>Tannarx (Kelgan narxi): <b>{formatSum(selectedProductToSell.cost_price)} so'm</b></p>
-                                    <p>Omborda qoldiq: <b>{selectedProductToSell.quantity} ta</b></p>
                                 </div>
                             )}
 
-                            <label>3. Sotuv soni:</label>
+                            <label>4. Sotuv soni:</label>
                             <input
                                 type="number"
                                 min="1"
-                                max={selectedProductToSell ? selectedProductToSell.quantity : 1}
                                 value={sellForm.quantity}
                                 onChange={(e) => setSellForm({ ...sellForm, quantity: e.target.value })}
                                 required
                                 className="form-input"
                             />
 
-                            <label>4. Sotish narxi (Dona uchun so'm):</label>
+                            <label>5. Sotish narxi (Dona uchun so'm):</label>
                             <input
                                 type="number"
                                 placeholder="Masalan: 180000"
@@ -816,7 +640,9 @@ const DashboardPage = () => {
 
                             {sellForm.sellPrice && selectedProductToSell && (
                                 <div className="profit-preview">
-                                    Kutilayotgan sof foyda: <b className={calculatedProfit >= 0 ? 'text-profit-positive' : 'text-profit-negative'}>{formatSum(calculatedProfit)} so'm</b>
+                                    Kutilayotgan sof foyda: <b className={calculatedProfit >= 0 ? 'text-profit-positive' : 'text-profit-negative'}>
+                                        {formatSum(calculatedProfit)} so'm
+                                    </b>
                                 </div>
                             )}
 
@@ -826,7 +652,7 @@ const DashboardPage = () => {
                                     type="button"
                                     onClick={() => {
                                         setSellModalOpen(false);
-                                        setSellForm({ category: '', productId: '', quantity: 1, sellPrice: '' });
+                                        setSellForm({ category: '', productId: '', size: '', quantity: 1, sellPrice: '' });
                                     }}
                                     className="btn btn-danger"
                                 >
