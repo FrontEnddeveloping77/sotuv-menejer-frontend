@@ -139,6 +139,10 @@ const DashboardPage = () => {
         return name.includes(deleteData.product_name.toLowerCase());
     });
 
+    // Sotuv uchun aynan tanlangan tovarning to'liq ma'lumoti (tannarx, qoldiq va h.k.)
+    // Bu real vaqtda foyda hisoblash uchun kerak.
+    const selectedSellProduct = products.find((p) => String(p.id) === String(sellData.product_id));
+
     // Sotuv modalida ID kiritilganda nomni avto-to'ldirish
     const handleSellIdChange = (idVal) => {
         const found = products.find((p) => String(p.id) === String(idVal));
@@ -232,7 +236,6 @@ const DashboardPage = () => {
             setNewProduct({ category: '', name: '', color: '', cost_price: '', quantity: '' });
             await fetchData(false);
 
-            // ID o'rniga local_id olinadi, agar u bo'lmasa backend xabari yoki global id ishlatiladi
             const displayId = res.data?.product?.local_id || res.data?.product?.id || '';
             alert(res.data?.message || `Tovar saqlandi! Biriktirilgan ID: #${displayId}`);
 
@@ -408,13 +411,7 @@ const DashboardPage = () => {
                         {filteredProducts.length > 0 ? (
                             filteredProducts.map((p, index) => (
                                 <tr key={p.id}>
-                                    {/* 
-                  Agar massiv teskari (DESC) tartibda kelayotgan bo'lsa:
-                  Jami elementlar sonidan joriy indeksni ayiramiz.
-                  Masalan, 3 ta tovar bo'lsa: 3-0=#3 (birinchi qator), 3-1=#2, 3-2=#1 (eng pastki qator)
-                */}
                                     <td><b>#{filteredProducts.length - index}</b></td>
-
                                     <td><span className="category-badge">{p.category || 'Umumiy'}</span></td>
                                     <td><b>{p.title || p.name}</b></td>
                                     <td>{p.color ? <span className="color-badge">{p.color}</span> : '-'}</td>
@@ -509,7 +506,7 @@ const DashboardPage = () => {
                 </div>
             )}
 
-            {/* 🛒 SOTUV MODALI (YANGILANDI) */}
+            {/* 🛒 SOTUV MODALI (qidiruv + real vaqtda foyda kalkulyatori bilan) */}
             {sellModal && (
                 <div className="modal-overlay">
                     <div className="modal-box">
@@ -527,7 +524,6 @@ const DashboardPage = () => {
                                 />
                             </div>
 
-                            {/* Agar 2 yoki undan ortiq tovar to'g'ri kelsa tanlash uchun select */}
                             {matchedSellProducts.length >= 2 && (
                                 <div className="form-group">
                                     <label style={{ color: '#d97706', fontWeight: 'bold' }}>
@@ -548,7 +544,6 @@ const DashboardPage = () => {
                                 </div>
                             )}
 
-                            {/* Tovar ID'si (Ixtiyoriy) */}
                             <div className="form-group">
                                 <label>Tovar ID'si (Ixtiyoriy) :</label>
                                 <input
@@ -565,11 +560,17 @@ const DashboardPage = () => {
                                 <input
                                     type="number"
                                     min="1"
+                                    max={selectedSellProduct?.quantity || undefined}
                                     value={sellData.sell_quantity}
                                     onChange={(e) => setSellData({ ...sellData, sell_quantity: e.target.value })}
                                     required
                                     className="form-input"
                                 />
+                                {selectedSellProduct && (
+                                    <small style={{ color: '#64748b' }}>
+                                        Omborda mavjud: {selectedSellProduct.quantity} dona
+                                    </small>
+                                )}
                             </div>
 
                             <div className="form-group">
@@ -583,6 +584,37 @@ const DashboardPage = () => {
                                     className="form-input"
                                 />
                             </div>
+
+                            {/* --- REAL VAQTDA KUTILAYOTGAN FOYDA VA TUSHUM KO'RSATKICHI --- */}
+                            {selectedSellProduct && Number(sellData.selling_price) > 0 && Number(sellData.sell_quantity) > 0 && (
+                                <div style={{
+                                    backgroundColor: '#f8fafc',
+                                    border: '1px solid #cbd5e1',
+                                    borderRadius: '8px',
+                                    padding: '12px 16px',
+                                    marginTop: '15px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '8px'
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#475569' }}>
+                                        <span>Jami tushum:</span>
+                                        <strong style={{ color: '#0f172a' }}>
+                                            {formatSum(Number(sellData.selling_price) * Number(sellData.sell_quantity))} so'm
+                                        </strong>
+                                    </div>
+
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', paddingTop: '4px', borderTop: '1px dashed #cbd5e1' }}>
+                                        <span style={{ fontWeight: '600', color: '#0f172a' }}>Kutilayotgan foyda:</span>
+                                        <strong style={{
+                                            color: ((Number(sellData.selling_price) - Number(selectedSellProduct.cost_price || 0)) * Number(sellData.sell_quantity)) >= 0 ? '#16a34a' : '#dc2626'
+                                        }}>
+                                            {((Number(sellData.selling_price) - Number(selectedSellProduct.cost_price || 0)) * Number(sellData.sell_quantity)) >= 0 ? '+' : ''}
+                                            {formatSum((Number(sellData.selling_price) - Number(selectedSellProduct.cost_price || 0)) * Number(sellData.sell_quantity))} so'm
+                                        </strong>
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="modal-actions">
                                 <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
@@ -659,13 +691,12 @@ const DashboardPage = () => {
                 </div>
             )}
 
-            {/* 🗑️ O'CHIRISH MODALI (YANGILANDI) */}
+            {/* 🗑️ O'CHIRISH MODALI */}
             {deleteModal && (
                 <div className="modal-overlay">
                     <div className="modal-box">
                         <h3>🗑️ Tovarni O'chirish / Kamaytirish</h3>
                         <form onSubmit={handleDeleteProduct} className="product-form">
-                            {/* Nomi bo'yicha qidirish */}
                             <div className="form-group">
                                 <label>Tovar Nomi bo'yicha qidirish :</label>
                                 <input
@@ -677,7 +708,6 @@ const DashboardPage = () => {
                                 />
                             </div>
 
-                            {/* Agar 2 yoki undan ortiq tovar to'g'ri kelsa tanlash uchun select */}
                             {matchedDeleteProducts.length >= 2 && (
                                 <div className="form-group">
                                     <label style={{ color: '#d97706', fontWeight: 'bold' }}>
@@ -698,7 +728,6 @@ const DashboardPage = () => {
                                 </div>
                             )}
 
-                            {/* Tovar ID'si (Ixtiyoriy) */}
                             <div className="form-group">
                                 <label>Tovar ID'si (Ixtiyoriy) :</label>
                                 <input
