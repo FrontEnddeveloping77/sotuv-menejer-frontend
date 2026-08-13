@@ -124,21 +124,20 @@ const DashboardPage = () => {
         return Number(val || 0).toLocaleString('uz-UZ');
     };
 
-    // --- SOTUV VA O'CHIRISH UCHUN QIDIRUV VA AVTO-TO'LDIRISH MANTIG'I ---
+    // --- SOTUV VA O'CHIRISH UCHUN QIDIRUV VA AVTO-TO'LDIRISH MANTIG'I (FAQAT REAL ID) ---
 
     const selectedSellProduct = products.find((p) =>
-        String(p.local_id || p.id) === String(sellData.product_id)
+        String(p.local_id || p.id) === String(sellData.product_id).trim()
     );
 
     const selectedDeleteProduct = products.find((p) =>
-        String(p.local_id || p.id) === String(deleteData.product_id)
+        String(p.local_id || p.id) === String(deleteData.product_id).trim()
     );
 
     const handleSellIdChange = (e) => {
         const idVal = e.target.value;
-        const found = products.find((p, index) =>
-            String(p.local_id || p.id) === idVal.trim() ||
-            String(index + 1) === idVal.trim()
+        const found = products.find((p) =>
+            String(p.local_id || p.id) === idVal.trim()
         );
 
         setSellData((prev) => ({
@@ -158,16 +157,15 @@ const DashboardPage = () => {
         setSellData((prev) => ({
             ...prev,
             product_name: nameVal,
-            product_id: found ? (found.local_id || found.id) : '',
+            product_id: found ? String(found.local_id || found.id) : '',
             selling_price: found ? (found.selling_price || prev.selling_price) : prev.selling_price
         }));
     };
 
     const handleDeleteIdChange = (e) => {
         const idVal = e.target.value;
-        const found = products.find((p, index) =>
-            String(p.local_id || p.id) === idVal.trim() ||
-            String(index + 1) === idVal.trim()
+        const found = products.find((p) =>
+            String(p.local_id || p.id) === idVal.trim()
         );
 
         setDeleteData((prev) => ({
@@ -186,7 +184,7 @@ const DashboardPage = () => {
         setDeleteData((prev) => ({
             ...prev,
             product_name: nameVal,
-            product_id: found ? (found.local_id || found.id) : ''
+            product_id: found ? String(found.local_id || found.id) : ''
         }));
     };
 
@@ -379,9 +377,9 @@ const DashboardPage = () => {
                     </thead>
                     <tbody>
                         {filteredProducts.length > 0 ? (
-                            filteredProducts.map((p, index) => (
+                            filteredProducts.map((p) => (
                                 <tr key={p.id}>
-                                    <td><b>#{filteredProducts.length - index}</b></td>
+                                    <td><b>#{p.local_id || p.id}</b></td>
                                     <td><span className="category-badge">{p.category || 'Umumiy'}</span></td>
                                     <td><b>{p.title || p.name}</b></td>
                                     <td>{p.color ? <span className="color-badge">{p.color}</span> : '-'}</td>
@@ -498,12 +496,13 @@ const DashboardPage = () => {
                             </div>
 
                             <div className="form-group">
-                                <label>Tovar ID'si (Ixtiyoriy) :</label>
+                                <label>Tovar ID'si * :</label>
                                 <input
                                     type="text"
                                     placeholder="Masalan: 3"
                                     value={sellData.product_id}
                                     onChange={handleSellIdChange}
+                                    required
                                     className="form-input"
                                 />
                             </div>
@@ -649,7 +648,7 @@ const DashboardPage = () => {
                             </div>
 
                             <div className="form-group">
-                                <label>Tovar ID'si bo'yicha :</label>
+                                <label>Tovar ID'si * :</label>
                                 <input
                                     type="text"
                                     placeholder="Masalan: 3"
@@ -719,4 +718,4 @@ const DashboardPage = () => {
     );
 };
 
-export default DashboardPage;
+export default DashboardPage; 
