@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-// import '../styles/dashboard.css';
+import '../styles/dashboard.css';
 
 // MUHIM: Avval axios so'rovlarida na manzil (baseURL), na Authorization token
 // yuborilmagan edi - shuning uchun barcha so'rovlar backendga yetib bormasdi.
