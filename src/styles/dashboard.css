@@ -465,7 +465,63 @@ select:focus {
     padding: 24px !important;
     width: 100% !important;
     max-width: 460px !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Bir nechta razmerni bir vaqtda sotish/kamaytirish savatchasi uchun kengroq modal */
+.modal-box-wide {
+    max-width: 560px !important;
+}
+
+/* Savatchadagi har bir razmer-qatori */
+.cart-row {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 14px !important;
+    margin: 10px 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    background-color: #f8fafc !important;
+}
+
+.cart-row-fields {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+}
+
+.btn-add-row {
+    background-color: #e0f2fe !important;
+    color: #0369a1 !important;
+    border: 1px dashed #38bdf8 !important;
+    border-radius: 8px !important;
+    padding: 10px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    margin: 6px 0 12px 0 !important;
+}
+
+.btn-add-row:hover {
+    background-color: #bae6fd !important;
+}
+
+.btn-remove-row {
+    align-self: flex-end !important;
+    background-color: #fee2e2 !important;
+    color: #b91c1c !important;
+    border: none !important;
+    border-radius: 6px !important;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+}
+
+.btn-remove-row:hover {
+    background-color: #fecaca !important;
 }
 
 .modal-box h3 {

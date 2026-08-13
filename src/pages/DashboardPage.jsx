@@ -64,13 +64,14 @@ const DashboardPage = () => {
         quantity: ''
     });
 
-    // Sotish formasi
+    // Sotish formasi — endi "savatcha" (bir nechta razmerni bir vaqtda sotish)
+    // uslubida ishlaydi: avval tovar (local_id) tanlanadi, so'ng shu tovarning
+    // xohlagan sonda razmer-qatorlari ("+ Yana razmer qo'shish" orqali) qo'shiladi.
+    const emptySellRow = () => ({ size: '', sell_quantity: 1, selling_price: '' });
+    const [sellSearch, setSellSearch] = useState('');
     const [sellData, setSellData] = useState({
         product_id: '',
-        product_name: '',
-        size: '',
-        sell_quantity: 1,
-        selling_price: ''
+        rows: [emptySellRow()]
     });
 
     // Rasxod formasi
@@ -80,13 +81,13 @@ const DashboardPage = () => {
         expense_type: 'daily'
     });
 
-    // O'chirish formasi
+    // O'chirish formasi — xuddi sotish savatchasi kabi, bir nechta razmerni
+    // bitta amal bilan kamaytirish/o'chirish imkonini beradi.
+    const emptyDeleteRow = () => ({ size: '', remove_all: false, quantity_to_remove: 1 });
+    const [deleteSearch, setDeleteSearch] = useState('');
     const [deleteData, setDeleteData] = useState({
         product_id: '',
-        product_name: '',
-        size: '',
-        remove_all: false,
-        quantity_to_remove: 1
+        rows: [emptyDeleteRow()]
     });
 
     // Chiqish (Logout) funksiyasi
@@ -156,79 +157,113 @@ const DashboardPage = () => {
 
     const productGroups = groupProductsByLocalId(products);
 
-    // --- SOTUV VA O'CHIRISH UCHUN QIDIRUV, RAZMER TANLASH VA AVTO-TO'LDIRISH MANTIG'I ---
+    // --- SOTUV VA O'CHIRISH UCHUN TOVAR TANLASH VA KO'P RAZMERLI SAVATCHA MANTIG'I ---
+    // Tovar endi ishonchli <select> orqali (local_id bo'yicha) tanlanadi — bu eski
+    // "ID/nom yozib kiritish" usulidagi mos kelmaslik xatolarining oldini oladi va
+    // tanlangan tovarning barcha razmerlari (va har birining qoldig'i) har doim
+    // to'g'ri va aniq ko'rinishini kafolatlaydi.
+    const matchesQuery = (group, query) => {
+        const q = query.toLowerCase().trim();
+        if (!q) return true;
+        const idStr = group.local_id ? String(group.local_id) : '';
+        const nameStr = (group.name || '').toLowerCase();
+        const categoryStr = (group.category || '').toLowerCase();
+        const colorStr = (group.color || '').toLowerCase();
+        const sizesStr = group.variants.map((v) => (v.size || '').toLowerCase()).join(' ');
+        return (
+            idStr.includes(q) ||
+            nameStr.includes(q) ||
+            categoryStr.includes(q) ||
+            colorStr.includes(q) ||
+            sizesStr.includes(q)
+        );
+    };
 
-    // Tovar ID (local_id) bo'yicha shu tovarning barcha razmer-qatorlarini topamiz
-    const sellGroupRows = products.filter((p) =>
-        String(p.local_id) === String(sellData.product_id).trim()
-    );
-    const deleteGroupRows = products.filter((p) =>
-        String(p.local_id) === String(deleteData.product_id).trim()
-    );
+    const filteredSellGroups = productGroups.filter((g) => matchesQuery(g, sellSearch));
+    const filteredDeleteGroups = productGroups.filter((g) => matchesQuery(g, deleteSearch));
 
-    // Aniq tanlangan qator: agar tovarda faqat bitta razmer/variant bo'lsa avtomatik
-    // tanlanadi, aks holda foydalanuvchi tanlagan razmerga mos qator olinadi
-    const selectedSellProduct = sellGroupRows.length === 1
-        ? sellGroupRows[0]
-        : sellGroupRows.find((p) => String(p.size || '') === String(sellData.size || ''));
+    const sellGroup = productGroups.find((g) => String(g.local_id) === String(sellData.product_id)) || null;
+    const deleteGroup = productGroups.find((g) => String(g.local_id) === String(deleteData.product_id)) || null;
 
-    const selectedDeleteProduct = deleteGroupRows.length === 1
-        ? deleteGroupRows[0]
-        : deleteGroupRows.find((p) => String(p.size || '') === String(deleteData.size || ''));
+    // Berilgan tovar guruhi va bitta savatcha qatoridagi razmerga mos aniq bazadagi
+    // qatorni (variantni) topib beradi. Agar tovarda umuman razmer bo'lmasa
+    // (bitta "Standart" variant), razmer tanlashsiz o'sha yagona variant qaytariladi.
+    const resolveVariant = (group, row) => {
+        if (!group) return null;
+        if (group.variants.length === 1) return group.variants[0];
+        return group.variants.find((v) => String(v.size || '') === String(row.size || '')) || null;
+    };
 
-    const handleSellIdChange = (e) => {
-        const idVal = e.target.value;
-        const rows = products.filter((p) => String(p.local_id) === idVal.trim());
-        const first = rows[0];
+    // Tanlangan tovarda hali savatga qo'shilmagan (band qilinmagan) razmerlar soni —
+    // "+ Yana razmer qo'shish" tugmasini shu asosda yoqamiz/o'chiramiz.
+    const usedSellSizes = (excludeIndex) =>
+        sellData.rows.filter((_, i) => i !== excludeIndex).map((r) => r.size);
+    const usedDeleteSizes = (excludeIndex) =>
+        deleteData.rows.filter((_, i) => i !== excludeIndex).map((r) => r.size);
 
+    const canAddMoreSellRows = sellGroup && sellData.rows.length < sellGroup.variants.length;
+    const canAddMoreDeleteRows = deleteGroup && deleteData.rows.length < deleteGroup.variants.length;
+
+    // Tovar tanlanganda (select orqali) savatcha bitta bo'sh qator bilan qayta boshlanadi
+    const handleSellGroupSelect = (localId) => {
+        const group = productGroups.find((g) => String(g.local_id) === String(localId));
+        setSellData({
+            product_id: localId,
+            rows: [{
+                size: group && group.variants.length === 1 ? (group.variants[0].size || '') : '',
+                sell_quantity: 1,
+                selling_price: ''
+            }]
+        });
+    };
+
+    const handleDeleteGroupSelect = (localId) => {
+        const group = productGroups.find((g) => String(g.local_id) === String(localId));
+        setDeleteData({
+            product_id: localId,
+            rows: [{
+                size: group && group.variants.length === 1 ? (group.variants[0].size || '') : '',
+                remove_all: false,
+                quantity_to_remove: 1
+            }]
+        });
+    };
+
+    const updateSellRow = (index, patch) => {
         setSellData((prev) => ({
             ...prev,
-            product_id: idVal,
-            product_name: first ? (first.title || first.name) : '',
-            size: rows.length === 1 ? (first.size || '') : '',
+            rows: prev.rows.map((r, i) => (i === index ? { ...r, ...patch } : r))
         }));
     };
 
-    const handleSellNameChange = (e) => {
-        const nameVal = e.target.value;
-        const found = products.find((p) =>
-            (p.title || p.name || '').toLowerCase().includes(nameVal.toLowerCase())
-        );
-        const rows = found ? products.filter((p) => String(p.local_id) === String(found.local_id)) : [];
+    const updateDeleteRow = (index, patch) => {
+        setDeleteData((prev) => ({
+            ...prev,
+            rows: prev.rows.map((r, i) => (i === index ? { ...r, ...patch } : r))
+        }));
+    };
 
+    const addSellRow = () => {
+        if (!canAddMoreSellRows) return;
+        setSellData((prev) => ({ ...prev, rows: [...prev.rows, emptySellRow()] }));
+    };
+
+    const addDeleteRow = () => {
+        if (!canAddMoreDeleteRows) return;
+        setDeleteData((prev) => ({ ...prev, rows: [...prev.rows, emptyDeleteRow()] }));
+    };
+
+    const removeSellRow = (index) => {
         setSellData((prev) => ({
             ...prev,
-            product_name: nameVal,
-            product_id: found ? String(found.local_id) : '',
-            size: rows.length === 1 ? (rows[0].size || '') : ''
+            rows: prev.rows.length > 1 ? prev.rows.filter((_, i) => i !== index) : prev.rows
         }));
     };
 
-    const handleDeleteIdChange = (e) => {
-        const idVal = e.target.value;
-        const rows = products.filter((p) => String(p.local_id) === idVal.trim());
-        const first = rows[0];
-
+    const removeDeleteRow = (index) => {
         setDeleteData((prev) => ({
             ...prev,
-            product_id: idVal,
-            product_name: first ? (first.title || first.name) : '',
-            size: rows.length === 1 ? (first.size || '') : ''
-        }));
-    };
-
-    const handleDeleteNameChange = (e) => {
-        const nameVal = e.target.value;
-        const found = products.find((p) =>
-            (p.title || p.name || '').toLowerCase().includes(nameVal.toLowerCase())
-        );
-        const rows = found ? products.filter((p) => String(p.local_id) === String(found.local_id)) : [];
-
-        setDeleteData((prev) => ({
-            ...prev,
-            product_name: nameVal,
-            product_id: found ? String(found.local_id) : '',
-            size: rows.length === 1 ? (rows[0].size || '') : ''
+            rows: prev.rows.length > 1 ? prev.rows.filter((_, i) => i !== index) : prev.rows
         }));
     };
 
@@ -259,33 +294,77 @@ const DashboardPage = () => {
         }
     };
 
-    // 2. Tovar sotish (tanlangan razmer bo'yicha)
+    // 2. Tovar sotish — bir vaqtning o'zida bir nechta razmerni sotish mumkin
+    // ("+ Yana razmer qo'shish" orqali qo'shilgan har bir qator alohida item
+    // sifatida backendga yuboriladi va bitta savdo sifatida birgalikda amalga oshiriladi)
     const handleSellProduct = async (e) => {
         e.preventDefault();
-        if (!sellData.product_id || sellGroupRows.length === 0) {
-            alert("Iltimos, mavjud tovar ID'sini kiriting yoki nomini tanlang!");
+
+        if (!sellGroup) {
+            alert("Iltimos, sotiladigan tovarni tanlang!");
             return;
         }
-        if (sellGroupRows.length > 1 && !sellData.size) {
-            alert("Iltimos, sotilayotgan tovarning razmerini tanlang!");
+
+        const items = [];
+        const seenVariantIds = new Set();
+
+        for (let i = 0; i < sellData.rows.length; i++) {
+            const row = sellData.rows[i];
+
+            if (sellGroup.variants.length > 1 && !row.size) {
+                alert(`${i + 1}-qatorda razmerni tanlang!`);
+                return;
+            }
+
+            const variant = resolveVariant(sellGroup, row);
+            if (!variant) {
+                alert(`${i + 1}-qatordagi razmer bo'yicha tovar topilmadi!`);
+                return;
+            }
+
+            if (seenVariantIds.has(variant.id)) {
+                alert("Bir xil razmerni savatchada faqat bir marta tanlang!");
+                return;
+            }
+            seenVariantIds.add(variant.id);
+
+            const qty = Number(row.sell_quantity);
+            const price = Number(row.selling_price);
+
+            if (!qty || qty <= 0) {
+                alert(`${i + 1}-qatorda sotilayotgan sonni to'g'ri kiriting!`);
+                return;
+            }
+            if (qty > variant.quantity) {
+                alert(`${i + 1}-qatorda: omborda faqat ${variant.quantity} ta bor!`);
+                return;
+            }
+            if (isNaN(price) || price < 0 || row.selling_price === '') {
+                alert(`${i + 1}-qatorda sotish narxini to'g'ri kiriting!`);
+                return;
+            }
+
+            items.push({
+                product_id: Number(variant.id),
+                sell_quantity: qty,
+                selling_price: price
+            });
+        }
+
+        if (items.length === 0) {
+            alert("Kamida bitta razmer va son kiritilishi shart!");
             return;
         }
-        if (!selectedSellProduct) {
-            alert("Tanlangan razmer bo'yicha tovar topilmadi!");
-            return;
-        }
+
         setIsSubmitting(true);
         try {
-            await api.post('/api/dashboard/sell', {
-                product_id: Number(selectedSellProduct.id),
-                sell_quantity: Number(sellData.sell_quantity) || 1,
-                selling_price: Number(sellData.selling_price) || 0
-            });
+            await api.post('/api/dashboard/sell', { items });
 
             setSellModal(false);
-            setSellData({ product_id: '', product_name: '', size: '', sell_quantity: 1, selling_price: '' });
+            setSellData({ product_id: '', rows: [emptySellRow()] });
+            setSellSearch('');
             await fetchData(false);
-            alert("Sotuv muvaffaqiyatli amalga oshirildi!");
+            alert(items.length > 1 ? "Barcha razmerlar muvaffaqiyatli sotildi!" : "Sotuv muvaffaqiyatli amalga oshirildi!");
         } catch (err) {
             alert(err.response?.data?.message || "Sotuvda xatolik yuz berdi!");
         } finally {
@@ -315,33 +394,71 @@ const DashboardPage = () => {
         }
     };
 
-    // 4. Tovarni kamaytirish / O'chirish (tanlangan razmer bo'yicha)
+    // 4. Tovarni kamaytirish / O'chirish — bir vaqtning o'zida bir nechta
+    // razmerdan olib tashlash mumkin (savatcha uslubida, sotuv modaliga o'xshash)
     const handleDeleteProduct = async (e) => {
         e.preventDefault();
-        if (!deleteData.product_id || deleteGroupRows.length === 0) {
-            alert("Iltimos, mavjud tovar ID'sini kiriting yoki nomini tanlang!");
+
+        if (!deleteGroup) {
+            alert("Iltimos, o'chiriladigan/kamaytiriladigan tovarni tanlang!");
             return;
         }
-        if (deleteGroupRows.length > 1 && !deleteData.size) {
-            alert("Iltimos, o'chiriladigan/kamaytiriladigan tovarning razmerini tanlang!");
+
+        const items = [];
+        const seenVariantIds = new Set();
+
+        for (let i = 0; i < deleteData.rows.length; i++) {
+            const row = deleteData.rows[i];
+
+            if (deleteGroup.variants.length > 1 && !row.size) {
+                alert(`${i + 1}-qatorda razmerni tanlang!`);
+                return;
+            }
+
+            const variant = resolveVariant(deleteGroup, row);
+            if (!variant) {
+                alert(`${i + 1}-qatordagi razmer bo'yicha tovar topilmadi!`);
+                return;
+            }
+
+            if (seenVariantIds.has(variant.id)) {
+                alert("Bir xil razmerni ro'yxatda faqat bir marta tanlang!");
+                return;
+            }
+            seenVariantIds.add(variant.id);
+
+            const removeQty = row.remove_all ? variant.quantity : (Number(row.quantity_to_remove) || 0);
+
+            if (!removeQty || removeQty <= 0) {
+                alert(`${i + 1}-qatorda olib tashlanadigan sonni to'g'ri kiriting!`);
+                return;
+            }
+            if (removeQty > variant.quantity) {
+                alert(`${i + 1}-qatorda: omborda faqat ${variant.quantity} ta bor!`);
+                return;
+            }
+
+            items.push({
+                product_id: Number(variant.id),
+                remove_all: !!row.remove_all,
+                quantity_to_remove: removeQty
+            });
+        }
+
+        if (items.length === 0) {
+            alert("Kamida bitta razmer va son kiritilishi shart!");
             return;
         }
-        if (!selectedDeleteProduct) {
-            alert("Tanlangan razmer bo'yicha tovar topilmadi!");
-            return;
-        }
+
         setIsSubmitting(true);
         try {
-            await api.post('/api/dashboard/delete-product', {
-                product_id: Number(selectedDeleteProduct.id),
-                remove_all: deleteData.remove_all,
-                quantity_to_remove: deleteData.remove_all ? Number(selectedDeleteProduct.quantity) : Number(deleteData.quantity_to_remove) || 1
-            });
+            await api.post('/api/dashboard/delete-product', { items });
 
             setDeleteModal(false);
-            setDeleteData({ product_id: '', product_name: '', size: '', remove_all: false, quantity_to_remove: 1 });
+            setDeleteData({ product_id: '', rows: [emptyDeleteRow()] });
+            setDeleteSearch('');
             await fetchData(false);
-            alert("Amal muvaffaqiyatli bajarildi!");
+            alert(items.length > 1 ? "Barcha razmerlar bo'yicha amal bajarildi!" : "Amal muvaffaqiyatli bajarildi!");
         } catch (err) {
             alert(err.response?.data?.message || "O'chirishda xatolik yuz berdi!");
         } finally {
@@ -588,116 +705,164 @@ const DashboardPage = () => {
             {/* 🛒 TOVAR SOTISH MODALI */}
             {sellModal && (
                 <div className="modal-overlay">
-                    <div className="modal-box">
+                    <div className="modal-box modal-box-wide">
                         <div className="modal-header">
                             <h3>🛒 Tovar Sotish</h3>
                         </div>
 
                         <form onSubmit={handleSellProduct} className="product-form">
                             <div className="form-group">
-                                <label>Tovar Nomi bo'yicha qidirish :</label>
+                                <label>Tovar bo'yicha qidirish :</label>
                                 <input
                                     type="text"
-                                    placeholder="Masalan: Nike, Divan..."
-                                    value={sellData.product_name}
-                                    onChange={handleSellNameChange}
+                                    placeholder="ID, nomi, kategoriya, rang yoki razmer..."
+                                    value={sellSearch}
+                                    onChange={(e) => setSellSearch(e.target.value)}
                                     className="form-input"
                                 />
                             </div>
 
                             <div className="form-group">
-                                <label>Tovar ID'si * :</label>
-                                <input
-                                    type="text"
-                                    placeholder="Masalan: 3"
+                                <label>Tovarni tanlang * :</label>
+                                <select
                                     value={sellData.product_id}
-                                    onChange={handleSellIdChange}
+                                    onChange={(e) => handleSellGroupSelect(e.target.value)}
                                     required
                                     className="form-input"
-                                />
+                                >
+                                    <option value="">-- Tovarni tanlang --</option>
+                                    {filteredSellGroups.map((g) => (
+                                        <option key={g.local_id} value={g.local_id}>
+                                            #{g.local_id} — {g.name} {g.color ? `(${g.color})` : ''} — jami: {g.variants.reduce((s, v) => s + v.quantity, 0)} ta
+                                        </option>
+                                    ))}
+                                </select>
+                                {sellSearch && filteredSellGroups.length === 0 && (
+                                    <div className="error-text">⚠️ Qidiruvga mos tovar topilmadi!</div>
+                                )}
                             </div>
 
-                            {sellData.product_id && sellGroupRows.length === 0 && (
-                                <div className="error-text">
-                                    ⚠️ Bunday ID ga ega tovar topilmadi!
-                                </div>
-                            )}
-
-                            {sellGroupRows.length > 1 && (
-                                <div className="form-group">
-                                    <label>Razmer * :</label>
-                                    <select
-                                        value={sellData.size}
-                                        onChange={(e) => setSellData({ ...sellData, size: e.target.value })}
-                                        required
-                                        className="form-input"
-                                    >
-                                        <option value="">-- Razmerni tanlang --</option>
-                                        {sellGroupRows.map((r) => (
-                                            <option key={r.id} value={r.size || ''}>
-                                                {r.size || 'Standart'} (Qoldiq: {r.quantity} ta)
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            )}
-
-                            {selectedSellProduct && (
-                                <div className="info-banner info-success">
-                                    ✅ Topildi: <b>{selectedSellProduct.title || selectedSellProduct.name}</b>
-                                    ({selectedSellProduct.color || 'Rangsiz'} | O'lchami: {selectedSellProduct.size || 'Standart'})
-                                    — Qoldiq: {selectedSellProduct.quantity} ta
-                                </div>
-                            )}
-
-                            <div className="form-group">
-                                <label>Sotilayotgan Soni (Dona) * :</label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max={selectedSellProduct?.quantity || 1}
-                                    value={sellData.sell_quantity}
-                                    onChange={(e) => setSellData({ ...sellData, sell_quantity: e.target.value })}
-                                    required
-                                    className="form-input"
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label>Sotish Narxi (1 dona uchun) * :</label>
-                                <input
-                                    type="number"
-                                    value={sellData.selling_price}
-                                    onChange={(e) => setSellData({ ...sellData, selling_price: e.target.value })}
-                                    placeholder="350000"
-                                    required
-                                    className="form-input"
-                                />
-                            </div>
-
-                            {selectedSellProduct && Number(sellData.selling_price) > 0 && Number(sellData.sell_quantity) > 0 && (
-                                <div className="calculation-box">
-                                    <div className="calc-row">
-                                        <span>Jami tushum:</span>
-                                        <strong>
-                                            {formatSum(Number(sellData.selling_price) * Number(sellData.sell_quantity))} so'm
-                                        </strong>
+                            {sellGroup && (
+                                <>
+                                    <div className="info-banner info-success">
+                                        ✅ Tanlangan: <b>{sellGroup.name}</b> ({sellGroup.color || 'Rangsiz'}) —
+                                        mavjud razmerlar: {sellGroup.variants.map((v) => `${v.size || 'Standart'} (${v.quantity} ta)`).join(', ')}
                                     </div>
-                                    <div className="calc-row calc-total">
-                                        <span>Kutilayotgan foyda:</span>
-                                        <strong className={((Number(sellData.selling_price) - Number(selectedSellProduct.cost_price || 0)) * Number(sellData.sell_quantity)) >= 0 ? "profit-plus" : "profit-minus"}>
-                                            {((Number(sellData.selling_price) - Number(selectedSellProduct.cost_price || 0)) * Number(sellData.sell_quantity)) >= 0 ? '+' : ''}
-                                            {formatSum((Number(sellData.selling_price) - Number(selectedSellProduct.cost_price || 0)) * Number(sellData.sell_quantity))} so'm
-                                        </strong>
-                                    </div>
-                                </div>
+
+                                    {sellData.rows.map((row, index) => {
+                                        const variant = resolveVariant(sellGroup, row);
+                                        const usedSizes = usedSellSizes(index);
+                                        return (
+                                            <div className="cart-row" key={index}>
+                                                {sellGroup.variants.length > 1 && (
+                                                    <div className="form-group">
+                                                        <label>Razmer * ({index + 1}-qator) :</label>
+                                                        <select
+                                                            value={row.size}
+                                                            onChange={(e) => updateSellRow(index, { size: e.target.value })}
+                                                            required
+                                                            className="form-input"
+                                                        >
+                                                            <option value="">-- Razmerni tanlang --</option>
+                                                            {sellGroup.variants
+                                                                .filter((v) => !usedSizes.includes(v.size) || v.size === row.size)
+                                                                .map((v) => (
+                                                                    <option key={v.id} value={v.size || ''}>
+                                                                        {v.size || 'Standart'} (Qoldiq: {v.quantity} ta)
+                                                                    </option>
+                                                                ))}
+                                                        </select>
+                                                    </div>
+                                                )}
+
+                                                {variant && (
+                                                    <div className="cart-row-fields">
+                                                        <div className="form-group">
+                                                            <label>Soni (Dona) * :</label>
+                                                            <input
+                                                                type="number"
+                                                                min="1"
+                                                                max={variant.quantity}
+                                                                value={row.sell_quantity}
+                                                                onChange={(e) => updateSellRow(index, { sell_quantity: e.target.value })}
+                                                                required
+                                                                className="form-input"
+                                                            />
+                                                        </div>
+                                                        <div className="form-group">
+                                                            <label>Sotish narxi (1 dona) * :</label>
+                                                            <input
+                                                                type="number"
+                                                                value={row.selling_price}
+                                                                onChange={(e) => updateSellRow(index, { selling_price: e.target.value })}
+                                                                placeholder="350000"
+                                                                required
+                                                                className="form-input"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {sellData.rows.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeSellRow(index)}
+                                                        className="btn btn-remove-row"
+                                                    >
+                                                        ✕ Qatorni olib tashlash
+                                                    </button>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+
+                                    {canAddMoreSellRows && (
+                                        <button type="button" onClick={addSellRow} className="btn btn-add-row">
+                                            + Yana razmer qo'shish
+                                        </button>
+                                    )}
+
+                                    {(() => {
+                                        const validRows = sellData.rows
+                                            .map((row) => ({ row, variant: resolveVariant(sellGroup, row) }))
+                                            .filter(({ variant, row }) => variant && Number(row.selling_price) >= 0 && row.selling_price !== '' && Number(row.sell_quantity) > 0);
+
+                                        if (validRows.length === 0) return null;
+
+                                        const totalRevenue = validRows.reduce((s, { row }) => s + Number(row.selling_price) * Number(row.sell_quantity), 0);
+                                        const totalProfit = validRows.reduce((s, { row, variant }) => s + (Number(row.selling_price) - Number(variant.cost_price || sellGroup.cost_price || 0)) * Number(row.sell_quantity), 0);
+
+                                        return (
+                                            <div className="calculation-box">
+                                                <div className="calc-row">
+                                                    <span>Jami tushum:</span>
+                                                    <strong>{formatSum(totalRevenue)} so'm</strong>
+                                                </div>
+                                                <div className="calc-row calc-total">
+                                                    <span>Kutilayotgan foyda:</span>
+                                                    <strong className={totalProfit >= 0 ? "profit-plus" : "profit-minus"}>
+                                                        {totalProfit >= 0 ? '+' : ''}{formatSum(totalProfit)} so'm
+                                                    </strong>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+                                </>
                             )}
 
                             <div className="modal-actions">
-                                <button type="submit" disabled={isSubmitting || !selectedSellProduct} className="btn btn-primary">
+                                <button type="submit" disabled={isSubmitting || !sellGroup} className="btn btn-primary">
                                     {isSubmitting ? "Sotilmoqda..." : "Sotuvni Bajarish"}
                                 </button>
-                                <button type="button" onClick={() => setSellModal(false)} className="btn btn-danger">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSellModal(false);
+                                        setSellData({ product_id: '', rows: [emptySellRow()] });
+                                        setSellSearch('');
+                                    }}
+                                    className="btn btn-danger"
+                                >
                                     Bekor qilish
                                 </button>
                             </div>
@@ -766,105 +931,145 @@ const DashboardPage = () => {
             {/* 🗑️ TOVARNI O'CHIRISH MODALI */}
             {deleteModal && (
                 <div className="modal-overlay">
-                    <div className="modal-box">
+                    <div className="modal-box modal-box-wide">
                         <div className="modal-header">
                             <h3>🗑️ Tovarni O'chirish / Kamaytirish</h3>
                         </div>
 
                         <form onSubmit={handleDeleteProduct} className="product-form">
                             <div className="form-group">
-                                <label>Tovar Nomi bo'yicha qidirish :</label>
+                                <label>Tovar bo'yicha qidirish :</label>
                                 <input
                                     type="text"
-                                    placeholder="Masalan: Nike, Divan..."
-                                    value={deleteData.product_name}
-                                    onChange={handleDeleteNameChange}
+                                    placeholder="ID, nomi, kategoriya, rang yoki razmer..."
+                                    value={deleteSearch}
+                                    onChange={(e) => setDeleteSearch(e.target.value)}
                                     className="form-input"
                                 />
                             </div>
 
                             <div className="form-group">
-                                <label>Tovar ID'si * :</label>
-                                <input
-                                    type="text"
-                                    placeholder="Masalan: 3"
+                                <label>Tovarni tanlang * :</label>
+                                <select
                                     value={deleteData.product_id}
-                                    onChange={handleDeleteIdChange}
+                                    onChange={(e) => handleDeleteGroupSelect(e.target.value)}
                                     required
                                     className="form-input"
-                                />
+                                >
+                                    <option value="">-- Tovarni tanlang --</option>
+                                    {filteredDeleteGroups.map((g) => (
+                                        <option key={g.local_id} value={g.local_id}>
+                                            #{g.local_id} — {g.name} {g.color ? `(${g.color})` : ''} — jami: {g.variants.reduce((s, v) => s + v.quantity, 0)} ta
+                                        </option>
+                                    ))}
+                                </select>
+                                {deleteSearch && filteredDeleteGroups.length === 0 && (
+                                    <div className="error-text">⚠️ Qidiruvga mos tovar topilmadi!</div>
+                                )}
                             </div>
 
-                            {deleteData.product_id && deleteGroupRows.length === 0 && (
-                                <div className="error-text">
-                                    ⚠️ Bunday ID ga ega tovar topilmadi!
-                                </div>
-                            )}
+                            {deleteGroup && (
+                                <>
+                                    <div className="info-banner info-danger">
+                                        <div><strong>Tovar:</strong> {deleteGroup.name} ({deleteGroup.color || 'Rangsiz'})</div>
+                                        <div><strong>Kategoriya:</strong> {deleteGroup.category || 'Umumiy'}</div>
+                                        <div><strong>Mavjud razmerlar:</strong> {deleteGroup.variants.map((v) => `${v.size || 'Standart'} (${v.quantity} ta)`).join(', ')}</div>
+                                    </div>
 
-                            {deleteGroupRows.length > 1 && (
-                                <div className="form-group">
-                                    <label>Razmer * :</label>
-                                    <select
-                                        value={deleteData.size}
-                                        onChange={(e) => setDeleteData({ ...deleteData, size: e.target.value })}
-                                        required
-                                        className="form-input"
-                                    >
-                                        <option value="">-- Razmerni tanlang --</option>
-                                        {deleteGroupRows.map((r) => (
-                                            <option key={r.id} value={r.size || ''}>
-                                                {r.size || 'Standart'} (Qoldiq: {r.quantity} ta)
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            )}
+                                    {deleteData.rows.map((row, index) => {
+                                        const variant = resolveVariant(deleteGroup, row);
+                                        const usedSizes = usedDeleteSizes(index);
+                                        return (
+                                            <div className="cart-row" key={index}>
+                                                {deleteGroup.variants.length > 1 && (
+                                                    <div className="form-group">
+                                                        <label>Razmer * ({index + 1}-qator) :</label>
+                                                        <select
+                                                            value={row.size}
+                                                            onChange={(e) => updateDeleteRow(index, { size: e.target.value })}
+                                                            required
+                                                            className="form-input"
+                                                        >
+                                                            <option value="">-- Razmerni tanlang --</option>
+                                                            {deleteGroup.variants
+                                                                .filter((v) => !usedSizes.includes(v.size) || v.size === row.size)
+                                                                .map((v) => (
+                                                                    <option key={v.id} value={v.size || ''}>
+                                                                        {v.size || 'Standart'} (Qoldiq: {v.quantity} ta)
+                                                                    </option>
+                                                                ))}
+                                                        </select>
+                                                    </div>
+                                                )}
 
-                            {selectedDeleteProduct && (
-                                <div className="info-banner info-danger">
-                                    <div><strong>O'chirilayotgan Tovar:</strong> {selectedDeleteProduct.title || selectedDeleteProduct.name}</div>
-                                    <div><strong>Kategoriya:</strong> {selectedDeleteProduct.category || 'Umumiy'}</div>
-                                    <div><strong>Rangi:</strong> {selectedDeleteProduct.color || '-'}</div>
-                                    <div><strong>O'lchami:</strong> {selectedDeleteProduct.size || 'Standart'}</div>
-                                    <div><strong>Ombordagi qoldiq:</strong> {selectedDeleteProduct.quantity} ta</div>
-                                </div>
-                            )}
+                                                {variant && (
+                                                    <>
+                                                        <div className="form-group checkbox-group">
+                                                            <label>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={row.remove_all}
+                                                                    onChange={(e) => updateDeleteRow(index, { remove_all: e.target.checked })}
+                                                                />
+                                                                <span>Butunlay o'chirish (qoldiq: {variant.quantity} ta)</span>
+                                                            </label>
+                                                        </div>
 
-                            <div className="form-group checkbox-group">
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        checked={deleteData.remove_all}
-                                        onChange={(e) => setDeleteData({ ...deleteData, remove_all: e.target.checked })}
-                                    />
-                                    <span>Butunlay o'chirib tashlash (barcha qoldiqni yo'qotish)</span>
-                                </label>
-                            </div>
+                                                        {!row.remove_all && (
+                                                            <div className="form-group">
+                                                                <label>O'chiriladigan dona soni :</label>
+                                                                <input
+                                                                    type="number"
+                                                                    min="1"
+                                                                    max={variant.quantity}
+                                                                    value={row.quantity_to_remove}
+                                                                    onChange={(e) => updateDeleteRow(index, { quantity_to_remove: e.target.value })}
+                                                                    className="form-input"
+                                                                    required
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                )}
 
-                            {!deleteData.remove_all && (
-                                <div className="form-group">
-                                    <label>O'chiriladigan dona soni :</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        max={selectedDeleteProduct?.quantity || 1}
-                                        value={deleteData.quantity_to_remove}
-                                        onChange={(e) => setDeleteData({ ...deleteData, quantity_to_remove: e.target.value })}
-                                        className="form-input"
-                                        required
-                                    />
-                                </div>
+                                                {deleteData.rows.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeDeleteRow(index)}
+                                                        className="btn btn-remove-row"
+                                                    >
+                                                        ✕ Qatorni olib tashlash
+                                                    </button>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+
+                                    {canAddMoreDeleteRows && (
+                                        <button type="button" onClick={addDeleteRow} className="btn btn-add-row">
+                                            + Yana razmer qo'shish
+                                        </button>
+                                    )}
+                                </>
                             )}
 
                             <div className="modal-actions">
                                 <button
                                     type="submit"
-                                    disabled={isSubmitting || !selectedDeleteProduct}
+                                    disabled={isSubmitting || !deleteGroup}
                                     className="btn btn-delete"
                                 >
-                                    {isSubmitting ? "Bajarilmoqda..." : deleteData.remove_all ? "Butunlay O'chirish" : "Kamaytirish"}
+                                    {isSubmitting ? "Bajarilmoqda..." : "Amalni Bajarish"}
                                 </button>
-                                <button type="button" onClick={() => setDeleteModal(false)} className="btn btn-secondary">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setDeleteModal(false);
+                                        setDeleteData({ product_id: '', rows: [emptyDeleteRow()] });
+                                        setDeleteSearch('');
+                                    }}
+                                    className="btn btn-secondary"
+                                >
                                     Bekor qilish
                                 </button>
                             </div>
