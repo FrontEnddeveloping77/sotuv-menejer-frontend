@@ -23,7 +23,8 @@
 }
 
 .dashboard-header h2 {
-    font-size: 22px !important;
+    font-size: 24px !important;
+    /* 22px -> 24px */
     font-weight: 700 !important;
     color: #0f172a !important;
     margin: 0 !important;
@@ -43,7 +44,8 @@
 .stats-title {
     margin: 20px 0 12px 0 !important;
     color: #0f172a !important;
-    font-size: 16px !important;
+    font-size: 18px !important;
+    /* 16px -> 18px */
     font-weight: 700 !important;
 }
 
@@ -53,7 +55,7 @@
 
 .stats-grid {
     display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
     gap: 16px !important;
     margin-bottom: 24px !important;
 }
@@ -66,7 +68,7 @@
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
-    padding: 16px 20px !important;
+    padding: 18px 20px !important;
     background-color: #ffffff !important;
     border-radius: 12px !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
@@ -75,19 +77,21 @@
 
 .stats-grid .stat-card h4,
 .stat-card h4 {
-    font-size: 13px !important;
+    font-size: 14px !important;
+    /* 13px -> 14px */
     font-weight: 700 !important;
     color: #475569 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
     margin: 0 0 12px 0 !important;
-    padding-bottom: 6px !important;
+    padding-bottom: 8px !important;
     border-bottom: 1px solid #f1f5f9 !important;
 }
 
 .stats-grid .stat-card h3,
 .stat-card h3 {
-    font-size: 18px !important;
+    font-size: 20px !important;
+    /* 18px -> 20px */
     font-weight: 700 !important;
     color: #0f172a !important;
     margin: 0 0 8px 0 !important;
@@ -95,10 +99,11 @@
 
 .stats-grid .stat-card p,
 .stat-card p {
-    font-size: 13px !important;
+    font-size: 15px !important;
+    /* 13px -> 15px */
     font-weight: 500 !important;
     color: #64748b !important;
-    margin: 6px 0 0 0 !important;
+    margin: 8px 0 0 0 !important;
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
@@ -106,7 +111,8 @@
 
 .stats-grid .stat-card p b,
 .stat-card p b {
-    font-size: 13px !important;
+    font-size: 15px !important;
+    /* 13px -> 15px */
     font-weight: 600 !important;
     color: #1e293b !important;
 }
@@ -136,11 +142,12 @@
 .btn,
 .header-actions .btn,
 .header-buttons .btn {
-    padding: 10px 18px !important;
+    padding: 10px 20px !important;
     border-radius: 8px !important;
     border: none !important;
     font-weight: 600 !important;
-    font-size: 13px !important;
+    font-size: 14px !important;
+    /* 13px -> 14px */
     cursor: pointer !important;
     transition: all 0.2s ease !important;
     display: inline-flex !important;
@@ -239,7 +246,8 @@
 .category-header h3,
 .section-header h3 {
     margin: 0 !important;
-    font-size: 16px !important;
+    font-size: 18px !important;
+    /* 16px/17px -> 18px */
     color: #0f172a !important;
     font-weight: 700 !important;
 }
@@ -251,12 +259,13 @@
 }
 
 .category-btn {
-    padding: 6px 14px !important;
+    padding: 8px 16px !important;
     border-radius: 6px !important;
     border: 1px solid #cbd5e1 !important;
     background-color: #ffffff !important;
     color: #475569 !important;
-    font-size: 12px !important;
+    font-size: 13px !important;
+    /* 12px -> 13px */
     font-weight: 600 !important;
     cursor: pointer !important;
     transition: all 0.2s ease !important;
@@ -270,7 +279,8 @@
 
 .empty-text {
     color: #94a3b8 !important;
-    font-size: 13px !important;
+    font-size: 14px !important;
+    /* 13px -> 14px */
 }
 
 /* ==========================================
@@ -282,11 +292,12 @@ input[type="text"],
 input[type="number"],
 select {
     width: 100% !important;
-    max-width: 380px !important;
-    padding: 10px 14px !important;
+    max-width: 400px !important;
+    padding: 11px 16px !important;
     border: 1px solid #cbd5e1 !important;
     border-radius: 6px !important;
-    font-size: 13px !important;
+    font-size: 14px !important;
+    /* 13px -> 14px */
     color: #0f172a !important;
     background-color: #ffffff !important;
     box-sizing: border-box !important;
@@ -335,9 +346,10 @@ select:focus {
 
 .products-table th,
 .products-table td {
-    padding: 12px 16px !important;
+    padding: 14px 18px !important;
     border-bottom: 1px solid #e2e8f0 !important;
-    font-size: 13px !important;
+    font-size: 14px !important;
+    /* 13px -> 14px */
 }
 
 .products-table th {
@@ -345,7 +357,8 @@ select:focus {
     color: #64748b !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
-    font-size: 11px !important;
+    font-size: 12px !important;
+    /* 11px -> 12px */
     letter-spacing: 0.5px !important;
 }
 
@@ -361,15 +374,17 @@ select:focus {
     text-align: center !important;
     color: #94a3b8 !important;
     padding: 24px !important;
-    font-size: 14px !important;
+    font-size: 15px !important;
+    /* 14px -> 15px */
 }
 
 .category-badge {
     background-color: #eff6ff !important;
     color: #2563eb !important;
-    padding: 4px 10px !important;
+    padding: 5px 12px !important;
     border-radius: 12px !important;
-    font-size: 11px !important;
+    font-size: 12px !important;
+    /* 11px -> 12px */
     font-weight: 700 !important;
     display: inline-block !important;
 }
@@ -377,9 +392,10 @@ select:focus {
 .color-badge {
     background-color: #f1f5f9 !important;
     color: #475569 !important;
-    padding: 3px 8px !important;
+    padding: 4px 10px !important;
     border-radius: 6px !important;
-    font-size: 12px !important;
+    font-size: 13px !important;
+    /* 12px -> 13px */
     font-weight: 600 !important;
 }
 
@@ -418,7 +434,8 @@ select:focus {
     margin-top: 0 !important;
     margin-bottom: 16px !important;
     color: #0f172a !important;
-    font-size: 18px !important;
+    font-size: 20px !important;
+    /* 18px -> 20px */
     font-weight: 700 !important;
 }
 
@@ -435,7 +452,8 @@ select:focus {
 
 .product-form label,
 .form-group label {
-    font-size: 13px !important;
+    font-size: 14px !important;
+    /* 13px -> 14px */
     font-weight: 600 !important;
     color: #334155 !important;
 }
@@ -470,7 +488,8 @@ select:focus {
     cursor: pointer !important;
     font-weight: 600 !important;
     color: #dc2626 !important;
-    font-size: 13px !important;
+    font-size: 14px !important;
+    /* 13px -> 14px */
     margin: 0 !important;
     display: flex !important;
     align-items: center !important;
@@ -481,7 +500,8 @@ select:focus {
     padding: 10px !important;
     border-radius: 6px !important;
     font-weight: 600 !important;
-    font-size: 13px !important;
+    font-size: 14px !important;
+    /* 13px -> 14px */
     text-align: center !important;
     margin-top: 6px !important;
 }
@@ -508,8 +528,8 @@ select:focus {
     background-color: #2563eb !important;
     color: #ffffff !important;
     border: none !important;
-    width: 40px !important;
-    height: 40px !important;
+    width: 44px !important;
+    height: 44px !important;
     border-radius: 50% !important;
     cursor: pointer !important;
     box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3) !important;
@@ -531,7 +551,8 @@ select:focus {
     align-items: center !important;
     background-color: #f8fafc !important;
     z-index: 9999 !important;
-    font-size: 18px !important;
+    font-size: 20px !important;
+    /* 18px -> 20px */
     font-weight: 600 !important;
     color: #2563eb !important;
 }
@@ -539,8 +560,8 @@ select:focus {
 .loading-state::after,
 .loading-spinner::after {
     content: "" !important;
-    width: 32px !important;
-    height: 32px !important;
+    width: 34px !important;
+    height: 34px !important;
     margin-top: 14px !important;
     border: 3px solid #e2e8f0 !important;
     border-top-color: #2563eb !important;
@@ -567,7 +588,7 @@ select:focus {
     padding: 28px !important;
     border-radius: 12px !important;
     text-align: center !important;
-    max-width: 380px !important;
+    max-width: 400px !important;
     border: 1px solid #e2e8f0 !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
 }
