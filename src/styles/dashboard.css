@@ -352,6 +352,14 @@ select:focus {
     /* 13px -> 14px */
 }
 
+.products-table td {
+    padding: 14px 18px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    font-size: 14px !important;
+    text-transform: uppercase !important;
+    /* Barcha jadval uyachalarini katta harf qiladi */
+}
+
 .products-table th {
     background-color: #f8fafc !important;
     color: #64748b !important;
@@ -384,9 +392,10 @@ select:focus {
     padding: 5px 12px !important;
     border-radius: 12px !important;
     font-size: 12px !important;
-    /* 11px -> 12px */
     font-weight: 700 !important;
     display: inline-block !important;
+    text-transform: uppercase !important;
+    /* Matnni to'liq katta harf qiladi */
 }
 
 .color-badge {
@@ -395,8 +404,9 @@ select:focus {
     padding: 4px 10px !important;
     border-radius: 6px !important;
     font-size: 13px !important;
-    /* 12px -> 13px */
     font-weight: 600 !important;
+    text-transform: uppercase !important;
+    /* Matnni to'liq katta harf qiladi */
 }
 
 .warning-stock {
