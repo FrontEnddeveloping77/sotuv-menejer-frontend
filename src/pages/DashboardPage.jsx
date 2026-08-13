@@ -231,7 +231,11 @@ const DashboardPage = () => {
             setAddProductModal(false);
             setNewProduct({ category: '', name: '', color: '', cost_price: '', quantity: '' });
             await fetchData(false);
-            alert(`Tovar saqlandi! Biriktirilgan ID: #${res.data?.product?.id || res.data?.id || ''}`);
+
+            // ID o'rniga local_id olinadi, agar u bo'lmasa backend xabari yoki global id ishlatiladi
+            const displayId = res.data?.product?.local_id || res.data?.product?.id || '';
+            alert(res.data?.message || `Tovar saqlandi! Biriktirilgan ID: #${displayId}`);
+
         } catch (err) {
             alert(err.response?.data?.message || "Tovar qo'shishda xatolik yuz berdi!");
         } finally {
