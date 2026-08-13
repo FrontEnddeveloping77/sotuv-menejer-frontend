@@ -715,52 +715,21 @@ const DashboardPage = () => {
                                 <label>Tovar bo'yicha qidirish :</label>
                                 <input
                                     type="text"
-                                    placeholder="ID raqami (masalan: 1) yoki tovar nomi..."
+                                    placeholder="Tovar Nomi bilan qidirish"
                                     value={sellSearch}
-                                    onChange={(e) => {
-                                        const query = e.target.value;
-                                        setSellSearch(query);
+                                    onChange={(e) => setSellSearch(e.target.value)}
 
-                                        if (!query.trim()) {
-                                            setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
-                                            return;
-                                        }
-
-                                        const trimmedQuery = query.trim();
-                                        const isNumeric = /^\d+$/.test(trimmedQuery);
-
-                                        // Agar raqam kiritilsa - FAQAT ID si aniq mos kelgani. Harf yozilsa - nomi bo'yicha.
-                                        const foundGroup = productsGroups.find(g => {
-                                            if (isNumeric) {
-                                                return String(g.local_id) === trimmedQuery;
-                                            } else {
-                                                return g.name.toLowerCase().includes(trimmedQuery.toLowerCase());
-                                            }
-                                        });
-
-                                        if (foundGroup) {
-                                            setSellData(prev => ({ ...prev, product_id: String(foundGroup.local_id) }));
-                                            handleSellGroupSelect(foundGroup.local_id);
-                                        } else {
-                                            setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
-                                        }
-                                    }}
                                     className="form-input"
                                 />
                             </div>
 
                             <div className="form-group">
                                 <label>Tovarni tanlang * :</label>
-                                <select
-                                    value={sellData.product_id}
-                                    onChange={(e) => handleSellGroupSelect(e.target.value)}
-                                    required
-                                    className="form-input"
-                                >
-                                    <option value="">-- Tovarni tanlang --</option>
-                                    {filteredSellGroups.map((g) => (
-                                        <option key={g.local_id} value={g.local_id}>
-                                            #{g.local_id} — {g.name} {g.color ? `(${g.color})` : ''} — jami: {g.variants.reduce((s, v) => s + v.quantity, 0)} ta
+                                <select onChange={(e) => handleSellGroupSelect(e.target.value)}>
+                                    <option value="">-- Tovar tanlang --</option>
+                                    {filteredSellGroups.map((product) => (
+                                        <option key={product.id} value={product.id}>
+                                            {product.name}
                                         </option>
                                     ))}
                                 </select>
@@ -968,57 +937,26 @@ const DashboardPage = () => {
                                 <label>Tovar bo'yicha qidirish :</label>
                                 <input
                                     type="text"
-                                    placeholder="ID raqami (masalan: 1) yoki tovar nomi..."
-                                    value={sellSearch}
-                                    onChange={(e) => {
-                                        const query = e.target.value;
-                                        setSellSearch(query);
-
-                                        if (!query.trim()) {
-                                            setDeleteData(prev => ({ ...prev, product_id: '', rows: [emptyDeleteRow()] }));
-                                            return;
-                                        }
-
-                                        const trimmedQuery = query.trim();
-                                        const isNumeric = /^\d+$/.test(trimmedQuery);
-
-                                        const foundGroup = productsGroups.find(g => {
-                                            if (isNumeric) {
-                                                return String(g.local_id) === trimmedQuery;
-                                            } else {
-                                                return g.name.toLowerCase().includes(trimmedQuery.toLowerCase());
-                                            }
-                                        });
-
-                                        if (foundGroup) {
-                                            setDeleteData(prev => ({ ...prev, product_id: String(foundGroup.local_id) }));
-                                            handleDeleteGroupSelect(foundGroup.local_id);
-                                        } else {
-                                            setDeleteData(prev => ({ ...prev, product_id: '', rows: [emptyDeleteRow()] }));
-                                        }
-                                    }}
-                                    className="form-input"
+                                    placeholder="O'chirmoqchi bo'lgan tovar nomi..."
+                                    value={delSearch}
+                                    onChange={(e) => setDelSearch(e.target.value)}
+                                    className="search-input"
                                 />
-                            </div>
 
-                            <div className="form-group">
-                                <label>Tovarni tanlang * :</label>
-                                <select
-                                    value={deleteData.product_id}
-                                    onChange={(e) => handleDeleteGroupSelect(e.target.value)}
-                                    required
-                                    className="form-input"
-                                >
-                                    <option value="">-- Tovarni tanlang --</option>
-                                    {filteredDeleteGroups.map((g) => (
-                                        <option key={g.local_id} value={g.local_id}>
-                                            #{g.local_id} — {g.name} {g.color ? `(${g.color})` : ''} — jami: {g.variants.reduce((s, v) => s + v.quantity, 0)} ta
-                                        </option>
-                                    ))}
-                                </select>
-                                {deleteSearch && filteredDeleteGroups.length === 0 && (
-                                    <div className="error-text">⚠️ Qidiruvga mos tovar topilmadi!</div>
-                                )}
+                                <div className="form-group">
+                                    <label>Tovarni tanlang * :</label>
+                                    <select onChange={(e) => handleDelGroupSelect(e.target.value)}>
+                                        <option value="">-- Tovar tanlang --</option>
+                                        {filteredDeleteGroups.map((product) => (
+                                            <option key={product.id} value={product.id}>
+                                                {product.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {deleteSearch && filteredDeleteGroups.length === 0 && (
+                                        <div className="error-text">⚠️ Qidiruvga mos tovar topilmadi!</div>
+                                    )}
+                                </div>
                             </div>
 
                             {deleteGroup && (
