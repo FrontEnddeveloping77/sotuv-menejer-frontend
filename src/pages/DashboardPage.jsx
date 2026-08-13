@@ -18,7 +18,6 @@ api.interceptors.request.use((config) => {
 const DashboardPage = () => {
     const navigate = useNavigate();
 
-    // Statik va ma'lumotlar holatlari
     const [stats, setStats] = useState({
         storeName: "Mening Do'konim",
         totalProducts: 0,
@@ -44,17 +43,14 @@ const DashboardPage = () => {
     const [products, setProducts] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
 
-    // Loading holatlari
     const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Modallar holatlari
     const [addProductModal, setAddProductModal] = useState(false);
     const [sellModal, setSellModal] = useState(false);
     const [expenseModal, setExpenseModal] = useState(false);
     const [deleteModal, setDeleteModal] = useState(false);
 
-    // Formlar holati
     const [newProduct, setNewProduct] = useState({
         category: '',
         name: '',
@@ -64,9 +60,6 @@ const DashboardPage = () => {
         quantity: ''
     });
 
-    // Sotish formasi — endi "savatcha" (bir nechta razmerni bir vaqtda sotish)
-    // uslubida ishlaydi: avval tovar (local_id) tanlanadi, so'ng shu tovarning
-    // xohlagan sonda razmer-qatorlari ("+ Yana razmer qo'shish" orqali) qo'shiladi.
     const emptySellRow = () => ({ size: '', sell_quantity: 1, selling_price: '' });
     const [sellSearch, setSellSearch] = useState('');
     const [sellData, setSellData] = useState({
@@ -74,15 +67,12 @@ const DashboardPage = () => {
         rows: [emptySellRow()]
     });
 
-    // Rasxod formasi
     const [expenseData, setExpenseData] = useState({
         title: '',
         amount: '',
         expense_type: 'daily'
     });
 
-    // O'chirish formasi — xuddi sotish savatchasi kabi, bir nechta razmerni
-    // bitta amal bilan kamaytirish/o'chirish imkonini beradi.
     const emptyDeleteRow = () => ({ size: '', remove_all: false, quantity_to_remove: 1 });
     const [deleteSearch, setDeleteSearch] = useState('');
     const [deleteData, setDeleteData] = useState({
@@ -90,7 +80,6 @@ const DashboardPage = () => {
         rows: [emptyDeleteRow()]
     });
 
-    // Chiqish (Logout) funksiyasi
     const handleLogout = () => {
         if (window.confirm("Tizimdan chiqishni tasdiqlaysizmi?")) {
             localStorage.removeItem('token');
@@ -98,7 +87,6 @@ const DashboardPage = () => {
         }
     };
 
-    // Ma'lumotlarni yuklash
     const fetchData = async (showMainLoader = false) => {
         try {
             if (showMainLoader) setIsInitialLoading(true);
@@ -129,9 +117,6 @@ const DashboardPage = () => {
     };
 
     // --- RAZMERLARGA KO'RA GURUHLASH ---
-    // Bir xil local_id ga ega bo'lgan qatorlar (turli razmerlar) bitta "tovar" sifatida
-    // guruhlanadi, shu bilan jadvalda va statistikada har bir o'lchamning qoldig'i
-    // aniq ko'rinadi.
     const groupProductsByLocalId = (list) => {
         const map = new Map();
         (list || []).forEach((p) => {
@@ -157,26 +142,12 @@ const DashboardPage = () => {
 
     const productGroups = groupProductsByLocalId(products);
 
-    // --- SOTUV VA O'CHIRISH UCHUN TOVAR TANLASH VA KO'P RAZMERLI SAVATCHA MANTIG'I ---
-    // Tovar endi ishonchli <select> orqali (local_id bo'yicha) tanlanadi — bu eski
-    // "ID/nom yozib kiritish" usulidagi mos kelmaslik xatolarining oldini oladi va
-    // tanlangan tovarning barcha razmerlari (va har birining qoldig'i) har doim
-    // to'g'ri va aniq ko'rinishini kafolatlaydi.
+    // --- SOTUV VA O'CHIRISH UCHUN QIDIRUV: ENDI FAQAT NOM BO'YICHA ---
     const matchesQuery = (group, query) => {
         const q = query.toLowerCase().trim();
         if (!q) return true;
-        const idStr = group.local_id ? String(group.local_id) : '';
         const nameStr = (group.name || '').toLowerCase();
-        const categoryStr = (group.category || '').toLowerCase();
-        const colorStr = (group.color || '').toLowerCase();
-        const sizesStr = group.variants.map((v) => (v.size || '').toLowerCase()).join(' ');
-        return (
-            idStr.includes(q) ||
-            nameStr.includes(q) ||
-            categoryStr.includes(q) ||
-            colorStr.includes(q) ||
-            sizesStr.includes(q)
-        );
+        return nameStr.includes(q);
     };
 
     const filteredSellGroups = productGroups.filter((g) => matchesQuery(g, sellSearch));
@@ -185,17 +156,12 @@ const DashboardPage = () => {
     const sellGroup = productGroups.find((g) => String(g.local_id) === String(sellData.product_id)) || null;
     const deleteGroup = productGroups.find((g) => String(g.local_id) === String(deleteData.product_id)) || null;
 
-    // Berilgan tovar guruhi va bitta savatcha qatoridagi razmerga mos aniq bazadagi
-    // qatorni (variantni) topib beradi. Agar tovarda umuman razmer bo'lmasa
-    // (bitta "Standart" variant), razmer tanlashsiz o'sha yagona variant qaytariladi.
     const resolveVariant = (group, row) => {
         if (!group) return null;
         if (group.variants.length === 1) return group.variants[0];
         return group.variants.find((v) => String(v.size || '') === String(row.size || '')) || null;
     };
 
-    // Tanlangan tovarda hali savatga qo'shilmagan (band qilinmagan) razmerlar soni —
-    // "+ Yana razmer qo'shish" tugmasini shu asosda yoqamiz/o'chiramiz.
     const usedSellSizes = (excludeIndex) =>
         sellData.rows.filter((_, i) => i !== excludeIndex).map((r) => r.size);
     const usedDeleteSizes = (excludeIndex) =>
@@ -204,7 +170,6 @@ const DashboardPage = () => {
     const canAddMoreSellRows = sellGroup && sellData.rows.length < sellGroup.variants.length;
     const canAddMoreDeleteRows = deleteGroup && deleteData.rows.length < deleteGroup.variants.length;
 
-    // Tovar tanlanganda (select orqali) savatcha bitta bo'sh qator bilan qayta boshlanadi
     const handleSellGroupSelect = (localId) => {
         const group = productGroups.find((g) => String(g.local_id) === String(localId));
         setSellData({
@@ -267,7 +232,6 @@ const DashboardPage = () => {
         }));
     };
 
-    // 1. Tovar qo'shish (bir nechta razmer bilan)
     const handleAddProduct = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -294,9 +258,6 @@ const DashboardPage = () => {
         }
     };
 
-    // 2. Tovar sotish — bir vaqtning o'zida bir nechta razmerni sotish mumkin
-    // ("+ Yana razmer qo'shish" orqali qo'shilgan har bir qator alohida item
-    // sifatida backendga yuboriladi va bitta savdo sifatida birgalikda amalga oshiriladi)
     const handleSellProduct = async (e) => {
         e.preventDefault();
 
@@ -372,7 +333,6 @@ const DashboardPage = () => {
         }
     };
 
-    // 3. Rasxod qo'shish
     const handleAddExpense = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -394,8 +354,6 @@ const DashboardPage = () => {
         }
     };
 
-    // 4. Tovarni kamaytirish / O'chirish — bir vaqtning o'zida bir nechta
-    // razmerdan olib tashlash mumkin (savatcha uslubida, sotuv modaliga o'xshash)
     const handleDeleteProduct = async (e) => {
         e.preventDefault();
 
@@ -466,8 +424,6 @@ const DashboardPage = () => {
         }
     };
 
-    // Qidiruv bo'yicha filtrlash (guruh darajasida: ID, nomi, kategoriya, rangi yoki
-    // istalgan razmer mos kelsa, shu tovar guruhi ko'rsatiladi)
     const filteredGroups = productGroups.filter((g) => {
         const query = searchQuery.toLowerCase().trim();
         if (!query) return true;
@@ -493,7 +449,6 @@ const DashboardPage = () => {
 
     return (
         <div className="dashboard-container">
-            {/* SARLAVHA VA AMALLAR TUGMALARI */}
             <header className="dashboard-header">
                 <h2>🏬 {stats.storeName || "Mening Do'konim"} Boshqaruv Paneli</h2>
                 <div className="header-buttons">
@@ -505,7 +460,6 @@ const DashboardPage = () => {
                 </div>
             </header>
 
-            {/* STATISTIKA KARTALARI */}
             <section className="stats-grid">
                 <div className="stat-card">
                     <h4>Ombor Holati</h4>
@@ -532,7 +486,6 @@ const DashboardPage = () => {
                 </div>
             </section>
 
-            {/* QIDIRUV VA OMBOR JADVALI */}
             <section className="products-section">
                 <div className="section-header">
                     <h3>📦 Ombordagi Tovarlar</h3>
@@ -593,7 +546,6 @@ const DashboardPage = () => {
                 </table>
             </section>
 
-            {/* ➕ YANGI TOVAR QO'SHISH MODALI */}
             {addProductModal && (
                 <div className="modal-overlay">
                     <div className="modal-box">
@@ -641,7 +593,6 @@ const DashboardPage = () => {
                                     className="form-input"
                                 />
                             </div>
-                            {/* RAZMERLAR: bir nechta razmer vergul bilan kiritiladi */}
                             <div className="form-group">
                                 <label>Razmerlar (ixtiyoriy, bir nechtasini vergul bilan ajrating):</label>
                                 <input
@@ -669,7 +620,6 @@ const DashboardPage = () => {
                                 />
                             </div>
 
-                            {/* RAZMERLARGA TAQSIMLASH OLDINDAN KO'RISH */}
                             {newProduct.sizes && newProduct.quantity ? (() => {
                                 const list = [...new Set(
                                     newProduct.sizes.split(',').map((s) => s.trim()).filter(Boolean)
@@ -702,7 +652,7 @@ const DashboardPage = () => {
                 </div>
             )}
 
-            {/* 🛒 TOVAR SOTISH MODALI */}
+            {/* 🛒 TOVAR SOTISH MODALI — endi FAQAT NOM bo'yicha qidiradi */}
             {sellModal && (
                 <div className="modal-overlay">
                     <div className="modal-box modal-box-wide">
@@ -712,32 +662,12 @@ const DashboardPage = () => {
 
                         <form onSubmit={handleSellProduct} className="product-form">
                             <div className="form-group">
-                                <label>Tovar bo'yicha qidirish :</label>
+                                <label>Tovar nomi bo'yicha qidirish :</label>
                                 <input
-                                    type="number"
-                                    placeholder="Faqat ID raqamini yozing (masalan: 2)..."
+                                    type="text"
+                                    placeholder="Masalan: Nike, Divan..."
                                     value={sellSearch}
-                                    onChange={(e) => {
-                                        const idVal = e.target.value;
-                                        setSellSearch(idVal);
-
-                                        if (!idVal) {
-                                            // Agar input bo'shatilsa, tanlovni tozalaymiz
-                                            setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
-                                            return;
-                                        }
-
-                                        // Faqat kiritilgan ID bo'yicha mos tovarni qidiramiz
-                                        const foundGroup = productsGroups.find(g => String(g.local_id) === String(idVal));
-
-                                        if (foundGroup) {
-                                            // Agar shunday ID li tovar topilsa, uni avtomatik tanlaymiz
-                                            handleSellGroupSelect(foundGroup.local_id);
-                                        } else {
-                                            // Topilmasa ID tanlovini tozalaymiz
-                                            setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
-                                        }
-                                    }}
+                                    onChange={(e) => setSellSearch(e.target.value)}
                                     className="form-input"
                                 />
                             </div>
@@ -753,7 +683,7 @@ const DashboardPage = () => {
                                     <option value="">-- Tovarni tanlang --</option>
                                     {filteredSellGroups.map((g) => (
                                         <option key={g.local_id} value={g.local_id}>
-                                            #{g.local_id} — {g.name} {g.color ? `(${g.color})` : ''} — jami: {g.variants.reduce((s, v) => s + v.quantity, 0)} ta
+                                            {g.name} {g.color ? `(${g.color})` : ''} — jami: {g.variants.reduce((s, v) => s + v.quantity, 0)} ta
                                         </option>
                                     ))}
                                 </select>
@@ -891,7 +821,6 @@ const DashboardPage = () => {
                 </div>
             )}
 
-            {/* 💸 RASXOD MODALI (TEGILMADI) */}
             {expenseModal && (
                 <div className="modal-overlay">
                     <div className="modal-box">
@@ -948,7 +877,7 @@ const DashboardPage = () => {
                 </div>
             )}
 
-            {/* 🗑️ TOVARNI O'CHIRISH MODALI */}
+            {/* 🗑️ TOVARNI O'CHIRISH MODALI — endi FAQAT NOM bo'yicha qidiradi, o'z holatini ishlatadi */}
             {deleteModal && (
                 <div className="modal-overlay">
                     <div className="modal-box modal-box-wide">
@@ -958,32 +887,12 @@ const DashboardPage = () => {
 
                         <form onSubmit={handleDeleteProduct} className="product-form">
                             <div className="form-group">
-                                <label>Tovar bo'yicha qidirish :</label>
+                                <label>Tovar nomi bo'yicha qidirish :</label>
                                 <input
-                                    type="number"
-                                    placeholder="Faqat ID raqamini yozing (masalan: 2)..."
-                                    value={sellSearch}
-                                    onChange={(e) => {
-                                        const idVal = e.target.value;
-                                        setSellSearch(idVal);
-
-                                        if (!idVal) {
-                                            // Agar input bo'shatilsa, tanlovni tozalaymiz
-                                            setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
-                                            return;
-                                        }
-
-                                        // Faqat kiritilgan ID bo'yicha mos tovarni qidiramiz
-                                        const foundGroup = productsGroups.find(g => String(g.local_id) === String(idVal));
-
-                                        if (foundGroup) {
-                                            // Agar shunday ID li tovar topilsa, uni avtomatik tanlaymiz
-                                            handleSellGroupSelect(foundGroup.local_id);
-                                        } else {
-                                            // Topilmasa ID tanlovini tozalaymiz
-                                            setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
-                                        }
-                                    }}
+                                    type="text"
+                                    placeholder="Masalan: Nike, Divan..."
+                                    value={deleteSearch}
+                                    onChange={(e) => setDeleteSearch(e.target.value)}
                                     className="form-input"
                                 />
                             </div>
@@ -999,7 +908,7 @@ const DashboardPage = () => {
                                     <option value="">-- Tovarni tanlang --</option>
                                     {filteredDeleteGroups.map((g) => (
                                         <option key={g.local_id} value={g.local_id}>
-                                            #{g.local_id} — {g.name} {g.color ? `(${g.color})` : ''} — jami: {g.variants.reduce((s, v) => s + v.quantity, 0)} ta
+                                            {g.name} {g.color ? `(${g.color})` : ''} — jami: {g.variants.reduce((s, v) => s + v.quantity, 0)} ta
                                         </option>
                                     ))}
                                 </select>
