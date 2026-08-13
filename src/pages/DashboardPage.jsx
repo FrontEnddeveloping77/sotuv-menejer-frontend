@@ -715,25 +715,30 @@ const DashboardPage = () => {
                                 <label>Tovar bo'yicha qidirish :</label>
                                 <input
                                     type="text"
-                                    placeholder="ID raqami yoki nomini yozing (masalan: 1 yoki futbolka)..."
+                                    placeholder="ID raqami (masalan: 1) yoki tovar nomi..."
                                     value={sellSearch}
                                     onChange={(e) => {
                                         const query = e.target.value;
                                         setSellSearch(query);
 
-                                        if (!query) {
+                                        if (!query.trim()) {
                                             setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
                                             return;
                                         }
 
-                                        // Aniq mos keladigan ID yoki nomni qidiramiz
-                                        const foundGroup = productsGroups.find(g =>
-                                            String(g.local_id) === String(query.trim()) ||
-                                            g.name.toLowerCase().includes(query.toLowerCase())
-                                        );
+                                        const trimmedQuery = query.trim();
+                                        const isNumeric = /^\d+$/.test(trimmedQuery);
+
+                                        // Agar raqam kiritilsa - FAQAT ID si aniq mos kelgani. Harf yozilsa - nomi bo'yicha.
+                                        const foundGroup = productsGroups.find(g => {
+                                            if (isNumeric) {
+                                                return String(g.local_id) === trimmedQuery;
+                                            } else {
+                                                return g.name.toLowerCase().includes(trimmedQuery.toLowerCase());
+                                            }
+                                        });
 
                                         if (foundGroup) {
-                                            // Avtomatik ravishda ID ni o'rnatamiz va tanlaymiz
                                             setSellData(prev => ({ ...prev, product_id: String(foundGroup.local_id) }));
                                             handleSellGroupSelect(foundGroup.local_id);
                                         } else {
@@ -963,21 +968,27 @@ const DashboardPage = () => {
                                 <label>Tovar bo'yicha qidirish :</label>
                                 <input
                                     type="text"
-                                    placeholder="ID raqami yoki nomini yozing (masalan: 1 yoki futbolka)..."
+                                    placeholder="ID raqami (masalan: 1) yoki tovar nomi..."
                                     value={sellSearch}
                                     onChange={(e) => {
                                         const query = e.target.value;
                                         setSellSearch(query);
 
-                                        if (!query) {
-                                            setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
+                                        if (!query.trim()) {
+                                            setDeleteData(prev => ({ ...prev, product_id: '', rows: [emptyDeleteRow()] }));
                                             return;
                                         }
 
-                                        const foundGroup = productsGroups.find(g =>
-                                            String(g.local_id) === String(query.trim()) ||
-                                            g.name.toLowerCase().includes(query.toLowerCase())
-                                        );
+                                        const trimmedQuery = query.trim();
+                                        const isNumeric = /^\d+$/.test(trimmedQuery);
+
+                                        const foundGroup = productsGroups.find(g => {
+                                            if (isNumeric) {
+                                                return String(g.local_id) === trimmedQuery;
+                                            } else {
+                                                return g.name.toLowerCase().includes(trimmedQuery.toLowerCase());
+                                            }
+                                        });
 
                                         if (foundGroup) {
                                             setDeleteData(prev => ({ ...prev, product_id: String(foundGroup.local_id) }));
