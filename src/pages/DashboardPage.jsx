@@ -408,7 +408,12 @@ const DashboardPage = () => {
                         {filteredProducts.length > 0 ? (
                             filteredProducts.map((p, index) => (
                                 <tr key={p.id}>
-                                    <td><b>#{index + 1}</b></td>
+                                    {/* 
+                  Agar massiv teskari (DESC) tartibda kelayotgan bo'lsa:
+                  Jami elementlar sonidan joriy indeksni ayiramiz.
+                  Masalan, 3 ta tovar bo'lsa: 3-0=#3 (birinchi qator), 3-1=#2, 3-2=#1 (eng pastki qator)
+                */}
+                                    <td><b>#{filteredProducts.length - index}</b></td>
 
                                     <td><span className="category-badge">{p.category || 'Umumiy'}</span></td>
                                     <td><b>{p.title || p.name}</b></td>
