@@ -51,12 +51,13 @@ const DashboardPage = () => {
     const [deleteModal, setDeleteModal] = useState(false);
 
     // Formlar holati
+    // State'dan "size" olib tashlandi
     const [newProduct, setNewProduct] = useState({
         category: '',
         name: '',
-        color: '',
         cost_price: '',
-        quantity: 1
+        color: '',
+        quantity: ''
     });
 
     const [sellData, setSellData] = useState({
@@ -281,66 +282,84 @@ const DashboardPage = () => {
                 </table>
             </section>
 
-            {/* ➕ YANGI TOVAR QO'SHISH MODALI (O'LCHAM UMUMAN YO'Q) */}
+            {/* ➕ YANGI TOVAR QO'SHISH MODALI */}
             {addProductModal && (
                 <div className="modal-overlay">
                     <div className="modal-box">
                         <h3>➕ Yangi Tovar Qo‘shish</h3>
                         <form onSubmit={handleAddProduct} className="product-form">
-                            <label>Kategoriya (Ixtiyoriy):</label>
-                            <input
-                                type="text"
-                                placeholder="Masalan: noutbuk"
-                                value={newProduct.category}
-                                onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
-                                className="form-input"
-                            />
 
-                            <label>Tovar Nomi * :</label>
-                            <input
-                                type="text"
-                                placeholder="Masalan: Acer core i 5"
-                                value={newProduct.name}
-                                onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                                required
-                                className="form-input"
-                            />
+                            <div className="form-group">
+                                <label>Kategoriya (Ixtiyoriy):</label>
+                                <input
+                                    type="text"
+                                    placeholder="Divan, Krossovka, Tufli..."
+                                    value={newProduct.category}
+                                    onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
+                                    className="form-input"
+                                />
+                            </div>
 
-                            <label>Kelgan Narxi (Tannarx) * :</label>
-                            <input
-                                type="number"
-                                placeholder="1000000"
-                                value={newProduct.cost_price}
-                                onChange={(e) => setNewProduct({ ...newProduct, cost_price: e.target.value })}
-                                required
-                                className="form-input"
-                            />
+                            <div className="form-group">
+                                <label>Tovar Nomi * :</label>
+                                <input
+                                    type="text"
+                                    placeholder="Nike Air Max"
+                                    value={newProduct.name}
+                                    onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                                    required
+                                    className="form-input"
+                                />
+                            </div>
 
-                            {/* FAQAT RANGI BOR - O'LCHAMI (SIZE) UMUMAN OLIB TASHALDI */}
-                            <label>Rangi:</label>
-                            <input
-                                type="text"
-                                placeholder="Masalan: Qora"
-                                value={newProduct.color}
-                                onChange={(e) => setNewProduct({ ...newProduct, color: e.target.value })}
-                                className="form-input"
-                            />
+                            <div className="form-group">
+                                <label>Kelgan Narxi (Tannarx) * :</label>
+                                <input
+                                    type="number"
+                                    placeholder="140000"
+                                    value={newProduct.cost_price}
+                                    onChange={(e) => setNewProduct({ ...newProduct, cost_price: e.target.value })}
+                                    required
+                                    className="form-input"
+                                />
+                            </div>
 
-                            <label>Soni (Sklad):</label>
-                            <input
-                                type="number"
-                                min="1"
-                                placeholder="10"
-                                value={newProduct.quantity}
-                                onChange={(e) => setNewProduct({ ...newProduct, quantity: e.target.value })}
-                                required
-                                className="form-input"
-                            />
+                            {/* FAQAT RANGI FIELD'I (O'lchami inputi butunlay olib tashlandi va full-width qilindi) */}
+                            <div className="form-group">
+                                <label>Rangi:</label>
+                                <input
+                                    type="text"
+                                    placeholder="Qora"
+                                    value={newProduct.color}
+                                    onChange={(e) => setNewProduct({ ...newProduct, color: e.target.value })}
+                                    className="form-input"
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Soni (Sklad):</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    placeholder="1"
+                                    value={newProduct.quantity}
+                                    onChange={(e) => setNewProduct({ ...newProduct, quantity: e.target.value })}
+                                    required
+                                    className="form-input"
+                                />
+                            </div>
 
                             <div className="modal-actions">
                                 <button type="submit" className="btn btn-primary">Saqlash</button>
-                                <button type="button" onClick={() => setAddProductModal(false)} className="btn btn-danger">Bekor qilish</button>
+                                <button
+                                    type="button"
+                                    onClick={() => setAddProductModal(false)}
+                                    className="btn btn-danger"
+                                >
+                                    Bekor qilish
+                                </button>
                             </div>
+
                         </form>
                     </div>
                 </div>
