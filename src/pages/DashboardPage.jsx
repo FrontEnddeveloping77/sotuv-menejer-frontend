@@ -714,34 +714,27 @@ const DashboardPage = () => {
                             <div className="form-group">
                                 <label>Tovar bo'yicha qidirish :</label>
                                 <input
-                                    type="text"
-                                    placeholder="Tovar Nomi bilan qidirish"
+                                    type="number"
+                                    placeholder="Faqat ID raqamini yozing (masalan: 2)..."
                                     value={sellSearch}
                                     onChange={(e) => {
-                                        const query = e.target.value;
-                                        setSellSearch(query);
+                                        const idVal = e.target.value;
+                                        setSellSearch(idVal);
 
-                                        if (!query.trim()) {
+                                        if (!idVal) {
+                                            // Agar input bo'shatilsa, tanlovni tozalaymiz
                                             setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
                                             return;
                                         }
 
-                                        const trimmedQuery = query.trim();
-                                        const isNumeric = /^\d+$/.test(trimmedQuery);
-
-                                        // Agar raqam kiritilsa - FAQAT ID si aniq mos kelgani. Harf yozilsa - nomi bo'yicha.
-                                        const foundGroup = productsGroups.find(g => {
-                                            if (isNumeric) {
-                                                return String(g.local_id) === trimmedQuery;
-                                            } else {
-                                                return g.name.toLowerCase().includes(trimmedQuery.toLowerCase());
-                                            }
-                                        });
+                                        // Faqat kiritilgan ID bo'yicha mos tovarni qidiramiz
+                                        const foundGroup = productsGroups.find(g => String(g.local_id) === String(idVal));
 
                                         if (foundGroup) {
-                                            setSellData(prev => ({ ...prev, product_id: String(foundGroup.local_id) }));
+                                            // Agar shunday ID li tovar topilsa, uni avtomatik tanlaymiz
                                             handleSellGroupSelect(foundGroup.local_id);
                                         } else {
+                                            // Topilmasa ID tanlovini tozalaymiz
                                             setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
                                         }
                                     }}
@@ -967,34 +960,28 @@ const DashboardPage = () => {
                             <div className="form-group">
                                 <label>Tovar bo'yicha qidirish :</label>
                                 <input
-                                    type="text"
-                                    placeholder="ID raqami (masalan: 1) yoki tovar nomi..."
+                                    type="number"
+                                    placeholder="Faqat ID raqamini yozing (masalan: 2)..."
                                     value={sellSearch}
                                     onChange={(e) => {
-                                        const query = e.target.value;
-                                        setSellSearch(query);
+                                        const idVal = e.target.value;
+                                        setSellSearch(idVal);
 
-                                        if (!query.trim()) {
-                                            setDeleteData(prev => ({ ...prev, product_id: '', rows: [emptyDeleteRow()] }));
+                                        if (!idVal) {
+                                            // Agar input bo'shatilsa, tanlovni tozalaymiz
+                                            setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
                                             return;
                                         }
 
-                                        const trimmedQuery = query.trim();
-                                        const isNumeric = /^\d+$/.test(trimmedQuery);
-
-                                        const foundGroup = productsGroups.find(g => {
-                                            if (isNumeric) {
-                                                return String(g.local_id) === trimmedQuery;
-                                            } else {
-                                                return g.name.toLowerCase().includes(trimmedQuery.toLowerCase());
-                                            }
-                                        });
+                                        // Faqat kiritilgan ID bo'yicha mos tovarni qidiramiz
+                                        const foundGroup = productsGroups.find(g => String(g.local_id) === String(idVal));
 
                                         if (foundGroup) {
-                                            setDeleteData(prev => ({ ...prev, product_id: String(foundGroup.local_id) }));
-                                            handleDeleteGroupSelect(foundGroup.local_id);
+                                            // Agar shunday ID li tovar topilsa, uni avtomatik tanlaymiz
+                                            handleSellGroupSelect(foundGroup.local_id);
                                         } else {
-                                            setDeleteData(prev => ({ ...prev, product_id: '', rows: [emptyDeleteRow()] }));
+                                            // Topilmasa ID tanlovini tozalaymiz
+                                            setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
                                         }
                                     }}
                                     className="form-input"
