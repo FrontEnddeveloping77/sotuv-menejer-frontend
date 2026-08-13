@@ -409,6 +409,39 @@ select:focus {
     font-weight: 700 !important;
 }
 
+.size-badge-list {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+}
+
+.size-badge {
+    background-color: #ecfdf5 !important;
+    color: #047857 !important;
+    border: 1px solid #a7f3d0 !important;
+    padding: 4px 10px !important;
+    border-radius: 12px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    text-transform: none !important;
+}
+
+.size-badge-low {
+    background-color: #fef2f2 !important;
+    color: #b91c1c !important;
+    border: 1px solid #fecaca !important;
+}
+
+.form-hint {
+    display: block !important;
+    margin-top: -10px !important;
+    margin-bottom: 14px !important;
+    color: #94a3b8 !important;
+    font-size: 12px !important;
+    text-transform: none !important;
+}
+
 /* ==========================================
    10. MODAL VA FORMA
    ========================================== */

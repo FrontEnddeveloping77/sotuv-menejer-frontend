@@ -60,6 +60,7 @@ const DashboardPage = () => {
         name: '',
         cost_price: '',
         color: '',
+        sizes: '',
         quantity: ''
     });
 
@@ -67,6 +68,7 @@ const DashboardPage = () => {
     const [sellData, setSellData] = useState({
         product_id: '',
         product_name: '',
+        size: '',
         sell_quantity: 1,
         selling_price: ''
     });
@@ -82,6 +84,7 @@ const DashboardPage = () => {
     const [deleteData, setDeleteData] = useState({
         product_id: '',
         product_name: '',
+        size: '',
         remove_all: false,
         quantity_to_remove: 1
     });
@@ -124,27 +127,65 @@ const DashboardPage = () => {
         return Number(val || 0).toLocaleString('uz-UZ');
     };
 
-    // --- SOTUV VA O'CHIRISH UCHUN QIDIRUV VA AVTO-TO'LDIRISH MANTIG'I (FAQAT REAL ID) ---
+    // --- RAZMERLARGA KO'RA GURUHLASH ---
+    // Bir xil local_id ga ega bo'lgan qatorlar (turli razmerlar) bitta "tovar" sifatida
+    // guruhlanadi, shu bilan jadvalda va statistikada har bir o'lchamning qoldig'i
+    // aniq ko'rinadi.
+    const groupProductsByLocalId = (list) => {
+        const map = new Map();
+        (list || []).forEach((p) => {
+            const key = p.local_id ?? p.id;
+            if (!map.has(key)) {
+                map.set(key, {
+                    local_id: p.local_id,
+                    category: p.category,
+                    name: p.title || p.name,
+                    color: p.color,
+                    cost_price: p.cost_price,
+                    variants: []
+                });
+            }
+            map.get(key).variants.push({
+                id: p.id,
+                size: p.size,
+                quantity: Number(p.quantity) || 0
+            });
+        });
+        return Array.from(map.values());
+    };
 
-    const selectedSellProduct = products.find((p) =>
-        String(p.local_id || p.id) === String(sellData.product_id).trim()
+    const productGroups = groupProductsByLocalId(products);
+
+    // --- SOTUV VA O'CHIRISH UCHUN QIDIRUV, RAZMER TANLASH VA AVTO-TO'LDIRISH MANTIG'I ---
+
+    // Tovar ID (local_id) bo'yicha shu tovarning barcha razmer-qatorlarini topamiz
+    const sellGroupRows = products.filter((p) =>
+        String(p.local_id) === String(sellData.product_id).trim()
+    );
+    const deleteGroupRows = products.filter((p) =>
+        String(p.local_id) === String(deleteData.product_id).trim()
     );
 
-    const selectedDeleteProduct = products.find((p) =>
-        String(p.local_id || p.id) === String(deleteData.product_id).trim()
-    );
+    // Aniq tanlangan qator: agar tovarda faqat bitta razmer/variant bo'lsa avtomatik
+    // tanlanadi, aks holda foydalanuvchi tanlagan razmerga mos qator olinadi
+    const selectedSellProduct = sellGroupRows.length === 1
+        ? sellGroupRows[0]
+        : sellGroupRows.find((p) => String(p.size || '') === String(sellData.size || ''));
+
+    const selectedDeleteProduct = deleteGroupRows.length === 1
+        ? deleteGroupRows[0]
+        : deleteGroupRows.find((p) => String(p.size || '') === String(deleteData.size || ''));
 
     const handleSellIdChange = (e) => {
         const idVal = e.target.value;
-        const found = products.find((p) =>
-            String(p.local_id || p.id) === idVal.trim()
-        );
+        const rows = products.filter((p) => String(p.local_id) === idVal.trim());
+        const first = rows[0];
 
         setSellData((prev) => ({
             ...prev,
             product_id: idVal,
-            product_name: found ? (found.title || found.name) : '',
-            selling_price: found ? (found.selling_price || prev.selling_price) : prev.selling_price
+            product_name: first ? (first.title || first.name) : '',
+            size: rows.length === 1 ? (first.size || '') : '',
         }));
     };
 
@@ -153,25 +194,26 @@ const DashboardPage = () => {
         const found = products.find((p) =>
             (p.title || p.name || '').toLowerCase().includes(nameVal.toLowerCase())
         );
+        const rows = found ? products.filter((p) => String(p.local_id) === String(found.local_id)) : [];
 
         setSellData((prev) => ({
             ...prev,
             product_name: nameVal,
-            product_id: found ? String(found.local_id || found.id) : '',
-            selling_price: found ? (found.selling_price || prev.selling_price) : prev.selling_price
+            product_id: found ? String(found.local_id) : '',
+            size: rows.length === 1 ? (rows[0].size || '') : ''
         }));
     };
 
     const handleDeleteIdChange = (e) => {
         const idVal = e.target.value;
-        const found = products.find((p) =>
-            String(p.local_id || p.id) === idVal.trim()
-        );
+        const rows = products.filter((p) => String(p.local_id) === idVal.trim());
+        const first = rows[0];
 
         setDeleteData((prev) => ({
             ...prev,
             product_id: idVal,
-            product_name: found ? (found.title || found.name) : ''
+            product_name: first ? (first.title || first.name) : '',
+            size: rows.length === 1 ? (first.size || '') : ''
         }));
     };
 
@@ -180,15 +222,17 @@ const DashboardPage = () => {
         const found = products.find((p) =>
             (p.title || p.name || '').toLowerCase().includes(nameVal.toLowerCase())
         );
+        const rows = found ? products.filter((p) => String(p.local_id) === String(found.local_id)) : [];
 
         setDeleteData((prev) => ({
             ...prev,
             product_name: nameVal,
-            product_id: found ? String(found.local_id || found.id) : ''
+            product_id: found ? String(found.local_id) : '',
+            size: rows.length === 1 ? (rows[0].size || '') : ''
         }));
     };
 
-    // 1. Tovar qo'shish
+    // 1. Tovar qo'shish (bir nechta razmer bilan)
     const handleAddProduct = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -198,14 +242,15 @@ const DashboardPage = () => {
                 name: newProduct.name,
                 color: newProduct.color,
                 cost_price: Number(newProduct.cost_price) || 0,
-                quantity: Number(newProduct.quantity) || 1
+                quantity: Number(newProduct.quantity) || 1,
+                sizes: newProduct.sizes || ''
             });
 
             setAddProductModal(false);
-            setNewProduct({ category: '', name: '', color: '', cost_price: '', quantity: '' });
+            setNewProduct({ category: '', name: '', color: '', cost_price: '', sizes: '', quantity: '' });
             await fetchData(false);
 
-            const displayId = res.data?.product?.local_id || res.data?.product?.id || '';
+            const displayId = res.data?.local_id || res.data?.product?.local_id || '';
             alert(res.data?.message || `Tovar saqlandi! Biriktirilgan ID: #${displayId}`);
         } catch (err) {
             alert(err.response?.data?.message || "Tovar qo'shishda xatolik yuz berdi!");
@@ -214,11 +259,19 @@ const DashboardPage = () => {
         }
     };
 
-    // 2. Tovar sotish
+    // 2. Tovar sotish (tanlangan razmer bo'yicha)
     const handleSellProduct = async (e) => {
         e.preventDefault();
-        if (!sellData.product_id || !selectedSellProduct) {
+        if (!sellData.product_id || sellGroupRows.length === 0) {
             alert("Iltimos, mavjud tovar ID'sini kiriting yoki nomini tanlang!");
+            return;
+        }
+        if (sellGroupRows.length > 1 && !sellData.size) {
+            alert("Iltimos, sotilayotgan tovarning razmerini tanlang!");
+            return;
+        }
+        if (!selectedSellProduct) {
+            alert("Tanlangan razmer bo'yicha tovar topilmadi!");
             return;
         }
         setIsSubmitting(true);
@@ -230,7 +283,7 @@ const DashboardPage = () => {
             });
 
             setSellModal(false);
-            setSellData({ product_id: '', product_name: '', sell_quantity: 1, selling_price: '' });
+            setSellData({ product_id: '', product_name: '', size: '', sell_quantity: 1, selling_price: '' });
             await fetchData(false);
             alert("Sotuv muvaffaqiyatli amalga oshirildi!");
         } catch (err) {
@@ -262,11 +315,19 @@ const DashboardPage = () => {
         }
     };
 
-    // 4. Tovarni kamaytirish / O'chirish
+    // 4. Tovarni kamaytirish / O'chirish (tanlangan razmer bo'yicha)
     const handleDeleteProduct = async (e) => {
         e.preventDefault();
-        if (!deleteData.product_id || !selectedDeleteProduct) {
+        if (!deleteData.product_id || deleteGroupRows.length === 0) {
             alert("Iltimos, mavjud tovar ID'sini kiriting yoki nomini tanlang!");
+            return;
+        }
+        if (deleteGroupRows.length > 1 && !deleteData.size) {
+            alert("Iltimos, o'chiriladigan/kamaytiriladigan tovarning razmerini tanlang!");
+            return;
+        }
+        if (!selectedDeleteProduct) {
+            alert("Tanlangan razmer bo'yicha tovar topilmadi!");
             return;
         }
         setIsSubmitting(true);
@@ -278,7 +339,7 @@ const DashboardPage = () => {
             });
 
             setDeleteModal(false);
-            setDeleteData({ product_id: '', product_name: '', remove_all: false, quantity_to_remove: 1 });
+            setDeleteData({ product_id: '', product_name: '', size: '', remove_all: false, quantity_to_remove: 1 });
             await fetchData(false);
             alert("Amal muvaffaqiyatli bajarildi!");
         } catch (err) {
@@ -288,21 +349,24 @@ const DashboardPage = () => {
         }
     };
 
-    // Qidiruv bo'yicha filtrlash
-    const filteredProducts = (products || []).filter((p) => {
+    // Qidiruv bo'yicha filtrlash (guruh darajasida: ID, nomi, kategoriya, rangi yoki
+    // istalgan razmer mos kelsa, shu tovar guruhi ko'rsatiladi)
+    const filteredGroups = productGroups.filter((g) => {
         const query = searchQuery.toLowerCase().trim();
         if (!query) return true;
 
-        const idStr = (p.local_id || p.id) ? (p.local_id || p.id).toString() : '';
-        const nameStr = (p.title || p.name || '').toLowerCase();
-        const categoryStr = (p.category || '').toLowerCase();
-        const colorStr = (p.color || '').toLowerCase();
+        const idStr = g.local_id ? String(g.local_id) : '';
+        const nameStr = (g.name || '').toLowerCase();
+        const categoryStr = (g.category || '').toLowerCase();
+        const colorStr = (g.color || '').toLowerCase();
+        const sizesStr = g.variants.map((v) => (v.size || '').toLowerCase()).join(' ');
 
         return (
             idStr.includes(query) ||
             nameStr.includes(query) ||
             categoryStr.includes(query) ||
-            colorStr.includes(query)
+            colorStr.includes(query) ||
+            sizesStr.includes(query)
         );
     });
 
@@ -372,24 +436,40 @@ const DashboardPage = () => {
                             <th>Tovar Nomi</th>
                             <th>Rangi</th>
                             <th>Kelgan Narxi (Tannarx)</th>
-                            <th>Qoldiq (Dona)</th>
+                            <th>O'lchamlar / Qoldiq</th>
+                            <th>Jami Qoldiq</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredProducts.length > 0 ? (
-                            filteredProducts.map((p) => (
-                                <tr key={p.id}>
-                                    <td><b>#{p.local_id || p.id}</b></td>
-                                    <td><span className="category-badge">{p.category || 'Umumiy'}</span></td>
-                                    <td><b>{p.title || p.name}</b></td>
-                                    <td>{p.color ? <span className="color-badge">{p.color}</span> : '-'}</td>
-                                    <td>{formatSum(p.cost_price)} so'm</td>
-                                    <td><b className={(p.quantity || 0) < 5 ? "warning-stock" : ""}>{p.quantity ?? 0} ta</b></td>
-                                </tr>
-                            ))
+                        {filteredGroups.length > 0 ? (
+                            filteredGroups.map((g) => {
+                                const totalQty = g.variants.reduce((sum, v) => sum + v.quantity, 0);
+                                return (
+                                    <tr key={g.local_id}>
+                                        <td><b>#{g.local_id}</b></td>
+                                        <td><span className="category-badge">{g.category || 'Umumiy'}</span></td>
+                                        <td><b>{g.name}</b></td>
+                                        <td>{g.color ? <span className="color-badge">{g.color}</span> : '-'}</td>
+                                        <td>{formatSum(g.cost_price)} so'm</td>
+                                        <td>
+                                            <div className="size-badge-list">
+                                                {g.variants.map((v) => (
+                                                    <span
+                                                        key={v.id}
+                                                        className={`size-badge ${v.quantity < 3 ? "size-badge-low" : ""}`}
+                                                    >
+                                                        {v.size ? v.size : "Standart"}: {v.quantity} ta
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </td>
+                                        <td><b className={totalQty < 5 ? "warning-stock" : ""}>{totalQty} ta</b></td>
+                                    </tr>
+                                );
+                            })
                         ) : (
                             <tr>
-                                <td colSpan="6" className="no-data">Tovar topilmadi!</td>
+                                <td colSpan="7" className="no-data">Tovar topilmadi!</td>
                             </tr>
                         )}
                     </tbody>
@@ -444,29 +524,49 @@ const DashboardPage = () => {
                                     className="form-input"
                                 />
                             </div>
-                            {/* YANGA QO'SHILGAN QISM: O'lcham (Size) */}
+                            {/* RAZMERLAR: bir nechta razmer vergul bilan kiritiladi */}
                             <div className="form-group">
-                                <label>O'lchami (Razmer):</label>
+                                <label>Razmerlar (ixtiyoriy, bir nechtasini vergul bilan ajrating):</label>
                                 <input
                                     type="text"
-                                    placeholder="XL, 42, 200x200..."
-                                    value={newProduct.size || ''}
-                                    onChange={(e) => setNewProduct({ ...newProduct, size: e.target.value })}
+                                    placeholder="Masalan: 39, 40, 41, 42, 43"
+                                    value={newProduct.sizes}
+                                    onChange={(e) => setNewProduct({ ...newProduct, sizes: e.target.value })}
                                     className="form-input"
                                 />
+                                <small className="form-hint">
+                                    Bir nechta razmer kiritsangiz, pastdagi "Umumiy Soni" ular orasida
+                                    avtomatik ravishda (imkon qadar teng) taqsimlanadi.
+                                </small>
                             </div>
                             <div className="form-group">
-                                <label>Soni (Sklad):</label>
+                                <label>Umumiy Soni (barcha razmerlar uchun) * :</label>
                                 <input
                                     type="number"
                                     min="1"
-                                    placeholder="1"
+                                    placeholder="10"
                                     value={newProduct.quantity}
                                     onChange={(e) => setNewProduct({ ...newProduct, quantity: e.target.value })}
                                     required
                                     className="form-input"
                                 />
                             </div>
+
+                            {/* RAZMERLARGA TAQSIMLASH OLDINDAN KO'RISH */}
+                            {newProduct.sizes && newProduct.quantity ? (() => {
+                                const list = [...new Set(
+                                    newProduct.sizes.split(',').map((s) => s.trim()).filter(Boolean)
+                                )];
+                                if (list.length === 0) return null;
+                                const total = Number(newProduct.quantity) || 0;
+                                const base = Math.floor(total / list.length);
+                                const rem = total % list.length;
+                                return (
+                                    <div className="info-banner info-success">
+                                        📏 Taqsimot: {list.map((s, i) => `${s}: ${base + (i < rem ? 1 : 0)} ta`).join(', ')}
+                                    </div>
+                                );
+                            })() : null}
                             <div className="modal-actions">
                                 <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
                                     {isSubmitting ? "Saqlanmoqda..." : "Saqlash"}
@@ -517,11 +617,35 @@ const DashboardPage = () => {
                                 />
                             </div>
 
+                            {sellData.product_id && sellGroupRows.length === 0 && (
+                                <div className="error-text">
+                                    ⚠️ Bunday ID ga ega tovar topilmadi!
+                                </div>
+                            )}
+
+                            {sellGroupRows.length > 1 && (
+                                <div className="form-group">
+                                    <label>Razmer * :</label>
+                                    <select
+                                        value={sellData.size}
+                                        onChange={(e) => setSellData({ ...sellData, size: e.target.value })}
+                                        required
+                                        className="form-input"
+                                    >
+                                        <option value="">-- Razmerni tanlang --</option>
+                                        {sellGroupRows.map((r) => (
+                                            <option key={r.id} value={r.size || ''}>
+                                                {r.size || 'Standart'} (Qoldiq: {r.quantity} ta)
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+
                             {selectedSellProduct && (
                                 <div className="info-banner info-success">
-                                    {/* QO'SHILDI: O'lchami (Size) ma'lumoti */}
                                     ✅ Topildi: <b>{selectedSellProduct.title || selectedSellProduct.name}</b>
-                                    ({selectedSellProduct.color || 'Rangsiz'} | O'lchami: {selectedSellProduct.size || '-'})
+                                    ({selectedSellProduct.color || 'Rangsiz'} | O'lchami: {selectedSellProduct.size || 'Standart'})
                                     — Qoldiq: {selectedSellProduct.quantity} ta
                                 </div>
                             )}
@@ -671,20 +795,40 @@ const DashboardPage = () => {
                                 />
                             </div>
 
-                            {selectedDeleteProduct ? (
+                            {deleteData.product_id && deleteGroupRows.length === 0 && (
+                                <div className="error-text">
+                                    ⚠️ Bunday ID ga ega tovar topilmadi!
+                                </div>
+                            )}
+
+                            {deleteGroupRows.length > 1 && (
+                                <div className="form-group">
+                                    <label>Razmer * :</label>
+                                    <select
+                                        value={deleteData.size}
+                                        onChange={(e) => setDeleteData({ ...deleteData, size: e.target.value })}
+                                        required
+                                        className="form-input"
+                                    >
+                                        <option value="">-- Razmerni tanlang --</option>
+                                        {deleteGroupRows.map((r) => (
+                                            <option key={r.id} value={r.size || ''}>
+                                                {r.size || 'Standart'} (Qoldiq: {r.quantity} ta)
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+
+                            {selectedDeleteProduct && (
                                 <div className="info-banner info-danger">
                                     <div><strong>O'chirilayotgan Tovar:</strong> {selectedDeleteProduct.title || selectedDeleteProduct.name}</div>
                                     <div><strong>Kategoriya:</strong> {selectedDeleteProduct.category || 'Umumiy'}</div>
                                     <div><strong>Rangi:</strong> {selectedDeleteProduct.color || '-'}</div>
-                                    {/* QO'SHILDI: O'lchami (Size) ma'lumoti */}
-                                    <div><strong>O'lchami:</strong> {selectedDeleteProduct.size || '-'}</div>
+                                    <div><strong>O'lchami:</strong> {selectedDeleteProduct.size || 'Standart'}</div>
                                     <div><strong>Ombordagi qoldiq:</strong> {selectedDeleteProduct.quantity} ta</div>
                                 </div>
-                            ) : deleteData.product_id ? (
-                                <div className="error-text">
-                                    ⚠️ Bunday ID ga ega tovar topilmadi!
-                                </div>
-                            ) : null}
+                            )}
 
                             <div className="form-group checkbox-group">
                                 <label>
@@ -732,4 +876,4 @@ const DashboardPage = () => {
     );
 };
 
-export default DashboardPage; 
+export default DashboardPage;
