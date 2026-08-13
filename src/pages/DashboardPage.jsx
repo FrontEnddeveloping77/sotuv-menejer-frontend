@@ -480,7 +480,6 @@ const DashboardPage = () => {
                     <div className="modal-box">
                         <div className="modal-header">
                             <h3>🛒 Tovar Sotish</h3>
-                            <button className="close-btn" onClick={() => setSellModal(false)}>&times;</button>
                         </div>
 
                         <form onSubmit={handleSellProduct} className="product-form">
@@ -632,7 +631,6 @@ const DashboardPage = () => {
                     <div className="modal-box">
                         <div className="modal-header">
                             <h3>🗑️ Tovarni O'chirish / Kamaytirish</h3>
-                            <button className="close-btn" onClick={() => setDeleteModal(false)}>&times;</button>
                         </div>
 
                         <form onSubmit={handleDeleteProduct} className="product-form">
