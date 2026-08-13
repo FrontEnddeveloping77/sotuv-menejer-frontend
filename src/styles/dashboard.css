@@ -1,107 +1,120 @@
-/*? Dashboard asosiy konteyneri va umumiy shriftlar */
+/* ==========================================
+   1. DASHBOARD ASOSIY KONTEYNERI VA SHRIFTLAR
+   ========================================== */
 .dashboard-container {
-    padding: 28px;
-    background-color: #f8fafc;
-    min-height: 100vh;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    color: #0f172a;
-    box-sizing: border-box;
+    padding: 28px !important;
+    background-color: #f1f5f9 !important;
+    min-height: 100vh !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    color: #0f172a !important;
+    box-sizing: border-box !important;
 }
 
-/* ? Yuqori shapka (Header) qismi */
+/* ==========================================
+   2. YUQORI SHAPKA (HEADER) VA TUGMALAR
+   ========================================== */
 .dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-    gap: 16px;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 24px !important;
+    flex-wrap: wrap !important;
+    gap: 16px !important;
 }
 
 .dashboard-header h2 {
-    font-size: 24px;
-    font-weight: 700;
-    color: #0f172a;
-    margin: 0;
-    letter-spacing: -0.5px;
+    font-size: 26px !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    letter-spacing: -0.5px !important;
 }
 
-/*? Header harakatlar tugmalari guruhi */
 .header-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    flex-wrap: wrap !important;
 }
 
-/* ? Statistika sarlavhasi va to'ri (Grid) */
+/* ==========================================
+   3. STATISTIKA SARLAVHASI VA GRID LAYOUT
+   ========================================== */
 .stats-title {
-    margin: 24px 0 16px 0;
-    color: #1e293b;
-    font-size: 18px;
-    font-weight: 700;
+    margin: 28px 0 16px 0 !important;
+    color: #0f172a !important;
+    font-size: 20px !important;
+    font-weight: 700 !important;
 }
 
 .stats-grid-top {
-    margin-bottom: 20px;
+    margin-bottom: 20px !important;
 }
 
 .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 18px;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
+    gap: 20px !important;
 }
 
-/* ? Statistika kartochkalari */
+/* ==========================================
+   4. STATISTIKA KARTOCHKALARI (OMBOR/HISOBOT)
+   ========================================== */
 .stats-grid .stat-card {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 20px;
-    background-color: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.06);
-    border: 1px solid #e2e8f0;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    padding: 22px 24px !important;
+    background-color: #ffffff !important;
+    border-radius: 14px !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+    border: 1px solid #e2e8f0 !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
 }
 
 .stats-grid .stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transform: translateY(-3px) !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08) !important;
 }
 
 .stats-grid .stat-card h4 {
-    font-size: 12px;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 0 0 10px 0;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    color: #334155 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+    margin: 0 0 14px 0 !important;
+    padding-bottom: 8px !important;
+    border-bottom: 2px solid #f1f5f9 !important;
 }
 
 .stats-grid .stat-card h3 {
-    font-size: 22px;
-    font-weight: 700;
-    color: #0f172a;
-    margin: 0 0 6px 0;
-    line-height: 1.2;
+    font-size: 24px !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    margin: 0 0 10px 0 !important;
+    line-height: 1.2 !important;
 }
 
 .stats-grid .stat-card p {
-    font-size: 13px;
-    font-weight: 500;
-    color: #475569;
-    margin: 4px 0 0 0;
-    line-height: 1.4;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    color: #475569 !important;
+    margin: 8px 0 0 0 !important;
+    line-height: 1.6 !important;
+    display: flex !important;
+    justify-content: space-between !important;
 }
 
 .stats-grid .stat-card p b {
-    font-size: 13px;
-    font-weight: 700;
-    color: #1e293b;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
 }
 
-/*! Dinamik tekst ranglari va muhim ogohlantirishlar */
+/* ==========================================
+   5. DINAMIK TEKST VA STATUS RANG LARI
+   ========================================== */
 .text-expense {
     color: #dc2626 !important;
 }
@@ -114,401 +127,421 @@
     color: #dc2626 !important;
 }
 
-/*? Asosiy tugmalar stili */
-.btn {
-    padding: 10px 18px;
-    border-radius: 8px;
-    border: none;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+/* ==========================================
+   6. ASOSIY TUGMA STILLARI VA RANGLARI
+   ========================================== */
+.btn,
+.header-actions .btn {
+    padding: 12px 20px !important;
+    border-radius: 10px !important;
+    border: none !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
 }
 
-.btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+.btn:hover,
+.header-actions .btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
-.btn:active {
-    transform: translateY(0);
+.btn:active,
+.header-actions .btn:active {
+    transform: translateY(0) !important;
 }
 
-/*? Har xil holatlar uchun tugma ranglari */
-.btn-primary {
-    background-color: #2563eb;
-    color: #ffffff;
+.btn-primary,
+.header-actions .btn-primary {
+    background-color: #2563eb !important;
+    color: #ffffff !important;
 }
 
 .btn-primary:hover {
-    background-color: #1d4ed8;
+    background-color: #1d4ed8 !important;
 }
 
-.btn-danger {
-    background-color: #dc2626;
-    color: #ffffff;
-}
-
-.btn-danger:hover {
-    background-color: #b91c1c;
-}
-
-.btn-success {
-    background-color: #16a34a;
-    color: #ffffff;
+.btn-success,
+.header-actions .btn-success {
+    background-color: #16a34a !important;
+    color: #ffffff !important;
 }
 
 .btn-success:hover {
-    background-color: #15803d;
+    background-color: #15803d !important;
 }
 
-.btn-expense {
-    background-color: #d97706;
-    color: #ffffff;
+.btn-expense,
+.header-actions .btn-expense {
+    background-color: #f59e0b !important;
+    color: #ffffff !important;
 }
 
 .btn-expense:hover {
-    background-color: #b45309;
+    background-color: #d97706 !important;
 }
 
-.btn-secondary {
-    background-color: #64748b;
-    color: #ffffff;
+.btn-danger,
+.header-actions .btn-danger {
+    background-color: #ef4444 !important;
+    color: #ffffff !important;
+}
+
+.btn-danger:hover {
+    background-color: #dc2626 !important;
+}
+
+.btn-secondary,
+.header-actions .btn-secondary {
+    background-color: #64748b !important;
+    color: #ffffff !important;
 }
 
 .btn-secondary:hover {
-    background-color: #475569;
+    background-color: #475569 !important;
 }
 
 .btn-close {
-    background-color: #f1f5f9;
-    color: #475569;
+    background-color: #e2e8f0 !important;
+    color: #334155 !important;
 }
 
 .btn-close:hover {
-    background-color: #e2e8f0;
+    background-color: #cbd5e1 !important;
 }
 
-/* ! Tizimdan chiqish va to'liq kenglikdagi tugmalar */
 .btn-logout {
-    background-color: #475569;
-    color: #ffffff;
+    background-color: #0f172a !important;
+    color: #ffffff !important;
 }
 
 .btn-logout:hover {
-    background-color: #334155;
-}
-
-.btn-logout:active {
-    transform: scale(0.98);
+    background-color: #1e293b !important;
 }
 
 .btn-full {
-    width: 100%;
-    margin-top: 16px;
+    width: 100% !important;
+    margin-top: 16px !important;
 }
 
-/* ? Kartochka bloqlari va kategoriyalar bo'limi */
+/* ==========================================
+   7. KARTOCHKA BLOQLARI VA KATEGORIYALAR
+   ========================================== */
 .box-card {
-    background-color: #ffffff;
-    border-radius: 12px;
-    padding: 24px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    margin-top: 24px;
+    background-color: #ffffff !important;
+    border-radius: 14px !important;
+    padding: 24px !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04) !important;
+    margin-top: 24px !important;
 }
 
 .box-card2 {
-    margin-top: 24px;
+    margin-top: 24px !important;
 }
 
 .category-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 16px !important;
 }
 
 .category-header h3 {
-    margin: 0;
-    font-size: 16px;
-    color: #0f172a;
-    font-weight: 700;
+    margin: 0 !important;
+    font-size: 18px !important;
+    color: #0f172a !important;
+    font-weight: 700 !important;
 }
 
 .category-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
 }
 
 .category-btn {
-    padding: 8px 16px;
-    border-radius: 8px;
-    border: 1px solid #cbd5e1;
-    background-color: #ffffff;
-    color: #334155;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    text-transform: uppercase;
-    transition: all 0.2s ease;
+    padding: 8px 16px !important;
+    border-radius: 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    background-color: #ffffff !important;
+    color: #334155 !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    text-transform: uppercase !important;
+    transition: all 0.2s ease !important;
 }
 
 .category-btn:hover {
-    background-color: #f8fafc;
-    border-color: #94a3b8;
+    background-color: #f8fafc !important;
+    border-color: #94a3b8 !important;
 }
 
 .category-btn.active {
-    background-color: #2563eb;
-    color: #ffffff;
-    border-color: #2563eb;
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #2563eb !important;
 }
 
 .category-count {
-    font-size: 12px;
-    opacity: 0.85;
-    font-weight: 600;
-    margin-left: 6px;
+    font-size: 12px !important;
+    opacity: 0.85 !important;
+    font-weight: 600 !important;
+    margin-left: 6px !important;
 }
 
 .empty-text {
-    color: #94a3b8;
-    font-size: 14px;
+    color: #94a3b8 !important;
+    font-size: 14px !important;
 }
 
-/* ? Qidiruv maydoni va Form elementlari */
+/* ==========================================
+   8. INPUT VA FORM ELETLARI (MARGIN VA PADDING)
+   ========================================== */
 .form-input,
-input[type="text"] {
-    width: 100%;
-    max-width: 400px;
-    padding: 10px 14px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 14px;
-    color: #0f172a;
-    background-color: #ffffff;
-    box-sizing: border-box;
-    outline: none;
-    transition: all 0.2s ease;
-    margin-bottom: 12px;
+input[type="text"],
+input[type="number"],
+select {
+    width: 100% !important;
+    max-width: 420px !important;
+    padding: 12px 16px !important;
+    margin-top: 8px !important;
+    margin-bottom: 16px !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    color: #0f172a !important;
+    background-color: #ffffff !important;
+    box-sizing: border-box !important;
+    outline: none !important;
+    transition: all 0.2s ease !important;
 }
 
 input[type="text"]::placeholder {
-    color: #94a3b8;
+    color: #94a3b8 !important;
 }
 
 .form-input:focus,
-input[type="text"]:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
 }
 
-/* ? Jadvallar stili va o'rab turuvchi wrapper */
+/* ==========================================
+   9. JADVAL (TABLE) STILLARI
+   ========================================== */
 .table-wrapper {
-    overflow-x: auto;
-    margin-top: 16px;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
+    overflow-x: auto !important;
+    margin-top: 16px !important;
+    border-radius: 10px !important;
+    border: 1px solid #e2e8f0 !important;
 }
 
 .products-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
-    background-color: #ffffff;
+    width: 100% !important;
+    border-collapse: collapse !important;
+    text-align: left !important;
+    background-color: #ffffff !important;
 }
 
 .products-table th,
 .products-table td {
-    padding: 14px 16px;
-    border-bottom: 1px solid #e2e8f0;
-    font-size: 14px;
+    padding: 16px 18px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    font-size: 14px !important;
 }
 
 .products-table th {
-    background-color: #f8fafc;
-    color: #475569;
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 12px;
-    letter-spacing: 0.5px;
+    background-color: #f8fafc !important;
+    color: #475569 !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    font-size: 12px !important;
+    letter-spacing: 0.5px !important;
 }
 
 .products-table tr:last-child td {
-    border-bottom: none;
+    border-bottom: none !important;
 }
 
 .products-table tr:hover {
-    background-color: #f8fafc;
+    background-color: #f8fafc !important;
 }
 
 .category-badge {
-    background-color: #eff6ff;
-    color: #2563eb;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    display: inline-block;
+    background-color: #eff6ff !important;
+    color: #2563eb !important;
+    padding: 6px 12px !important;
+    border-radius: 20px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    display: inline-block !important;
 }
 
-/*? Modallar va fon to'sig'i (Overlay) */
+/* ==========================================
+   10. MODAL VA FORMA ICHIDAGI MAZOFA
+   ========================================== */
 .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(15, 23, 42, 0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    backdrop-filter: blur(4px);
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background-color: rgba(15, 23, 42, 0.5) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 1000 !important;
+    backdrop-filter: blur(4px) !important;
 }
 
 .modal-box {
-    background-color: #ffffff;
-    border-radius: 16px;
-    padding: 28px;
-    width: 100%;
-    max-width: 480px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff !important;
+    border-radius: 16px !important;
+    padding: 28px !important;
+    width: 100% !important;
+    max-width: 500px !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
 }
 
 .modal-box h3 {
-    margin-top: 0;
-    margin-bottom: 20px;
-    color: #0f172a;
-    font-size: 18px;
-    font-weight: 700;
+    margin-top: 0 !important;
+    margin-bottom: 20px !important;
+    color: #0f172a !important;
+    font-size: 20px !important;
+    font-weight: 700 !important;
 }
 
 .product-form {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
 }
 
 .product-form label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #475569;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #334155 !important;
+    margin-bottom: 2px !important;
 }
 
 .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 16px !important;
 }
 
 .modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 16px;
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 12px !important;
+    margin-top: 20px !important;
 }
 
-/* //! Modaldagi razdel va belgilash elementlari */
 .checkbox-container {
-    margin: 8px 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    margin: 12px 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
 }
 
 .checkbox-input {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
+    width: 20px !important;
+    height: 20px !important;
+    cursor: pointer !important;
 }
 
 .checkbox-label {
-    cursor: pointer;
-    font-weight: 700;
-    color: #dc2626;
-    font-size: 14px;
+    cursor: pointer !important;
+    font-weight: 700 !important;
+    color: #dc2626 !important;
+    font-size: 14px !important;
+    margin: 0 !important;
 }
 
 .profit-badge {
-    padding: 12px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 13px;
-    text-align: center;
+    padding: 12px !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    text-align: center !important;
+    margin-top: 8px !important;
 }
 
 .profit-badge.positive {
-    background-color: #f0fdf4;
-    color: #16a34a;
-    border: 1px solid #bbf7d0;
+    background-color: #f0fdf4 !important;
+    color: #16a34a !important;
+    border: 1px solid #bbf7d0 !important;
 }
 
 .profit-badge.negative {
-    background-color: #fef2f2;
-    color: #dc2626;
-    border: 1px solid #fecaca;
+    background-color: #fef2f2 !important;
+    color: #dc2626 !important;
+    border: 1px solid #fecaca !important;
 }
 
-/* Scroll-top tugmasi */
+/* ==========================================
+   11. QO'SHIMCHA ELEMENTLAR (SCROLL & LOADING)
+   ========================================== */
 .scroll-top-btn {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background-color: #2563eb;
-    color: #ffffff;
-    border: none;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.2s ease, background-color 0.2s ease;
+    position: fixed !important;
+    bottom: 24px !important;
+    right: 24px !important;
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+    border: none !important;
+    width: 46px !important;
+    height: 46px !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: transform 0.2s ease, background-color 0.2s ease !important;
 }
 
 .scroll-top-btn:hover {
-    transform: translateY(-3px);
-    background-color: #1d4ed8;
+    transform: translateY(-3px) !important;
+    background-color: #1d4ed8 !important;
 }
 
-/* //! "Yuklanmoqda..." Markaziy Ekrani (Loading State Fix) */
 .loading-state {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    background-color: #f8fafc;
-    z-index: 9999;
-    font-size: 20px;
-    font-weight: 700;
-    color: #2563eb;
-    letter-spacing: 0.5px;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    background-color: #f8fafc !important;
+    z-index: 9999 !important;
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    color: #2563eb !important;
+    letter-spacing: 0.5px !important;
 }
 
 .loading-state::after {
-    content: "";
-    width: 36px;
-    height: 36px;
-    margin-top: 16px;
-    border: 3px solid #e2e8f0;
-    border-top-color: #2563eb;
-    border-radius: 50%;
-    animation: spinner 0.8s linear infinite;
+    content: "" !important;
+    width: 40px !important;
+    height: 40px !important;
+    margin-top: 18px !important;
+    border: 4px solid #e2e8f0 !important;
+    border-top-color: #2563eb !important;
+    border-radius: 50% !important;
+    animation: spinner 0.8s linear infinite !important;
 }
 
 @keyframes spinner {
@@ -517,21 +550,20 @@ input[type="text"]:focus {
     }
 }
 
-/* ! Sessiya muddati tugagandagi ekran */
 .expired-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background-color: #f8fafc;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    min-height: 100vh !important;
+    background-color: #f8fafc !important;
 }
 
 .expired-card {
-    background: #ffffff;
-    padding: 36px;
-    border-radius: 16px;
-    text-align: center;
-    max-width: 400px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    background: #ffffff !important;
+    padding: 36px !important;
+    border-radius: 16px !important;
+    text-align: center !important;
+    max-width: 400px !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05) !important;
 }
