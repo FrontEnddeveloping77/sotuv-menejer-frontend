@@ -2,11 +2,11 @@
    1. DASHBOARD ASOSIY KONTEYNERI VA SHRIFTLAR
    ========================================== */
 .dashboard-container {
-    padding: 28px !important;
-    background-color: #f1f5f9 !important;
+    padding: 24px !important;
+    background-color: #f8fafc !important;
     min-height: 100vh !important;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
-    color: #0f172a !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    color: #1e293b !important;
     box-sizing: border-box !important;
 }
 
@@ -23,17 +23,17 @@
 }
 
 .dashboard-header h2 {
-    font-size: 26px !important;
-    font-weight: 800 !important;
+    font-size: 22px !important;
+    font-weight: 700 !important;
     color: #0f172a !important;
     margin: 0 !important;
-    letter-spacing: -0.5px !important;
 }
 
 .header-actions {
     display: flex !important;
     align-items: center !important;
     gap: 12px !important;
+    /* Tugmalar oralig'ini ochish */
     flex-wrap: wrap !important;
 }
 
@@ -41,9 +41,9 @@
    3. STATISTIKA SARLAVHASI VA GRID LAYOUT
    ========================================== */
 .stats-title {
-    margin: 28px 0 16px 0 !important;
+    margin: 20px 0 12px 0 !important;
     color: #0f172a !important;
-    font-size: 20px !important;
+    font-size: 16px !important;
     font-weight: 700 !important;
 }
 
@@ -53,8 +53,8 @@
 
 .stats-grid {
     display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
-    gap: 20px !important;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+    gap: 16px !important;
 }
 
 /* ==========================================
@@ -64,56 +64,48 @@
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
-    padding: 22px 24px !important;
+    padding: 16px 20px !important;
     background-color: #ffffff !important;
-    border-radius: 14px !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
     border: 1px solid #e2e8f0 !important;
-    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
-}
-
-.stats-grid .stat-card:hover {
-    transform: translateY(-3px) !important;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08) !important;
 }
 
 .stats-grid .stat-card h4 {
-    font-size: 15px !important;
-    font-weight: 800 !important;
-    color: #334155 !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: #475569 !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.8px !important;
-    margin: 0 0 14px 0 !important;
-    padding-bottom: 8px !important;
-    border-bottom: 2px solid #f1f5f9 !important;
+    letter-spacing: 0.5px !important;
+    margin: 0 0 12px 0 !important;
+    padding-bottom: 6px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
 }
 
 .stats-grid .stat-card h3 {
-    font-size: 24px !important;
-    font-weight: 800 !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
     color: #0f172a !important;
-    margin: 0 0 10px 0 !important;
-    line-height: 1.2 !important;
+    margin: 0 0 8px 0 !important;
 }
 
 .stats-grid .stat-card p {
-    font-size: 15px !important;
+    font-size: 13px !important;
     font-weight: 500 !important;
-    color: #475569 !important;
-    margin: 8px 0 0 0 !important;
-    line-height: 1.6 !important;
+    color: #64748b !important;
+    margin: 6px 0 0 0 !important;
     display: flex !important;
     justify-content: space-between !important;
 }
 
 .stats-grid .stat-card p b {
-    font-size: 15px !important;
-    font-weight: 700 !important;
-    color: #0f172a !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
 }
 
 /* ==========================================
-   5. DINAMIK TEKST VA STATUS RANG LARI
+   5. DINAMIK TEKST VA STATUS RANGLARI
    ========================================== */
 .text-expense {
     color: #dc2626 !important;
@@ -128,73 +120,56 @@
 }
 
 /* ==========================================
-   6. ASOSIY TUGMA STILLARI VA RANGLARI
+   6. ASOSIY TUGMA STILLARI VA YORQIN RANGLAR
    ========================================== */
 .btn,
 .header-actions .btn {
-    padding: 12px 20px !important;
-    border-radius: 10px !important;
+    padding: 10px 18px !important;
+    border-radius: 8px !important;
     border: none !important;
-    font-weight: 700 !important;
-    font-size: 14px !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
     cursor: pointer !important;
     transition: all 0.2s ease !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     gap: 8px !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
 }
 
 .btn:hover,
 .header-actions .btn:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
+    opacity: 0.9 !important;
+    transform: translateY(-1px) !important;
 }
 
-.btn:active,
-.header-actions .btn:active {
-    transform: translateY(0) !important;
-}
-
+/* Tovar Qo'shish - Ko'k */
 .btn-primary,
 .header-actions .btn-primary {
     background-color: #2563eb !important;
     color: #ffffff !important;
 }
 
-.btn-primary:hover {
-    background-color: #1d4ed8 !important;
-}
-
+/* Tovar Sotish - Yashil */
 .btn-success,
 .header-actions .btn-success {
     background-color: #16a34a !important;
     color: #ffffff !important;
 }
 
-.btn-success:hover {
-    background-color: #15803d !important;
-}
-
+/* Rasxod Yozish - Saru / Sariy-to'q sariq */
 .btn-expense,
 .header-actions .btn-expense {
     background-color: #f59e0b !important;
     color: #ffffff !important;
 }
 
-.btn-expense:hover {
-    background-color: #d97706 !important;
-}
-
+/* Tovarni O'chirish - Qizil */
 .btn-danger,
 .header-actions .btn-danger {
-    background-color: #ef4444 !important;
-    color: #ffffff !important;
-}
-
-.btn-danger:hover {
     background-color: #dc2626 !important;
+    color: #ffffff !important;
 }
 
 .btn-secondary,
@@ -203,17 +178,9 @@
     color: #ffffff !important;
 }
 
-.btn-secondary:hover {
-    background-color: #475569 !important;
-}
-
 .btn-close {
     background-color: #e2e8f0 !important;
-    color: #334155 !important;
-}
-
-.btn-close:hover {
-    background-color: #cbd5e1 !important;
+    color: #475569 !important;
 }
 
 .btn-logout {
@@ -221,13 +188,9 @@
     color: #ffffff !important;
 }
 
-.btn-logout:hover {
-    background-color: #1e293b !important;
-}
-
 .btn-full {
     width: 100% !important;
-    margin-top: 16px !important;
+    margin-top: 14px !important;
 }
 
 /* ==========================================
@@ -235,27 +198,27 @@
    ========================================== */
 .box-card {
     background-color: #ffffff !important;
-    border-radius: 14px !important;
-    padding: 24px !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
     border: 1px solid #e2e8f0 !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04) !important;
-    margin-top: 24px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    margin-top: 20px !important;
 }
 
 .box-card2 {
-    margin-top: 24px !important;
+    margin-top: 20px !important;
 }
 
 .category-header {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
-    margin-bottom: 16px !important;
+    margin-bottom: 14px !important;
 }
 
 .category-header h3 {
     margin: 0 !important;
-    font-size: 18px !important;
+    font-size: 16px !important;
     color: #0f172a !important;
     font-weight: 700 !important;
 }
@@ -263,25 +226,19 @@
 .category-list {
     display: flex !important;
     flex-wrap: wrap !important;
-    gap: 10px !important;
+    gap: 8px !important;
 }
 
 .category-btn {
-    padding: 8px 16px !important;
-    border-radius: 8px !important;
+    padding: 6px 14px !important;
+    border-radius: 6px !important;
     border: 1px solid #cbd5e1 !important;
     background-color: #ffffff !important;
-    color: #334155 !important;
-    font-size: 13px !important;
+    color: #475569 !important;
+    font-size: 12px !important;
     font-weight: 600 !important;
     cursor: pointer !important;
-    text-transform: uppercase !important;
     transition: all 0.2s ease !important;
-}
-
-.category-btn:hover {
-    background-color: #f8fafc !important;
-    border-color: #94a3b8 !important;
 }
 
 .category-btn.active {
@@ -290,38 +247,30 @@
     border-color: #2563eb !important;
 }
 
-.category-count {
-    font-size: 12px !important;
-    opacity: 0.85 !important;
-    font-weight: 600 !important;
-    margin-left: 6px !important;
-}
-
 .empty-text {
     color: #94a3b8 !important;
-    font-size: 14px !important;
+    font-size: 13px !important;
 }
 
 /* ==========================================
-   8. INPUT VA FORM ELETLARI (MARGIN VA PADDING)
+   8. INPUT VA FORM ELEMENTLARI
    ========================================== */
 .form-input,
 input[type="text"],
 input[type="number"],
 select {
     width: 100% !important;
-    max-width: 420px !important;
-    padding: 12px 16px !important;
-    margin-top: 8px !important;
-    margin-bottom: 16px !important;
-    border: 1.5px solid #cbd5e1 !important;
-    border-radius: 8px !important;
-    font-size: 14px !important;
+    max-width: 380px !important;
+    padding: 10px 14px !important;
+    margin-top: 6px !important;
+    margin-bottom: 14px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    font-size: 13px !important;
     color: #0f172a !important;
     background-color: #ffffff !important;
     box-sizing: border-box !important;
     outline: none !important;
-    transition: all 0.2s ease !important;
 }
 
 input[type="text"]::placeholder {
@@ -333,7 +282,7 @@ input[type="text"]:focus,
 input[type="number"]:focus,
 select:focus {
     border-color: #2563eb !important;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
 }
 
 /* ==========================================
@@ -341,8 +290,8 @@ select:focus {
    ========================================== */
 .table-wrapper {
     overflow-x: auto !important;
-    margin-top: 16px !important;
-    border-radius: 10px !important;
+    margin-top: 14px !important;
+    border-radius: 8px !important;
     border: 1px solid #e2e8f0 !important;
 }
 
@@ -355,17 +304,17 @@ select:focus {
 
 .products-table th,
 .products-table td {
-    padding: 16px 18px !important;
+    padding: 12px 16px !important;
     border-bottom: 1px solid #e2e8f0 !important;
-    font-size: 14px !important;
+    font-size: 13px !important;
 }
 
 .products-table th {
     background-color: #f8fafc !important;
-    color: #475569 !important;
+    color: #64748b !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
-    font-size: 12px !important;
+    font-size: 11px !important;
     letter-spacing: 0.5px !important;
 }
 
@@ -373,22 +322,18 @@ select:focus {
     border-bottom: none !important;
 }
 
-.products-table tr:hover {
-    background-color: #f8fafc !important;
-}
-
 .category-badge {
     background-color: #eff6ff !important;
     color: #2563eb !important;
-    padding: 6px 12px !important;
-    border-radius: 20px !important;
-    font-size: 12px !important;
+    padding: 4px 10px !important;
+    border-radius: 12px !important;
+    font-size: 11px !important;
     font-weight: 700 !important;
     display: inline-block !important;
 }
 
 /* ==========================================
-   10. MODAL VA FORMA ICHIDAGI MAZOFA
+   10. MODAL VA FORMA
    ========================================== */
 .modal-overlay {
     position: fixed !important;
@@ -396,85 +341,84 @@ select:focus {
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
-    background-color: rgba(15, 23, 42, 0.5) !important;
+    background-color: rgba(15, 23, 42, 0.4) !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     z-index: 1000 !important;
-    backdrop-filter: blur(4px) !important;
+    backdrop-filter: blur(2px) !important;
 }
 
 .modal-box {
     background-color: #ffffff !important;
-    border-radius: 16px !important;
-    padding: 28px !important;
+    border-radius: 12px !important;
+    padding: 24px !important;
     width: 100% !important;
-    max-width: 500px !important;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
+    max-width: 460px !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
 }
 
 .modal-box h3 {
     margin-top: 0 !important;
-    margin-bottom: 20px !important;
+    margin-bottom: 16px !important;
     color: #0f172a !important;
-    font-size: 20px !important;
+    font-size: 18px !important;
     font-weight: 700 !important;
 }
 
 .product-form {
     display: flex !important;
     flex-direction: column !important;
-    gap: 6px !important;
+    gap: 4px !important;
 }
 
 .product-form label {
-    font-size: 14px !important;
+    font-size: 13px !important;
     font-weight: 600 !important;
     color: #334155 !important;
-    margin-bottom: 2px !important;
 }
 
 .form-row {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
-    gap: 16px !important;
+    gap: 12px !important;
 }
 
 .modal-actions {
     display: flex !important;
     justify-content: flex-end !important;
-    gap: 12px !important;
-    margin-top: 20px !important;
+    gap: 10px !important;
+    margin-top: 16px !important;
 }
 
 .checkbox-container {
-    margin: 12px 0 !important;
+    margin: 10px 0 !important;
     display: flex !important;
     align-items: center !important;
-    gap: 10px !important;
+    gap: 8px !important;
 }
 
 .checkbox-input {
-    width: 20px !important;
-    height: 20px !important;
+    width: 18px !important;
+    height: 18px !important;
     cursor: pointer !important;
 }
 
 .checkbox-label {
     cursor: pointer !important;
-    font-weight: 700 !important;
+    font-weight: 600 !important;
     color: #dc2626 !important;
-    font-size: 14px !important;
+    font-size: 13px !important;
     margin: 0 !important;
 }
 
 .profit-badge {
-    padding: 12px !important;
-    border-radius: 8px !important;
-    font-weight: 700 !important;
-    font-size: 14px !important;
+    padding: 10px !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
     text-align: center !important;
-    margin-top: 8px !important;
+    margin-top: 6px !important;
 }
 
 .profit-badge.positive {
@@ -490,29 +434,23 @@ select:focus {
 }
 
 /* ==========================================
-   11. QO'SHIMCHA ELEMENTLAR (SCROLL & LOADING)
+   11. YUKLANMOQDA VA QO'SHIMCHA ELEMENTLAR
    ========================================== */
 .scroll-top-btn {
     position: fixed !important;
-    bottom: 24px !important;
-    right: 24px !important;
+    bottom: 20px !important;
+    right: 20px !important;
     background-color: #2563eb !important;
     color: #ffffff !important;
     border: none !important;
-    width: 46px !important;
-    height: 46px !important;
+    width: 40px !important;
+    height: 40px !important;
     border-radius: 50% !important;
     cursor: pointer !important;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3) !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    transition: transform 0.2s ease, background-color 0.2s ease !important;
-}
-
-.scroll-top-btn:hover {
-    transform: translateY(-3px) !important;
-    background-color: #1d4ed8 !important;
 }
 
 .loading-state {
@@ -527,18 +465,17 @@ select:focus {
     align-items: center !important;
     background-color: #f8fafc !important;
     z-index: 9999 !important;
-    font-size: 22px !important;
-    font-weight: 700 !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
     color: #2563eb !important;
-    letter-spacing: 0.5px !important;
 }
 
 .loading-state::after {
     content: "" !important;
-    width: 40px !important;
-    height: 40px !important;
-    margin-top: 18px !important;
-    border: 4px solid #e2e8f0 !important;
+    width: 32px !important;
+    height: 32px !important;
+    margin-top: 14px !important;
+    border: 3px solid #e2e8f0 !important;
     border-top-color: #2563eb !important;
     border-radius: 50% !important;
     animation: spinner 0.8s linear infinite !important;
@@ -560,10 +497,10 @@ select:focus {
 
 .expired-card {
     background: #ffffff !important;
-    padding: 36px !important;
-    border-radius: 16px !important;
+    padding: 28px !important;
+    border-radius: 12px !important;
     text-align: center !important;
-    max-width: 400px !important;
+    max-width: 380px !important;
     border: 1px solid #e2e8f0 !important;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
 }
