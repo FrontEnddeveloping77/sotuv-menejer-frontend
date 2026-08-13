@@ -3,6 +3,121 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/dashboard.css';
 
+const [deleteId, setDeleteId] = useState('');
+const [selectedDeleteProduct, setSelectedDeleteProduct] = useState(null);
+
+// ID kiritilganda o'chiriladigan tovarni avtomatik topish
+const handleDeleteIdChange = (e) => {
+    const value = e.target.value;
+    setDeleteId(value);
+
+    if (!value.trim()) {
+        setSelectedDeleteProduct(null);
+        return;
+    }
+
+    // ID, local_id yoki tartib raqamiga qarab tovar topiladi
+    const foundProduct = products.find((p, index) =>
+        String(p.local_id || p.id) === value.trim() ||
+        String(index + 1) === value.trim() ||
+        String(products.length - index) === value.trim()
+    );
+
+    if (foundProduct) {
+        setSelectedDeleteProduct(foundProduct);
+    } else {
+        setSelectedDeleteProduct(null);
+    }
+};
+
+// Nomi bo'yicha qidirib topish (o'chirish uchun)
+const handleDeleteNameChange = (e) => {
+    const value = e.target.value;
+
+    const foundProduct = products.find(p =>
+        (p.title || p.name || '').toLowerCase().includes(value.toLowerCase())
+    );
+
+    if (foundProduct) {
+        setSelectedDeleteProduct(foundProduct);
+        setDeleteId(foundProduct.local_id || foundProduct.id);
+    } else {
+        setSelectedDeleteProduct(null);
+    }
+};
+
+// Tovarni o'chirish so'rovini yuborish
+const handleConfirmDelete = async (e) => {
+    e.preventDefault();
+    if (!selectedDeleteProduct) return;
+
+    if (!window.confirm(`Haqiqatan ham "${selectedDeleteProduct.title || selectedDeleteProduct.name}" tovarini o'chirmoqchimisiz?`)) {
+        return;
+    }
+
+    setIsSubmitting(true);
+    try {
+        await api.delete(`/api/products/${selectedDeleteProduct.id}`);
+        setDeleteModal(false);
+        setDeleteId('');
+        setSelectedDeleteProduct(null);
+        await fetchData(false);
+        alert("Tovar muvaffaqiyatli o'chirildi!");
+    } catch (err) {
+        alert(err.response?.data?.message || "Tovarni o'chirishda xatolik yuz berdi!");
+    } finally {
+        setIsSubmitting(false);
+    }
+};
+
+const [searchId, setSearchId] = useState('');
+const [searchName, setSearchName] = useState('');
+
+// ID kiritilganda tovar ma'lumotlarini avtomatik to'ldirish
+const handleIdChange = (e) => {
+    const value = e.target.value;
+    setSearchId(value);
+
+    if (!value.trim()) {
+        setSelectedProduct(null);
+        setSearchName('');
+        setSellingPrice(0);
+        return;
+    }
+
+    // ID bo'yicha tovar topish (local_id, id yoki tartib raqamiga qaraydi)
+    const foundProduct = products.find((p, index) =>
+        String(p.local_id || p.id) === value.trim() ||
+        String(index + 1) === value.trim() ||
+        String(products.length - index) === value.trim()
+    );
+
+    if (foundProduct) {
+        setSelectedProduct(foundProduct);
+        setSearchName(foundProduct.title || foundProduct.name || '');
+        setSellingPrice(foundProduct.selling_price || 0);
+    } else {
+        setSelectedProduct(null);
+        setSearchName('');
+    }
+};
+
+// Nomi bo'yicha qidirilganda
+const handleNameChange = (e) => {
+    const value = e.target.value;
+    setSearchName(value);
+
+    const foundProduct = products.find(p =>
+        (p.title || p.name || '').toLowerCase().includes(value.toLowerCase())
+    );
+
+    if (foundProduct) {
+        setSelectedProduct(foundProduct);
+        setSearchId(foundProduct.local_id || foundProduct.id);
+        setSellingPrice(foundProduct.selling_price || 0);
+    }
+};
+
 const BASE_URL = import.meta.env.VITE_API_URL || 'https://sotuv-menejer-backend.onrender.com';
 
 const api = axios.create({ baseURL: BASE_URL });
@@ -506,87 +621,77 @@ const DashboardPage = () => {
                 </div>
             )}
 
-            {/* 🛒 SOTUV MODALI (qidiruv + real vaqtda foyda kalkulyatori bilan) */}
+            {/* Tovar Sotish Modali */}
             {sellModal && (
                 <div className="modal-overlay">
-                    <div className="modal-box">
-                        <h3>🛒 Tovar Sotish</h3>
-                        <form onSubmit={handleSellProduct} className="product-form">
-                            {/* Nomi bo'yicha qidirish */}
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h2>🛒 Tovar Sotish</h2>
+                            <button className="close-btn" onClick={() => setSellModal(false)}>&times;</button>
+                        </div>
+
+                        <form onSubmit={handleSellProduct}>
+                            {/* Tovar Nomi bo'yicha qidirish */}
                             <div className="form-group">
                                 <label>Tovar Nomi bo'yicha qidirish :</label>
                                 <input
                                     type="text"
                                     placeholder="Masalan: Nike, Divan..."
-                                    value={sellData.product_name}
-                                    onChange={(e) => handleSellNameChange(e.target.value)}
-                                    className="form-input"
+                                    value={searchName}
+                                    onChange={handleNameChange}
                                 />
                             </div>
 
-                            {matchedSellProducts.length >= 2 && (
-                                <div className="form-group">
-                                    <label style={{ color: '#d97706', fontWeight: 'bold' }}>
-                                        ⚠️ Bir nechta tovar topildi. Aniq birini tanlang:
-                                    </label>
-                                    <select
-                                        className="form-input"
-                                        value={sellData.product_id}
-                                        onChange={(e) => handleSelectSellProduct(e.target.value)}
-                                    >
-                                        <option value="">-- Tovarni tanlang --</option>
-                                        {matchedSellProducts.map((p) => (
-                                            <option key={p.id} value={p.id}>
-                                                #{p.id} | {p.title || p.name} | {p.color || 'Rangsiz'} | Qoldiq: {p.quantity} ta | Tannarx: {formatSum(p.cost_price)} so'm
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            )}
-
+                            {/* Tovar ID'si bo'yicha qidirish */}
                             <div className="form-group">
                                 <label>Tovar ID'si (Ixtiyoriy) :</label>
                                 <input
                                     type="number"
-                                    placeholder="Masalan: 101"
-                                    value={sellData.product_id}
-                                    onChange={(e) => handleSellIdChange(e.target.value)}
-                                    className="form-input"
+                                    placeholder="Masalan: 3"
+                                    value={searchId}
+                                    onChange={handleIdChange}
                                 />
                             </div>
+
+                            {/* Topilgan tovar haqida ma'lumot (ko'rsatkich) */}
+                            {selectedProduct && (
+                                <div style={{
+                                    backgroundColor: '#e0f2fe',
+                                    color: '#0369a1',
+                                    padding: '8px 12px',
+                                    borderRadius: '6px',
+                                    fontSize: '13px',
+                                    marginBottom: '10px'
+                                }}>
+                                    ✅ Topildi: <b>{selectedProduct.title || selectedProduct.name}</b> ({selectedProduct.color || 'Rangsiz'}) — Qoldiq: {selectedProduct.quantity} ta
+                                </div>
+                            )}
 
                             <div className="form-group">
                                 <label>Sotilayotgan Soni (Dona) * :</label>
                                 <input
                                     type="number"
                                     min="1"
-                                    max={selectedSellProduct?.quantity || undefined}
-                                    value={sellData.sell_quantity}
-                                    onChange={(e) => setSellData({ ...sellData, sell_quantity: e.target.value })}
+                                    max={selectedProduct?.quantity || 1}
+                                    value={sellQuantity}
+                                    onChange={(e) => setSellQuantity(e.target.value)}
                                     required
-                                    className="form-input"
                                 />
-                                {selectedSellProduct && (
-                                    <small style={{ color: '#64748b' }}>
-                                        Omborda mavjud: {selectedSellProduct.quantity} dona
-                                    </small>
-                                )}
                             </div>
 
                             <div className="form-group">
                                 <label>Sotish Narxi (1 dona uchun) * :</label>
                                 <input
                                     type="number"
-                                    placeholder="180000"
-                                    value={sellData.selling_price}
-                                    onChange={(e) => setSellData({ ...sellData, selling_price: e.target.value })}
+                                    value={sellingPrice}
+                                    onChange={(e) => setSellingPrice(e.target.value)}
+                                    placeholder="350000"
                                     required
-                                    className="form-input"
                                 />
                             </div>
 
-                            {/* --- REAL VAQTDA KUTILAYOTGAN FOYDA VA TUSHUM KO'RSATKICHI --- */}
-                            {selectedSellProduct && Number(sellData.selling_price) > 0 && Number(sellData.sell_quantity) > 0 && (
+                            {/* Kutilayotgan Foyda va Tushum Bloki */}
+                            {selectedProduct && Number(sellingPrice) > 0 && Number(sellQuantity) > 0 && (
                                 <div style={{
                                     backgroundColor: '#f8fafc',
                                     border: '1px solid #cbd5e1',
@@ -600,33 +705,28 @@ const DashboardPage = () => {
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: '#475569' }}>
                                         <span>Jami tushum:</span>
                                         <strong style={{ color: '#0f172a' }}>
-                                            {formatSum(Number(sellData.selling_price) * Number(sellData.sell_quantity))} so'm
+                                            {formatSum(Number(sellingPrice) * Number(sellQuantity))} so'm
                                         </strong>
                                     </div>
 
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', paddingTop: '4px', borderTop: '1px dashed #cbd5e1' }}>
                                         <span style={{ fontWeight: '600', color: '#0f172a' }}>Kutilayotgan foyda:</span>
                                         <strong style={{
-                                            color: ((Number(sellData.selling_price) - Number(selectedSellProduct.cost_price || 0)) * Number(sellData.sell_quantity)) >= 0 ? '#16a34a' : '#dc2626'
+                                            color: ((Number(sellingPrice) - Number(selectedProduct.cost_price || 0)) * Number(sellQuantity)) >= 0 ? '#16a34a' : '#dc2626'
                                         }}>
-                                            {((Number(sellData.selling_price) - Number(selectedSellProduct.cost_price || 0)) * Number(sellData.sell_quantity)) >= 0 ? '+' : ''}
-                                            {formatSum((Number(sellData.selling_price) - Number(selectedSellProduct.cost_price || 0)) * Number(sellData.sell_quantity))} so'm
+                                            {((Number(sellingPrice) - Number(selectedProduct.cost_price || 0)) * Number(sellQuantity)) >= 0 ? '+' : ''}
+                                            {formatSum((Number(sellingPrice) - Number(selectedProduct.cost_price || 0)) * Number(sellQuantity))} so'm
                                         </strong>
                                     </div>
                                 </div>
                             )}
 
-                            <div className="modal-actions">
-                                <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-                                    {isSubmitting ? "Sotilmoqda..." : "Sotuvni Bajarish"}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setSellModal(false)}
-                                    className="btn btn-danger"
-                                    disabled={isSubmitting}
-                                >
+                            <div className="modal-actions" style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                                <button type="button" onClick={() => setSellModal(false)} className="btn-secondary">
                                     Bekor qilish
+                                </button>
+                                <button type="submit" disabled={isSubmitting || !selectedProduct} className="btn-primary">
+                                    {isSubmitting ? "Sotilmoqda..." : "Sotuvni Bajarish"}
                                 </button>
                             </div>
                         </form>
@@ -691,89 +791,81 @@ const DashboardPage = () => {
                 </div>
             )}
 
-            {/* 🗑️ O'CHIRISH MODALI */}
+            {/* Tovarni O'chirish Modali */}
             {deleteModal && (
                 <div className="modal-overlay">
-                    <div className="modal-box">
-                        <h3>🗑️ Tovarni O'chirish / Kamaytirish</h3>
-                        <form onSubmit={handleDeleteProduct} className="product-form">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h2>🗑️ Tovarni O'chirish</h2>
+                            <button className="close-btn" onClick={() => setDeleteModal(false)}>&times;</button>
+                        </div>
+
+                        <form onSubmit={handleConfirmDelete}>
+                            {/* Tovar Nomi bo'yicha qidiruv */}
                             <div className="form-group">
                                 <label>Tovar Nomi bo'yicha qidirish :</label>
                                 <input
                                     type="text"
                                     placeholder="Masalan: Nike, Divan..."
-                                    value={deleteData.product_name}
-                                    onChange={(e) => handleDeleteNameChange(e.target.value)}
-                                    className="form-input"
+                                    onChange={handleDeleteNameChange}
                                 />
                             </div>
 
-                            {matchedDeleteProducts.length >= 2 && (
-                                <div className="form-group">
-                                    <label style={{ color: '#d97706', fontWeight: 'bold' }}>
-                                        ⚠️ Bir nechta tovar topildi. Aniq birini tanlang:
-                                    </label>
-                                    <select
-                                        className="form-input"
-                                        value={deleteData.product_id}
-                                        onChange={(e) => handleSelectDeleteProduct(e.target.value)}
-                                    >
-                                        <option value="">-- Tovarni tanlang --</option>
-                                        {matchedDeleteProducts.map((p) => (
-                                            <option key={p.id} value={p.id}>
-                                                #{p.id} | {p.title || p.name} | {p.color || 'Rangsiz'} | Qoldiq: {p.quantity} ta | Tannarx: {formatSum(p.cost_price)} so'm
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            )}
-
+                            {/* Tovar ID'si bo'yicha qidiruv */}
                             <div className="form-group">
-                                <label>Tovar ID'si (Ixtiyoriy) :</label>
+                                <label>Tovar ID'si bo'yicha :</label>
                                 <input
                                     type="number"
-                                    placeholder="Masalan: 101"
-                                    value={deleteData.product_id}
-                                    onChange={(e) => handleDeleteIdChange(e.target.value)}
-                                    className="form-input"
+                                    placeholder="Masalan: 3"
+                                    value={deleteId}
+                                    onChange={handleDeleteIdChange}
+                                    required
                                 />
                             </div>
 
-                            <div className="form-group">
-                                <label className="checkbox-label">
-                                    <input
-                                        type="checkbox"
-                                        checked={deleteData.remove_all}
-                                        onChange={(e) => setDeleteData({ ...deleteData, remove_all: e.target.checked })}
-                                    />
-                                    Bazadan to'liq o'chirib tashlash
-                                </label>
-                            </div>
-
-                            {!deleteData.remove_all && (
-                                <div className="form-group">
-                                    <label>Olib tashlanadigan soni :</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        value={deleteData.quantity_to_remove}
-                                        onChange={(e) => setDeleteData({ ...deleteData, quantity_to_remove: e.target.value })}
-                                        className="form-input"
-                                    />
+                            {/* Topilgan tovar va uning ma'lumotlari ko'rsatkichi */}
+                            {selectedDeleteProduct ? (
+                                <div style={{
+                                    backgroundColor: '#fef2f2',
+                                    border: '1px solid #fecaca',
+                                    color: '#991b1b',
+                                    padding: '12px 16px',
+                                    borderRadius: '8px',
+                                    marginTop: '15px',
+                                    fontSize: '14px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '6px'
+                                }}>
+                                    <div><strong>O'chirilayotgan Tovar:</strong> {selectedDeleteProduct.title || selectedDeleteProduct.name}</div>
+                                    <div><strong>Kategoriya:</strong> {selectedDeleteProduct.category || 'Umumiy'}</div>
+                                    <div><strong>Rangi:</strong> {selectedDeleteProduct.color || '-'}</div>
+                                    <div><strong>Ombordagi qoldiq:</strong> {selectedDeleteProduct.quantity} ta</div>
                                 </div>
-                            )}
+                            ) : deleteId ? (
+                                <div style={{ color: '#dc2626', fontSize: '13px', marginTop: '10px' }}>
+                                    ⚠️ Bunday ID ga ega tovar topilmadi!
+                                </div>
+                            ) : null}
 
-                            <div className="modal-actions">
-                                <button type="submit" className="btn btn-danger" disabled={isSubmitting}>
-                                    {isSubmitting ? "Bajarilmoqda..." : "Tasdiqlash"}
+                            <div className="modal-actions" style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                                <button type="button" onClick={() => setDeleteModal(false)} className="btn-secondary">
+                                    Bekor qilish
                                 </button>
                                 <button
-                                    type="button"
-                                    onClick={() => setDeleteModal(false)}
-                                    className="btn btn-primary"
-                                    disabled={isSubmitting}
+                                    type="submit"
+                                    disabled={isSubmitting || !selectedDeleteProduct}
+                                    className="btn-danger"
+                                    style={{
+                                        backgroundColor: selectedDeleteProduct ? '#dc2626' : '#fca5a5',
+                                        color: '#fff',
+                                        border: 'none',
+                                        padding: '10px 18px',
+                                        borderRadius: '6px',
+                                        cursor: selectedDeleteProduct ? 'pointer' : 'not-allowed'
+                                    }}
                                 >
-                                    Bekor qilish
+                                    {isSubmitting ? "O'chirilmoqda..." : "Tovarni O'chirish"}
                                 </button>
                             </div>
                         </form>
