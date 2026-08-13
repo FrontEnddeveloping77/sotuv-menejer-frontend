@@ -715,7 +715,7 @@ const DashboardPage = () => {
                                 <label>Tovar bo'yicha qidirish :</label>
                                 <input
                                     type="text"
-                                    placeholder="ID raqami yoki nomini yozing (masalan: 2 yoki futbolka)..."
+                                    placeholder="ID raqami yoki nomini yozing (masalan: 1 yoki futbolka)..."
                                     value={sellSearch}
                                     onChange={(e) => {
                                         const query = e.target.value;
@@ -726,13 +726,15 @@ const DashboardPage = () => {
                                             return;
                                         }
 
-                                        // Agar faqat raqam kiritilgan bo'lsa ID bo'yicha, aks holda nom bo'yicha qidiramiz
+                                        // Aniq mos keladigan ID yoki nomni qidiramiz
                                         const foundGroup = productsGroups.find(g =>
-                                            String(g.local_id) === String(query) ||
+                                            String(g.local_id) === String(query.trim()) ||
                                             g.name.toLowerCase().includes(query.toLowerCase())
                                         );
 
                                         if (foundGroup) {
+                                            // Avtomatik ravishda ID ni o'rnatamiz va tanlaymiz
+                                            setSellData(prev => ({ ...prev, product_id: String(foundGroup.local_id) }));
                                             handleSellGroupSelect(foundGroup.local_id);
                                         } else {
                                             setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
@@ -961,7 +963,7 @@ const DashboardPage = () => {
                                 <label>Tovar bo'yicha qidirish :</label>
                                 <input
                                     type="text"
-                                    placeholder="ID raqami yoki nomini yozing (masalan: 2 yoki futbolka)..."
+                                    placeholder="ID raqami yoki nomini yozing (masalan: 1 yoki futbolka)..."
                                     value={sellSearch}
                                     onChange={(e) => {
                                         const query = e.target.value;
@@ -973,14 +975,15 @@ const DashboardPage = () => {
                                         }
 
                                         const foundGroup = productsGroups.find(g =>
-                                            String(g.local_id) === String(query) ||
+                                            String(g.local_id) === String(query.trim()) ||
                                             g.name.toLowerCase().includes(query.toLowerCase())
                                         );
 
                                         if (foundGroup) {
-                                            handleSellGroupSelect(foundGroup.local_id);
+                                            setDeleteData(prev => ({ ...prev, product_id: String(foundGroup.local_id) }));
+                                            handleDeleteGroupSelect(foundGroup.local_id);
                                         } else {
-                                            setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
+                                            setDeleteData(prev => ({ ...prev, product_id: '', rows: [emptyDeleteRow()] }));
                                         }
                                     }}
                                     className="form-input"
