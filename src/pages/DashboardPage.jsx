@@ -538,7 +538,7 @@ const DashboardPage = () => {
                     <h3>📦 Ombordagi Tovarlar</h3>
                     <input
                         type="text"
-                        placeholder="ID, Nomi, Kategoriya yoki Rang bo'yicha qidirish..."
+                        placeholder="ID, Nomi, Kategoriya, Rang yoki O'lchami bo'yicha qidirish..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="search-input"
@@ -717,7 +717,30 @@ const DashboardPage = () => {
                                     type="text"
                                     placeholder="ID, nomi, kategoriya, rang yoki razmer..."
                                     value={sellSearch}
-                                    onChange={(e) => setSellSearch(e.target.value)}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        setSellSearch(val);
+
+                                        // Qidiruv bo'yicha filtrlangan guruhlarni topamiz
+                                        const matches = productsGroups.filter(g => {
+                                            const query = val.toLowerCase();
+                                            return (
+                                                String(g.local_id).includes(query) ||
+                                                g.name.toLowerCase().includes(query) ||
+                                                (g.category && g.category.toLowerCase().includes(query)) ||
+                                                (g.color && g.color.toLowerCase().includes(query)) ||
+                                                g.variants.some(v => v.size && String(v.size).toLowerCase().includes(query))
+                                            );
+                                        });
+
+                                        // Agar bitta mos tovar topilsa, uni avtomatik tanlab qo'yamiz
+                                        if (matches.length === 1) {
+                                            handleSellGroupSelect(matches[0].local_id);
+                                        } else if (matches.length === 0) {
+                                            // Hech narsa topilmasa, tanlovni tozalaymiz
+                                            setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
+                                        }
+                                    }}
                                     className="form-input"
                                 />
                             </div>
@@ -942,8 +965,31 @@ const DashboardPage = () => {
                                 <input
                                     type="text"
                                     placeholder="ID, nomi, kategoriya, rang yoki razmer..."
-                                    value={deleteSearch}
-                                    onChange={(e) => setDeleteSearch(e.target.value)}
+                                    value={sellSearch}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        setSellSearch(val);
+
+                                        // Qidiruv bo'yicha filtrlangan guruhlarni topamiz
+                                        const matches = productsGroups.filter(g => {
+                                            const query = val.toLowerCase();
+                                            return (
+                                                String(g.local_id).includes(query) ||
+                                                g.name.toLowerCase().includes(query) ||
+                                                (g.category && g.category.toLowerCase().includes(query)) ||
+                                                (g.color && g.color.toLowerCase().includes(query)) ||
+                                                g.variants.some(v => v.size && String(v.size).toLowerCase().includes(query))
+                                            );
+                                        });
+
+                                        // Agar bitta mos tovar topilsa, uni avtomatik tanlab qo'yamiz
+                                        if (matches.length === 1) {
+                                            handleSellGroupSelect(matches[0].local_id);
+                                        } else if (matches.length === 0) {
+                                            // Hech narsa topilmasa, tanlovni tozalaymiz
+                                            setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
+                                        }
+                                    }}
                                     className="form-input"
                                 />
                             </div>
