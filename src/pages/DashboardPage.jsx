@@ -444,6 +444,17 @@ const DashboardPage = () => {
                                     className="form-input"
                                 />
                             </div>
+                            {/* YANGA QO'SHILGAN QISM: O'lcham (Size) */}
+                            <div className="form-group">
+                                <label>O'lchami (Razmer):</label>
+                                <input
+                                    type="text"
+                                    placeholder="XL, 42, 200x200..."
+                                    value={newProduct.size || ''}
+                                    onChange={(e) => setNewProduct({ ...newProduct, size: e.target.value })}
+                                    className="form-input"
+                                />
+                            </div>
                             <div className="form-group">
                                 <label>Soni (Sklad):</label>
                                 <input
@@ -508,7 +519,10 @@ const DashboardPage = () => {
 
                             {selectedSellProduct && (
                                 <div className="info-banner info-success">
-                                    ✅ Topildi: <b>{selectedSellProduct.title || selectedSellProduct.name}</b> ({selectedSellProduct.color || 'Rangsiz'}) — Qoldiq: {selectedSellProduct.quantity} ta
+                                    {/* QO'SHILDI: O'lchami (Size) ma'lumoti */}
+                                    ✅ Topildi: <b>{selectedSellProduct.title || selectedSellProduct.name}</b>
+                                    ({selectedSellProduct.color || 'Rangsiz'} | O'lchami: {selectedSellProduct.size || '-'})
+                                    — Qoldiq: {selectedSellProduct.quantity} ta
                                 </div>
                             )}
 
@@ -568,7 +582,7 @@ const DashboardPage = () => {
                 </div>
             )}
 
-            {/* 💸 RASXOD MODALI */}
+            {/* 💸 RASXOD MODALI (TEGILMADI) */}
             {expenseModal && (
                 <div className="modal-overlay">
                     <div className="modal-box">
@@ -662,6 +676,8 @@ const DashboardPage = () => {
                                     <div><strong>O'chirilayotgan Tovar:</strong> {selectedDeleteProduct.title || selectedDeleteProduct.name}</div>
                                     <div><strong>Kategoriya:</strong> {selectedDeleteProduct.category || 'Umumiy'}</div>
                                     <div><strong>Rangi:</strong> {selectedDeleteProduct.color || '-'}</div>
+                                    {/* QO'SHILDI: O'lchami (Size) ma'lumoti */}
+                                    <div><strong>O'lchami:</strong> {selectedDeleteProduct.size || '-'}</div>
                                     <div><strong>Ombordagi qoldiq:</strong> {selectedDeleteProduct.quantity} ta</div>
                                 </div>
                             ) : deleteData.product_id ? (
