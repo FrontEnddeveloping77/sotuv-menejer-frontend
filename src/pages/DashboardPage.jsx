@@ -714,30 +714,27 @@ const DashboardPage = () => {
                             <div className="form-group">
                                 <label>Tovar bo'yicha qidirish :</label>
                                 <input
-                                    type="text"
-                                    placeholder="ID, nomi, kategoriya, rang yoki razmer..."
+                                    type="number"
+                                    placeholder="Faqat ID raqamini yozing (masalan: 2)..."
                                     value={sellSearch}
                                     onChange={(e) => {
-                                        const val = e.target.value;
-                                        setSellSearch(val);
+                                        const idVal = e.target.value;
+                                        setSellSearch(idVal);
 
-                                        // Qidiruv bo'yicha filtrlangan guruhlarni topamiz
-                                        const matches = productsGroups.filter(g => {
-                                            const query = val.toLowerCase();
-                                            return (
-                                                String(g.local_id).includes(query) ||
-                                                g.name.toLowerCase().includes(query) ||
-                                                (g.category && g.category.toLowerCase().includes(query)) ||
-                                                (g.color && g.color.toLowerCase().includes(query)) ||
-                                                g.variants.some(v => v.size && String(v.size).toLowerCase().includes(query))
-                                            );
-                                        });
+                                        if (!idVal) {
+                                            // Agar input bo'shatilsa, tanlovni tozalaymiz
+                                            setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
+                                            return;
+                                        }
 
-                                        // Agar bitta mos tovar topilsa, uni avtomatik tanlab qo'yamiz
-                                        if (matches.length === 1) {
-                                            handleSellGroupSelect(matches[0].local_id);
-                                        } else if (matches.length === 0) {
-                                            // Hech narsa topilmasa, tanlovni tozalaymiz
+                                        // Faqat kiritilgan ID bo'yicha mos tovarni qidiramiz
+                                        const foundGroup = productsGroups.find(g => String(g.local_id) === String(idVal));
+
+                                        if (foundGroup) {
+                                            // Agar shunday ID li tovar topilsa, uni avtomatik tanlaymiz
+                                            handleSellGroupSelect(foundGroup.local_id);
+                                        } else {
+                                            // Topilmasa ID tanlovini tozalaymiz
                                             setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
                                         }
                                     }}
@@ -963,30 +960,27 @@ const DashboardPage = () => {
                             <div className="form-group">
                                 <label>Tovar bo'yicha qidirish :</label>
                                 <input
-                                    type="text"
-                                    placeholder="ID, nomi, kategoriya, rang yoki razmer..."
+                                    type="number"
+                                    placeholder="Faqat ID raqamini yozing (masalan: 2)..."
                                     value={sellSearch}
                                     onChange={(e) => {
-                                        const val = e.target.value;
-                                        setSellSearch(val);
+                                        const idVal = e.target.value;
+                                        setSellSearch(idVal);
 
-                                        // Qidiruv bo'yicha filtrlangan guruhlarni topamiz
-                                        const matches = productsGroups.filter(g => {
-                                            const query = val.toLowerCase();
-                                            return (
-                                                String(g.local_id).includes(query) ||
-                                                g.name.toLowerCase().includes(query) ||
-                                                (g.category && g.category.toLowerCase().includes(query)) ||
-                                                (g.color && g.color.toLowerCase().includes(query)) ||
-                                                g.variants.some(v => v.size && String(v.size).toLowerCase().includes(query))
-                                            );
-                                        });
+                                        if (!idVal) {
+                                            // Agar input bo'shatilsa, tanlovni tozalaymiz
+                                            setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
+                                            return;
+                                        }
 
-                                        // Agar bitta mos tovar topilsa, uni avtomatik tanlab qo'yamiz
-                                        if (matches.length === 1) {
-                                            handleSellGroupSelect(matches[0].local_id);
-                                        } else if (matches.length === 0) {
-                                            // Hech narsa topilmasa, tanlovni tozalaymiz
+                                        // Faqat kiritilgan ID bo'yicha mos tovarni qidiramiz
+                                        const foundGroup = productsGroups.find(g => String(g.local_id) === String(idVal));
+
+                                        if (foundGroup) {
+                                            // Agar shunday ID li tovar topilsa, uni avtomatik tanlaymiz
+                                            handleSellGroupSelect(foundGroup.local_id);
+                                        } else {
+                                            // Topilmasa ID tanlovini tozalaymiz
                                             setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
                                         }
                                     }}
