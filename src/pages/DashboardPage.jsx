@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../styles/dashboard.css';
 
-// MUHIM: Avval axios so'rovlarida na manzil (baseURL), na Authorization token
-// yuborilmagan edi - shuning uchun barcha so'rovlar backendga yetib bormasdi.
 const BASE_URL = import.meta.env.VITE_API_URL || 'https://sotuv-menejer-backend.onrender.com';
 
 const api = axios.create({ baseURL: BASE_URL });
@@ -51,7 +49,6 @@ const DashboardPage = () => {
     const [deleteModal, setDeleteModal] = useState(false);
 
     // Formlar holati
-    // State'dan "size" olib tashlandi
     const [newProduct, setNewProduct] = useState({
         category: '',
         name: '',
@@ -104,7 +101,7 @@ const DashboardPage = () => {
         return Number(val || 0).toLocaleString('uz-UZ');
     };
 
-    // 1. Tovar qo'shish (Razmersiz)
+    // 1. Tovar qo'shish
     const handleAddProduct = async (e) => {
         e.preventDefault();
         try {
@@ -117,9 +114,9 @@ const DashboardPage = () => {
             });
 
             setAddProductModal(false);
-            setNewProduct({ category: '', name: '', color: '', cost_price: '', quantity: 1 });
+            setNewProduct({ category: '', name: '', color: '', cost_price: '', quantity: '' });
             fetchData();
-            alert(`Tovar saqlandi! Biriktirilgan ID: #${res.data.product?.id}`);
+            alert(`Tovar saqlandi! Biriktirilgan ID: #${res.data.product?.id || res.data.id}`);
         } catch (err) {
             alert(err.response?.data?.message || "Tovar qo'shishda xatolik yuz berdi!");
         }
@@ -182,11 +179,12 @@ const DashboardPage = () => {
         }
     };
 
-    // Qidiruv bo'yicha filtrlash (ID, Nomi, Kategoriyasi va Rangi bo'yicha)
+    // Qidiruv bo'yicha filtrlash
     const filteredProducts = products.filter((p) => {
         const query = searchQuery.toLowerCase();
+        const idStr = p.id ? p.id.toString() : '';
         return (
-            p.id.toString().includes(query) ||
+            idStr.includes(query) ||
             (p.title || p.name || '').toLowerCase().includes(query) ||
             (p.category || '').toLowerCase().includes(query) ||
             (p.color || '').toLowerCase().includes(query)
@@ -288,7 +286,6 @@ const DashboardPage = () => {
                     <div className="modal-box">
                         <h3>➕ Yangi Tovar Qo‘shish</h3>
                         <form onSubmit={handleAddProduct} className="product-form">
-
                             <div className="form-group">
                                 <label>Kategoriya (Ixtiyoriy):</label>
                                 <input
@@ -324,7 +321,6 @@ const DashboardPage = () => {
                                 />
                             </div>
 
-                            {/* FAQAT RANGI FIELD'I (O'lchami inputi butunlay olib tashlandi va full-width qilindi) */}
                             <div className="form-group">
                                 <label>Rangi:</label>
                                 <input
@@ -359,47 +355,52 @@ const DashboardPage = () => {
                                     Bekor qilish
                                 </button>
                             </div>
-
                         </form>
                     </div>
                 </div>
             )}
 
-            {/* 2. SOTUV MODALI */}
+            {/* 🛒 SOTUV MODALI */}
             {sellModal && (
                 <div className="modal-overlay">
                     <div className="modal-box">
                         <h3>🛒 Tovar Sotish</h3>
                         <form onSubmit={handleSellProduct} className="product-form">
-                            <label>Tovar ID'si * :</label>
-                            <input
-                                type="number"
-                                placeholder="Masalan: 101"
-                                value={sellData.product_id}
-                                onChange={(e) => setSellData({ ...sellData, product_id: e.target.value })}
-                                required
-                                className="form-input"
-                            />
+                            <div className="form-group">
+                                <label>Tovar ID'si * :</label>
+                                <input
+                                    type="number"
+                                    placeholder="Masalan: 101"
+                                    value={sellData.product_id}
+                                    onChange={(e) => setSellData({ ...sellData, product_id: e.target.value })}
+                                    required
+                                    className="form-input"
+                                />
+                            </div>
 
-                            <label>Sotilayotgan Soni (Dona) * :</label>
-                            <input
-                                type="number"
-                                min="1"
-                                value={sellData.sell_quantity}
-                                onChange={(e) => setSellData({ ...sellData, sell_quantity: e.target.value })}
-                                required
-                                className="form-input"
-                            />
+                            <div className="form-group">
+                                <label>Sotilayotgan Soni (Dona) * :</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={sellData.sell_quantity}
+                                    onChange={(e) => setSellData({ ...sellData, sell_quantity: e.target.value })}
+                                    required
+                                    className="form-input"
+                                />
+                            </div>
 
-                            <label>Sotish Narxi (1 dona uchun) * :</label>
-                            <input
-                                type="number"
-                                placeholder="180000"
-                                value={sellData.selling_price}
-                                onChange={(e) => setSellData({ ...sellData, selling_price: e.target.value })}
-                                required
-                                className="form-input"
-                            />
+                            <div className="form-group">
+                                <label>Sotish Narxi (1 dona uchun) * :</label>
+                                <input
+                                    type="number"
+                                    placeholder="180000"
+                                    value={sellData.selling_price}
+                                    onChange={(e) => setSellData({ ...sellData, selling_price: e.target.value })}
+                                    required
+                                    className="form-input"
+                                />
+                            </div>
 
                             <div className="modal-actions">
                                 <button type="submit" className="btn btn-primary">Sotuvni Bajarish</button>
@@ -410,41 +411,47 @@ const DashboardPage = () => {
                 </div>
             )}
 
-            {/* 3. RASXOD MODALI */}
+            {/* 💸 RASXOD MODALI */}
             {expenseModal && (
                 <div className="modal-overlay">
                     <div className="modal-box">
                         <h3>💸 Rasxod Yozish</h3>
                         <form onSubmit={handleAddExpense} className="product-form">
-                            <label>Rasxod Nomi/Sababi * :</label>
-                            <input
-                                type="text"
-                                placeholder="Masalan: Tushlik yoki Arenda"
-                                value={expenseData.title}
-                                onChange={(e) => setExpenseData({ ...expenseData, title: e.target.value })}
-                                required
-                                className="form-input"
-                            />
+                            <div className="form-group">
+                                <label>Rasxod Nomi/Sababi * :</label>
+                                <input
+                                    type="text"
+                                    placeholder="Masalan: Tushlik yoki Arenda"
+                                    value={expenseData.title}
+                                    onChange={(e) => setExpenseData({ ...expenseData, title: e.target.value })}
+                                    required
+                                    className="form-input"
+                                />
+                            </div>
 
-                            <label>Suma (So'm) * :</label>
-                            <input
-                                type="number"
-                                placeholder="50000"
-                                value={expenseData.amount}
-                                onChange={(e) => setExpenseData({ ...expenseData, amount: e.target.value })}
-                                required
-                                className="form-input"
-                            />
+                            <div className="form-group">
+                                <label>Suma (So'm) * :</label>
+                                <input
+                                    type="number"
+                                    placeholder="50000"
+                                    value={expenseData.amount}
+                                    onChange={(e) => setExpenseData({ ...expenseData, amount: e.target.value })}
+                                    required
+                                    className="form-input"
+                                />
+                            </div>
 
-                            <label>Rasxod Turi :</label>
-                            <select
-                                value={expenseData.expense_type}
-                                onChange={(e) => setExpenseData({ ...expenseData, expense_type: e.target.value })}
-                                className="form-input"
-                            >
-                                <option value="daily">Kunlik</option>
-                                <option value="monthly">Oylik</option>
-                            </select>
+                            <div className="form-group">
+                                <label>Rasxod Turi :</label>
+                                <select
+                                    value={expenseData.expense_type}
+                                    onChange={(e) => setExpenseData({ ...expenseData, expense_type: e.target.value })}
+                                    className="form-input"
+                                >
+                                    <option value="daily">Kunlik</option>
+                                    <option value="monthly">Oylik</option>
+                                </select>
+                            </div>
 
                             <div className="modal-actions">
                                 <button type="submit" className="btn btn-primary">Saqlash</button>
@@ -455,33 +462,37 @@ const DashboardPage = () => {
                 </div>
             )}
 
-            {/* 4. O'CHIRISH MODALI */}
+            {/* 🗑️ O'CHIRISH MODALI */}
             {deleteModal && (
                 <div className="modal-overlay">
                     <div className="modal-box">
                         <h3>🗑️ Tovarni O'chirish / Kamaytirish</h3>
                         <form onSubmit={handleDeleteProduct} className="product-form">
-                            <label>Tovar ID'si * :</label>
-                            <input
-                                type="number"
-                                placeholder="Masalan: 101"
-                                value={deleteData.product_id}
-                                onChange={(e) => setDeleteData({ ...deleteData, product_id: e.target.value })}
-                                required
-                                className="form-input"
-                            />
-
-                            <label className="checkbox-label">
+                            <div className="form-group">
+                                <label>Tovar ID'si * :</label>
                                 <input
-                                    type="checkbox"
-                                    checked={deleteData.remove_all}
-                                    onChange={(e) => setDeleteData({ ...deleteData, remove_all: e.target.checked })}
+                                    type="number"
+                                    placeholder="Masalan: 101"
+                                    value={deleteData.product_id}
+                                    onChange={(e) => setDeleteData({ ...deleteData, product_id: e.target.value })}
+                                    required
+                                    className="form-input"
                                 />
-                                Bazadan to'liq o'chirib tashlash
-                            </label>
+                            </div>
+
+                            <div className="form-group">
+                                <label className="checkbox-label">
+                                    <input
+                                        type="checkbox"
+                                        checked={deleteData.remove_all}
+                                        onChange={(e) => setDeleteData({ ...deleteData, remove_all: e.target.checked })}
+                                    />
+                                    Bazadan to'liq o'chirib tashlash
+                                </label>
+                            </div>
 
                             {!deleteData.remove_all && (
-                                <>
+                                <div className="form-group">
                                     <label>Olib tashlanadigan soni :</label>
                                     <input
                                         type="number"
@@ -490,7 +501,7 @@ const DashboardPage = () => {
                                         onChange={(e) => setDeleteData({ ...deleteData, quantity_to_remove: e.target.value })}
                                         className="form-input"
                                     />
-                                </>
+                                </div>
                             )}
 
                             <div className="modal-actions">

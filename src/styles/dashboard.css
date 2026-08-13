@@ -29,11 +29,11 @@
     margin: 0 !important;
 }
 
-.header-actions {
+.header-actions,
+.header-buttons {
     display: flex !important;
     align-items: center !important;
     gap: 12px !important;
-    /* Tugmalar oralig'ini ochish */
     flex-wrap: wrap !important;
 }
 
@@ -55,12 +55,14 @@
     display: grid !important;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
     gap: 16px !important;
+    margin-bottom: 24px !important;
 }
 
 /* ==========================================
    4. STATISTIKA KARTOCHKALARI (OMBOR/HISOBOT)
    ========================================== */
-.stats-grid .stat-card {
+.stats-grid .stat-card,
+.stat-card {
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
@@ -71,7 +73,8 @@
     border: 1px solid #e2e8f0 !important;
 }
 
-.stats-grid .stat-card h4 {
+.stats-grid .stat-card h4,
+.stat-card h4 {
     font-size: 13px !important;
     font-weight: 700 !important;
     color: #475569 !important;
@@ -82,23 +85,27 @@
     border-bottom: 1px solid #f1f5f9 !important;
 }
 
-.stats-grid .stat-card h3 {
+.stats-grid .stat-card h3,
+.stat-card h3 {
     font-size: 18px !important;
     font-weight: 700 !important;
     color: #0f172a !important;
     margin: 0 0 8px 0 !important;
 }
 
-.stats-grid .stat-card p {
+.stats-grid .stat-card p,
+.stat-card p {
     font-size: 13px !important;
     font-weight: 500 !important;
     color: #64748b !important;
     margin: 6px 0 0 0 !important;
     display: flex !important;
     justify-content: space-between !important;
+    align-items: center !important;
 }
 
-.stats-grid .stat-card p b {
+.stats-grid .stat-card p b,
+.stat-card p b {
     font-size: 13px !important;
     font-weight: 600 !important;
     color: #1e293b !important;
@@ -111,19 +118,24 @@
     color: #dc2626 !important;
 }
 
-.text-profit-positive {
+.text-profit-positive,
+.profit-plus {
     color: #16a34a !important;
+    font-weight: 700 !important;
 }
 
-.text-profit-negative {
+.text-profit-negative,
+.profit-minus {
     color: #dc2626 !important;
+    font-weight: 700 !important;
 }
 
 /* ==========================================
    6. ASOSIY TUGMA STILLARI VA YORQIN RANGLAR
    ========================================== */
 .btn,
-.header-actions .btn {
+.header-actions .btn,
+.header-buttons .btn {
     padding: 10px 18px !important;
     border-radius: 8px !important;
     border: none !important;
@@ -139,26 +151,29 @@
 }
 
 .btn:hover,
-.header-actions .btn:hover {
+.header-actions .btn:hover,
+.header-buttons .btn:hover {
     opacity: 0.9 !important;
     transform: translateY(-1px) !important;
 }
 
 /* Tovar Qo'shish - Ko'k */
 .btn-primary,
-.header-actions .btn-primary {
+.header-actions .btn-primary,
+.btn-add {
     background-color: #2563eb !important;
     color: #ffffff !important;
 }
 
 /* Tovar Sotish - Yashil */
 .btn-success,
-.header-actions .btn-success {
+.header-actions .btn-success,
+.btn-sell {
     background-color: #16a34a !important;
     color: #ffffff !important;
 }
 
-/* Rasxod Yozish - Saru / Sariy-to'q sariq */
+/* Rasxod Yozish - Sariq / To'q sariq */
 .btn-expense,
 .header-actions .btn-expense {
     background-color: #f59e0b !important;
@@ -167,7 +182,8 @@
 
 /* Tovarni O'chirish - Qizil */
 .btn-danger,
-.header-actions .btn-danger {
+.header-actions .btn-danger,
+.btn-delete {
     background-color: #dc2626 !important;
     color: #ffffff !important;
 }
@@ -196,7 +212,8 @@
 /* ==========================================
    7. KARTOCHKA BLOQLARI VA KATEGORIYALAR
    ========================================== */
-.box-card {
+.box-card,
+.products-section {
     background-color: #ffffff !important;
     border-radius: 12px !important;
     padding: 20px !important;
@@ -209,14 +226,18 @@
     margin-top: 20px !important;
 }
 
-.category-header {
+.category-header,
+.section-header {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
     margin-bottom: 14px !important;
+    flex-wrap: wrap !important;
+    gap: 12px !important;
 }
 
-.category-header h3 {
+.category-header h3,
+.section-header h3 {
     margin: 0 !important;
     font-size: 16px !important;
     color: #0f172a !important;
@@ -256,14 +277,13 @@
    8. INPUT VA FORM ELEMENTLARI
    ========================================== */
 .form-input,
+.search-input,
 input[type="text"],
 input[type="number"],
 select {
     width: 100% !important;
     max-width: 380px !important;
     padding: 10px 14px !important;
-    margin-top: 6px !important;
-    margin-bottom: 14px !important;
     border: 1px solid #cbd5e1 !important;
     border-radius: 6px !important;
     font-size: 13px !important;
@@ -271,13 +291,24 @@ select {
     background-color: #ffffff !important;
     box-sizing: border-box !important;
     outline: none !important;
+    transition: all 0.2s ease !important;
 }
 
-input[type="text"]::placeholder {
+.form-input,
+input[type="text"],
+input[type="number"],
+select {
+    margin-top: 6px !important;
+    margin-bottom: 14px !important;
+}
+
+input[type="text"]::placeholder,
+.search-input::placeholder {
     color: #94a3b8 !important;
 }
 
 .form-input:focus,
+.search-input:focus,
 input[type="text"]:focus,
 input[type="number"]:focus,
 select:focus {
@@ -318,8 +349,19 @@ select:focus {
     letter-spacing: 0.5px !important;
 }
 
+.products-table tr:hover td {
+    background-color: #f8fafc !important;
+}
+
 .products-table tr:last-child td {
     border-bottom: none !important;
+}
+
+.no-data {
+    text-align: center !important;
+    color: #94a3b8 !important;
+    padding: 24px !important;
+    font-size: 14px !important;
 }
 
 .category-badge {
@@ -330,6 +372,20 @@ select:focus {
     font-size: 11px !important;
     font-weight: 700 !important;
     display: inline-block !important;
+}
+
+.color-badge {
+    background-color: #f1f5f9 !important;
+    color: #475569 !important;
+    padding: 3px 8px !important;
+    border-radius: 6px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+}
+
+.warning-stock {
+    color: #dc2626 !important;
+    font-weight: 700 !important;
 }
 
 /* ==========================================
@@ -372,7 +428,13 @@ select:focus {
     gap: 4px !important;
 }
 
-.product-form label {
+.form-group {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.product-form label,
+.form-group label {
     font-size: 13px !important;
     font-weight: 600 !important;
     color: #334155 !important;
@@ -410,6 +472,9 @@ select:focus {
     color: #dc2626 !important;
     font-size: 13px !important;
     margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
 }
 
 .profit-badge {
@@ -453,7 +518,8 @@ select:focus {
     justify-content: center !important;
 }
 
-.loading-state {
+.loading-state,
+.loading-spinner {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
@@ -470,7 +536,8 @@ select:focus {
     color: #2563eb !important;
 }
 
-.loading-state::after {
+.loading-state::after,
+.loading-spinner::after {
     content: "" !important;
     width: 32px !important;
     height: 32px !important;
