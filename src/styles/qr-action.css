@@ -1,0 +1,218 @@
+.qr-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #eef5ff, #f8fbff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    font-family: Inter, Arial, sans-serif;
+    color: #172033
+}
+
+.qr-card {
+    width: min(100%, 460px);
+    background: #fff;
+    border-radius: 28px;
+    padding: 28px;
+    box-shadow: 0 20px 60px rgba(31, 52, 91, .14);
+    text-align: center
+}
+
+.qr-icon,
+.success-icon {
+    font-size: 42px;
+    margin-bottom: 8px
+}
+
+.qr-label {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    color: #718096
+}
+
+.qr-card h1 {
+    font-size: 28px;
+    margin: 7px 0 16px
+}
+
+.product-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center
+}
+
+.product-details span {
+    background: #f3f6fa;
+    padding: 8px 11px;
+    border-radius: 12px;
+    font-size: 13px
+}
+
+.cost-box {
+    margin: 18px 0;
+    padding: 13px;
+    background: #f8fafc;
+    border-radius: 14px
+}
+
+.qr-actions {
+    display: grid;
+    gap: 12px;
+    margin-top: 22px
+}
+
+.qr-action {
+    border: 0;
+    border-radius: 18px;
+    padding: 17px;
+    text-align: left;
+    cursor: pointer;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 800
+}
+
+.qr-action span {
+    display: block
+}
+
+.qr-action small {
+    display: block;
+    margin-top: 4px;
+    opacity: .85;
+    font-weight: 500
+}
+
+.qr-action.delete {
+    background: #e55353
+}
+
+.qr-action.sell {
+    background: #16a36a
+}
+
+.qr-confirm,
+.qr-sell-form {
+    margin-top: 20px;
+    text-align: left
+}
+
+.qr-confirm h3,
+.qr-sell-form h3 {
+    text-align: center
+}
+
+.qr-sell-form label {
+    display: block;
+    font-weight: 700;
+    margin: 14px 0 7px
+}
+
+.qr-sell-form input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 15px;
+    border: 1px solid #d9e1ea;
+    border-radius: 13px;
+    font-size: 18px;
+    outline: none
+}
+
+.profit-preview {
+    margin: 12px 0;
+    padding: 12px;
+    border-radius: 12px
+}
+
+.profit-preview.positive {
+    background: #eaf9f0;
+    color: #12733f
+}
+
+.profit-preview.negative {
+    background: #fff0f0;
+    color: #b52c2c
+}
+
+.confirm-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px
+}
+
+.confirm-actions button {
+    flex: 1;
+    border: 0;
+    padding: 13px;
+    border-radius: 12px;
+    font-weight: 800;
+    cursor: pointer
+}
+
+.qr-secondary {
+    background: #eef2f7;
+    color: #334155
+}
+
+.qr-danger {
+    background: #e55353;
+    color: #fff
+}
+
+.qr-primary {
+    background: #1769e0;
+    color: #fff
+}
+
+.qr-error {
+    margin: 14px 0;
+    background: #fff0f0;
+    color: #b42318;
+    padding: 11px;
+    border-radius: 12px
+}
+
+.success-card {
+    padding-top: 38px
+}
+
+.success-icon {
+    width: 70px;
+    height: 70px;
+    margin: 0 auto 15px;
+    border-radius: 50%;
+    background: #eaf9f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #16a36a
+}
+
+.result-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    margin-top: 20px;
+    text-align: left;
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 16px
+}
+
+.qr-spinner {
+    width: 34px;
+    height: 34px;
+    border: 4px solid #dbe5f0;
+    border-top-color: #1769e0;
+    border-radius: 50%;
+    animation: qrspin .8s linear infinite;
+    margin: 0 auto 12px
+}
+
+@keyframes qrspin {
+    to {
+        transform: rotate(360deg)
+    }
+}

@@ -829,3 +829,10 @@ select:focus {
     font-size: 13px;
     font-weight: normal;
 }
+
+.qr-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-width: 70px
+}

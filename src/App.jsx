@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import QRActionPage from './pages/QRActionPage';
 
 function App() {
     const token = localStorage.getItem('token');
@@ -17,6 +18,9 @@ function App() {
 
                 {/* Login sahifasi */}
                 <Route path="/login" element={<LoginPage />} />
+
+                {/* QR orqali ochiladigan ombor amallari */}
+                <Route path="/qr/:token" element={<QRActionPage />} />
 
                 {/* Dashboard sahifasi */}
                 <Route

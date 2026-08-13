@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/dashboard.css';
+import '../styles/qr-modal.css';
+import ProductQR from '../components/ProductQR';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'https://sotuv-menejer-backend.onrender.com';
 
@@ -134,7 +136,8 @@ const DashboardPage = () => {
             map.get(key).variants.push({
                 id: p.id,
                 size: p.size,
-                quantity: Number(p.quantity) || 0
+                quantity: Number(p.quantity) || 0,
+                qr_token: p.qr_token
             });
         });
         return Array.from(map.values());
@@ -507,6 +510,7 @@ const DashboardPage = () => {
                             <th>Rangi</th>
                             <th>Kelgan Narxi (Tannarx)</th>
                             <th>O'lchamlar / Qoldiq</th>
+                            <th>QR</th>
                             <th>Jami Qoldiq</th>
                         </tr>
                     </thead>
@@ -533,13 +537,18 @@ const DashboardPage = () => {
                                                 ))}
                                             </div>
                                         </td>
+                                        <td>
+                                            <div className="qr-list">
+                                                {g.variants.map((v) => <ProductQR key={v.id} product={{ ...v, name: g.name }} />)}
+                                            </div>
+                                        </td>
                                         <td><b className={totalQty < 5 ? "warning-stock" : ""}>{totalQty} ta</b></td>
                                     </tr>
                                 );
                             })
                         ) : (
                             <tr>
-                                <td colSpan="7" className="no-data">Tovar topilmadi!</td>
+                                <td colSpan="8" className="no-data">Tovar topilmadi!</td>
                             </tr>
                         )}
                     </tbody>
