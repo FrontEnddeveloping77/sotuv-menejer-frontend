@@ -714,27 +714,27 @@ const DashboardPage = () => {
                             <div className="form-group">
                                 <label>Tovar bo'yicha qidirish :</label>
                                 <input
-                                    type="number"
-                                    placeholder="Faqat ID raqamini yozing (masalan: 2)..."
+                                    type="text"
+                                    placeholder="ID raqami yoki nomini yozing (masalan: 2 yoki futbolka)..."
                                     value={sellSearch}
                                     onChange={(e) => {
-                                        const idVal = e.target.value;
-                                        setSellSearch(idVal);
+                                        const query = e.target.value;
+                                        setSellSearch(query);
 
-                                        if (!idVal) {
-                                            // Agar input bo'shatilsa, tanlovni tozalaymiz
+                                        if (!query) {
                                             setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
                                             return;
                                         }
 
-                                        // Faqat kiritilgan ID bo'yicha mos tovarni qidiramiz
-                                        const foundGroup = productsGroups.find(g => String(g.local_id) === String(idVal));
+                                        // Agar faqat raqam kiritilgan bo'lsa ID bo'yicha, aks holda nom bo'yicha qidiramiz
+                                        const foundGroup = productsGroups.find(g =>
+                                            String(g.local_id) === String(query) ||
+                                            g.name.toLowerCase().includes(query.toLowerCase())
+                                        );
 
                                         if (foundGroup) {
-                                            // Agar shunday ID li tovar topilsa, uni avtomatik tanlaymiz
                                             handleSellGroupSelect(foundGroup.local_id);
                                         } else {
-                                            // Topilmasa ID tanlovini tozalaymiz
                                             setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
                                         }
                                     }}
@@ -960,27 +960,26 @@ const DashboardPage = () => {
                             <div className="form-group">
                                 <label>Tovar bo'yicha qidirish :</label>
                                 <input
-                                    type="number"
-                                    placeholder="Faqat ID raqamini yozing (masalan: 2)..."
+                                    type="text"
+                                    placeholder="ID raqami yoki nomini yozing (masalan: 2 yoki futbolka)..."
                                     value={sellSearch}
                                     onChange={(e) => {
-                                        const idVal = e.target.value;
-                                        setSellSearch(idVal);
+                                        const query = e.target.value;
+                                        setSellSearch(query);
 
-                                        if (!idVal) {
-                                            // Agar input bo'shatilsa, tanlovni tozalaymiz
+                                        if (!query) {
                                             setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
                                             return;
                                         }
 
-                                        // Faqat kiritilgan ID bo'yicha mos tovarni qidiramiz
-                                        const foundGroup = productsGroups.find(g => String(g.local_id) === String(idVal));
+                                        const foundGroup = productsGroups.find(g =>
+                                            String(g.local_id) === String(query) ||
+                                            g.name.toLowerCase().includes(query.toLowerCase())
+                                        );
 
                                         if (foundGroup) {
-                                            // Agar shunday ID li tovar topilsa, uni avtomatik tanlaymiz
                                             handleSellGroupSelect(foundGroup.local_id);
                                         } else {
-                                            // Topilmasa ID tanlovini tozalaymiz
                                             setSellData(prev => ({ ...prev, product_id: '', rows: [emptySellRow()] }));
                                         }
                                     }}
