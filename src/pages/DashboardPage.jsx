@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/dashboard.css';
 
@@ -15,6 +16,8 @@ api.interceptors.request.use((config) => {
 });
 
 const DashboardPage = () => {
+    const navigate = useNavigate();
+
     // Statik va ma'lumotlar holatlari
     const [stats, setStats] = useState({
         storeName: "Mening Do'konim",
@@ -40,7 +43,10 @@ const DashboardPage = () => {
 
     const [products, setProducts] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
-    const [loading, setLoading] = useState(true);
+    
+    // Loading holatlari
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Modallar holatlari
     const [addProductModal, setAddProductModal] = useState(false);
@@ -75,28 +81,40 @@ const DashboardPage = () => {
         quantity_to_remove: 1
     });
 
+    // Chiqish (Logout) funksiyasi
+    const handleLogout = () => {
+        if (window.confirm("Tizimdan chiqishni tasdiqlaysizmi?")) {
+            localStorage.removeItem('token');
+            navigate('/login');
+        }
+    };
+
     // Ma'lumotlarni yuklash
-    const fetchData = async () => {
+    const fetchData = async (showMainLoader = false) => {
         try {
-            setLoading(true);
+            if (showMainLoader) setIsInitialLoading(true);
+
             const [statsRes, productsRes] = await Promise.all([
                 api.get('/api/dashboard/stats'),
                 api.get('/api/products')
             ]);
-            setStats(statsRes.data);
-            setProducts(productsRes.data.products || productsRes.data);
+
+            if (statsRes.data) {
+                setStats((prev) => ({ ...prev, ...statsRes.data }));
+            }
+            const fetchedProducts = productsRes.data?.products || productsRes.data || [];
+            setProducts(Array.isArray(fetchedProducts) ? fetchedProducts : []);
         } catch (err) {
             console.error("Ma'lumotlarni yuklashda xatolik:", err);
         } finally {
-            setLoading(false);
+            if (showMainLoader) setIsInitialLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchData();
+        fetchData(true);
     }, []);
 
-    // Pul summasini formatlash (Masalan: 100 000)
     const formatSum = (val) => {
         return Number(val || 0).toLocaleString('uz-UZ');
     };
@@ -104,94 +122,112 @@ const DashboardPage = () => {
     // 1. Tovar qo'shish
     const handleAddProduct = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
         try {
             const res = await api.post('/api/products', {
                 category: newProduct.category || 'Umumiy',
                 name: newProduct.name,
                 color: newProduct.color,
-                cost_price: Number(newProduct.cost_price),
+                cost_price: Number(newProduct.cost_price) || 0,
                 quantity: Number(newProduct.quantity) || 1
             });
 
             setAddProductModal(false);
             setNewProduct({ category: '', name: '', color: '', cost_price: '', quantity: '' });
-            fetchData();
-            alert(`Tovar saqlandi! Biriktirilgan ID: #${res.data.product?.id || res.data.id}`);
+            await fetchData(false);
+            alert(`Tovar saqlandi! Biriktirilgan ID: #${res.data?.product?.id || res.data?.id || ''}`);
         } catch (err) {
             alert(err.response?.data?.message || "Tovar qo'shishda xatolik yuz berdi!");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     // 2. Tovar sotish
     const handleSellProduct = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
         try {
             await api.post('/api/dashboard/sell', {
                 product_id: Number(sellData.product_id),
-                sell_quantity: Number(sellData.sell_quantity),
-                selling_price: Number(sellData.selling_price)
+                sell_quantity: Number(sellData.sell_quantity) || 1,
+                selling_price: Number(sellData.selling_price) || 0
             });
 
             setSellModal(false);
             setSellData({ product_id: '', sell_quantity: 1, selling_price: '' });
-            fetchData();
+            await fetchData(false);
             alert("Sotuv muvaffaqiyatli amalga oshirildi!");
         } catch (err) {
             alert(err.response?.data?.message || "Sotuvda xatolik yuz berdi!");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     // 3. Rasxod qo'shish
     const handleAddExpense = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
         try {
             await api.post('/api/dashboard/expenses', {
                 title: expenseData.title,
-                amount: Number(expenseData.amount),
+                amount: Number(expenseData.amount) || 0,
                 expense_type: expenseData.expense_type
             });
 
             setExpenseModal(false);
             setExpenseData({ title: '', amount: '', expense_type: 'daily' });
-            fetchData();
+            await fetchData(false);
             alert("Rasxod kiritildi!");
         } catch (err) {
             alert(err.response?.data?.message || "Rasxod qo'shishda xatolik!");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     // 4. Tovarni kamaytirish / O'chirish
     const handleDeleteProduct = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
         try {
             await api.post('/api/dashboard/delete-product', {
                 product_id: Number(deleteData.product_id),
                 remove_all: deleteData.remove_all,
-                quantity_to_remove: Number(deleteData.quantity_to_remove)
+                quantity_to_remove: Number(deleteData.quantity_to_remove) || 1
             });
 
             setDeleteModal(false);
             setDeleteData({ product_id: '', remove_all: false, quantity_to_remove: 1 });
-            fetchData();
+            await fetchData(false);
             alert("Amal muvaffaqiyatli bajarildi!");
         } catch (err) {
             alert(err.response?.data?.message || "O'chirishda xatolik yuz berdi!");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     // Qidiruv bo'yicha filtrlash
-    const filteredProducts = products.filter((p) => {
-        const query = searchQuery.toLowerCase();
+    const filteredProducts = (products || []).filter((p) => {
+        const query = searchQuery.toLowerCase().trim();
+        if (!query) return true;
+
         const idStr = p.id ? p.id.toString() : '';
+        const nameStr = (p.title || p.name || '').toLowerCase();
+        const categoryStr = (p.category || '').toLowerCase();
+        const colorStr = (p.color || '').toLowerCase();
+
         return (
             idStr.includes(query) ||
-            (p.title || p.name || '').toLowerCase().includes(query) ||
-            (p.category || '').toLowerCase().includes(query) ||
-            (p.color || '').toLowerCase().includes(query)
+            nameStr.includes(query) ||
+            categoryStr.includes(query) ||
+            colorStr.includes(query)
         );
     });
 
-    if (loading) {
+    if (isInitialLoading) {
         return <div className="loading-spinner">Ma'lumotlar yuklanmoqda...</div>;
     }
 
@@ -199,12 +235,13 @@ const DashboardPage = () => {
         <div className="dashboard-container">
             {/* TEPANGI SARLAVHA VA AMALLAR TUGMALARI */}
             <header className="dashboard-header">
-                <h2>🏬 {stats.storeName} Boshqaruv Paneli</h2>
+                <h2>🏬 {stats.storeName || "Mening Do'konim"} Boshqaruv Paneli</h2>
                 <div className="header-buttons">
                     <button onClick={() => setAddProductModal(true)} className="btn btn-add">➕ Tovar Qo'shish</button>
                     <button onClick={() => setSellModal(true)} className="btn btn-sell">🛒 Tovar Sotish</button>
                     <button onClick={() => setExpenseModal(true)} className="btn btn-expense">💸 Rasxod Yozish</button>
                     <button onClick={() => setDeleteModal(true)} className="btn btn-delete">🗑️ Tovarni O'chirish</button>
+                    <button onClick={handleLogout} className="btn btn-logout">🚪 Chiqish</button>
                 </div>
             </header>
 
@@ -212,20 +249,20 @@ const DashboardPage = () => {
             <section className="stats-grid">
                 <div className="stat-card">
                     <h4>Ombor Holati</h4>
-                    <p><b>Jami tovar turi:</b> {stats.totalProducts} xil</p>
-                    <p><b>Jami qoldiq:</b> {stats.totalStock} dona</p>
+                    <p><b>Jami tovar turi:</b> {stats.totalProducts || 0} xil</p>
+                    <p><b>Jami qoldiq:</b> {stats.totalStock || 0} dona</p>
                 </div>
                 <div className="stat-card">
                     <h4>Bugungi Hisobot</h4>
-                    <p><b>Sotildi:</b> {stats.dailySold} dona</p>
+                    <p><b>Sotildi:</b> {stats.dailySold || 0} dona</p>
                     <p><b>Tushum:</b> {formatSum(stats.dailyRevenue)} so'm</p>
-                    <p><b>Sof Foyda:</b> <span className={stats.dailyProfit >= 0 ? "profit-plus" : "profit-minus"}>{formatSum(stats.dailyProfit)} so'm</span></p>
+                    <p><b>Sof Foyda:</b> <span className={(stats.dailyProfit || 0) >= 0 ? "profit-plus" : "profit-minus"}>{formatSum(stats.dailyProfit)} so'm</span></p>
                 </div>
                 <div className="stat-card">
                     <h4>Oylik Hisobot</h4>
-                    <p><b>Sotildi:</b> {stats.monthlySold} dona</p>
+                    <p><b>Sotildi:</b> {stats.monthlySold || 0} dona</p>
                     <p><b>Tushum:</b> {formatSum(stats.monthlyRevenue)} so'm</p>
-                    <p><b>Sof Foyda:</b> <span className={stats.monthlyProfit >= 0 ? "profit-plus" : "profit-minus"}>{formatSum(stats.monthlyProfit)} so'm</span></p>
+                    <p><b>Sof Foyda:</b> <span className={(stats.monthlyProfit || 0) >= 0 ? "profit-plus" : "profit-minus"}>{formatSum(stats.monthlyProfit)} so'm</span></p>
                 </div>
                 <div className="stat-card">
                     <h4>Jami Rasxodlar</h4>
@@ -268,7 +305,7 @@ const DashboardPage = () => {
                                     <td><b>{p.title || p.name}</b></td>
                                     <td>{p.color ? <span className="color-badge">{p.color}</span> : '-'}</td>
                                     <td>{formatSum(p.cost_price)} so'm</td>
-                                    <td><b className={p.quantity < 5 ? "warning-stock" : ""}>{p.quantity ?? 0} ta</b></td>
+                                    <td><b className={(p.quantity || 0) < 5 ? "warning-stock" : ""}>{p.quantity ?? 0} ta</b></td>
                                 </tr>
                             ))
                         ) : (
@@ -280,7 +317,7 @@ const DashboardPage = () => {
                 </table>
             </section>
 
-            {/* ➕ YANGI TOVAR QO'SHISH MODALI */}
+            {/* MODALLAR */}
             {addProductModal && (
                 <div className="modal-overlay">
                     <div className="modal-box">
@@ -296,7 +333,6 @@ const DashboardPage = () => {
                                     className="form-input"
                                 />
                             </div>
-
                             <div className="form-group">
                                 <label>Tovar Nomi * :</label>
                                 <input
@@ -308,7 +344,6 @@ const DashboardPage = () => {
                                     className="form-input"
                                 />
                             </div>
-
                             <div className="form-group">
                                 <label>Kelgan Narxi (Tannarx) * :</label>
                                 <input
@@ -320,7 +355,6 @@ const DashboardPage = () => {
                                     className="form-input"
                                 />
                             </div>
-
                             <div className="form-group">
                                 <label>Rangi:</label>
                                 <input
@@ -331,7 +365,6 @@ const DashboardPage = () => {
                                     className="form-input"
                                 />
                             </div>
-
                             <div className="form-group">
                                 <label>Soni (Sklad):</label>
                                 <input
@@ -344,13 +377,15 @@ const DashboardPage = () => {
                                     className="form-input"
                                 />
                             </div>
-
                             <div className="modal-actions">
-                                <button type="submit" className="btn btn-primary">Saqlash</button>
+                                <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+                                    {isSubmitting ? "Saqlanmoqda..." : "Saqlash"}
+                                </button>
                                 <button
                                     type="button"
                                     onClick={() => setAddProductModal(false)}
                                     className="btn btn-danger"
+                                    disabled={isSubmitting}
                                 >
                                     Bekor qilish
                                 </button>
@@ -360,7 +395,6 @@ const DashboardPage = () => {
                 </div>
             )}
 
-            {/* 🛒 SOTUV MODALI */}
             {sellModal && (
                 <div className="modal-overlay">
                     <div className="modal-box">
@@ -377,7 +411,6 @@ const DashboardPage = () => {
                                     className="form-input"
                                 />
                             </div>
-
                             <div className="form-group">
                                 <label>Sotilayotgan Soni (Dona) * :</label>
                                 <input
@@ -389,7 +422,6 @@ const DashboardPage = () => {
                                     className="form-input"
                                 />
                             </div>
-
                             <div className="form-group">
                                 <label>Sotish Narxi (1 dona uchun) * :</label>
                                 <input
@@ -401,17 +433,24 @@ const DashboardPage = () => {
                                     className="form-input"
                                 />
                             </div>
-
                             <div className="modal-actions">
-                                <button type="submit" className="btn btn-primary">Sotuvni Bajarish</button>
-                                <button type="button" onClick={() => setSellModal(false)} className="btn btn-danger">Bekor qilish</button>
+                                <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+                                    {isSubmitting ? "Sotilmoqda..." : "Sotuvni Bajarish"}
+                                </button>
+                                <button 
+                                    type="button" 
+                                    onClick={() => setSellModal(false)} 
+                                    className="btn btn-danger"
+                                    disabled={isSubmitting}
+                                >
+                                    Bekor qilish
+                                </button>
                             </div>
                         </form>
                     </div>
                 </div>
             )}
 
-            {/* 💸 RASXOD MODALI */}
             {expenseModal && (
                 <div className="modal-overlay">
                     <div className="modal-box">
@@ -428,7 +467,6 @@ const DashboardPage = () => {
                                     className="form-input"
                                 />
                             </div>
-
                             <div className="form-group">
                                 <label>Suma (So'm) * :</label>
                                 <input
@@ -440,7 +478,6 @@ const DashboardPage = () => {
                                     className="form-input"
                                 />
                             </div>
-
                             <div className="form-group">
                                 <label>Rasxod Turi :</label>
                                 <select
@@ -452,17 +489,24 @@ const DashboardPage = () => {
                                     <option value="monthly">Oylik</option>
                                 </select>
                             </div>
-
                             <div className="modal-actions">
-                                <button type="submit" className="btn btn-primary">Saqlash</button>
-                                <button type="button" onClick={() => setExpenseModal(false)} className="btn btn-danger">Bekor qilish</button>
+                                <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+                                    {isSubmitting ? "Saqlanmoqda..." : "Saqlash"}
+                                </button>
+                                <button 
+                                    type="button" 
+                                    onClick={() => setExpenseModal(false)} 
+                                    className="btn btn-danger"
+                                    disabled={isSubmitting}
+                                >
+                                    Bekor qilish
+                                </button>
                             </div>
                         </form>
                     </div>
                 </div>
             )}
 
-            {/* 🗑️ O'CHIRISH MODALI */}
             {deleteModal && (
                 <div className="modal-overlay">
                     <div className="modal-box">
@@ -479,7 +523,6 @@ const DashboardPage = () => {
                                     className="form-input"
                                 />
                             </div>
-
                             <div className="form-group">
                                 <label className="checkbox-label">
                                     <input
@@ -490,7 +533,6 @@ const DashboardPage = () => {
                                     Bazadan to'liq o'chirib tashlash
                                 </label>
                             </div>
-
                             {!deleteData.remove_all && (
                                 <div className="form-group">
                                     <label>Olib tashlanadigan soni :</label>
@@ -503,10 +545,18 @@ const DashboardPage = () => {
                                     />
                                 </div>
                             )}
-
                             <div className="modal-actions">
-                                <button type="submit" className="btn btn-danger">Tasdiqlash</button>
-                                <button type="button" onClick={() => setDeleteModal(false)} className="btn btn-primary">Bekor qilish</button>
+                                <button type="submit" className="btn btn-danger" disabled={isSubmitting}>
+                                    {isSubmitting ? "Bajarilmoqda..." : "Tasdiqlash"}
+                                </button>
+                                <button 
+                                    type="button" 
+                                    onClick={() => setDeleteModal(false)} 
+                                    className="btn btn-primary"
+                                    disabled={isSubmitting}
+                                >
+                                    Bekor qilish
+                                </button>
                             </div>
                         </form>
                     </div>
