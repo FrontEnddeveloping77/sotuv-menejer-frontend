@@ -48,6 +48,8 @@ const DashboardPage = () => {
 
     const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [subscriptionExpired, setSubscriptionExpired] = useState(false);
+    const [subscriptionMessage, setSubscriptionMessage] = useState('');
 
     const [addProductModal, setAddProductModal] = useState(false);
     const [sellModal, setSellModal] = useState(false);
@@ -105,8 +107,20 @@ const DashboardPage = () => {
             }
             const fetchedProducts = productsRes.data?.products || productsRes.data || [];
             setProducts(Array.isArray(fetchedProducts) ? fetchedProducts : []);
+            setSubscriptionExpired(false);
         } catch (err) {
             console.error("Ma'lumotlarni yuklashda xatolik:", err);
+
+            if (err.response?.status === 403) {
+                setSubscriptionExpired(true);
+                setSubscriptionMessage(
+                    err.response?.data?.message ||
+                    "To'lov muddati tugagan!"
+                );
+            } else if (err.response?.status === 401) {
+                localStorage.removeItem('token');
+                navigate('/login');
+            }
         } finally {
             if (showMainLoader) setIsInitialLoading(false);
         }
@@ -450,6 +464,29 @@ const DashboardPage = () => {
 
     if (isInitialLoading) {
         return <div className="loading-spinner">Ma'lumotlar yuklanmoqda...</div>;
+    }
+
+    if (subscriptionExpired) {
+        return (
+            <div className="subscription-expired-screen">
+                <div className="subscription-expired-card">
+                    <div className="subscription-expired-icon">🔒</div>
+                    <h2>To'lov muddati tugadi</h2>
+                    <p>
+                        {subscriptionMessage}
+                        {' '}To'lov qilganingizdan so'ng saytdan foydalanish
+                        huquqiga ega bo'lasiz.
+                    </p>
+                    <button
+                        type="button"
+                        className="btn btn-danger"
+                        onClick={handleLogout}
+                    >
+                        🚪 Chiqish
+                    </button>
+                </div>
+            </div>
+        );
     }
 
     return (
