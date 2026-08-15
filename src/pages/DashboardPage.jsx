@@ -521,7 +521,7 @@ const DashboardPage = () => {
                                 <th className="col-hide-narrow">Kelgan Narxi (Tannarx)</th>
                                 <th className="col-hide-mobile">O'lchamlar / Qoldiq</th>
                                 <th className="col-hide-mobile">QR</th>
-                                <th>Jami Qoldiq</th>
+                                <th className="col-hide-tiny">Jami Qoldiq</th>
                                 <th className="col-details-only">Amal</th>
                             </tr>
                         </thead>
@@ -553,7 +553,7 @@ const DashboardPage = () => {
                                                     {g.variants.map((v) => <ProductQR key={v.id} product={{ ...v, name: g.name }} />)}
                                                 </div>
                                             </td>
-                                            <td><b className={totalQty < 5 ? "warning-stock" : ""}>{totalQty} ta</b></td>
+                                            <td className="col-hide-tiny"><b className={totalQty < 5 ? "warning-stock" : ""}>{totalQty} ta</b></td>
                                             <td className="col-details-only">
                                                 <button
                                                     type="button"

@@ -938,6 +938,14 @@ body {
     }
 }
 
+/* 500px va undan kichik oynalarda: Jami Qoldiq ustuni ham yashiriladi,
+   u faqat "Batafsil" modalida (o'lchamlar orqali) ko'rinadi. */
+@media (max-width: 500px) {
+    .col-hide-tiny {
+        display: none !important;
+    }
+}
+
 @media (max-width: 768px) {
     .dashboard-container {
         padding: 14px !important;
