@@ -24,6 +24,7 @@ const DashboardPage = () => {
         storeName: "Mening Do'konim",
         totalProducts: 0,
         totalStock: 0,
+        totalStockValue: 0,
         totalSold: 0,
         totalRevenue: 0,
         totalProfit: 0,
@@ -468,6 +469,7 @@ const DashboardPage = () => {
                     <h4>Ombor Holati</h4>
                     <p><b>Jami tovar turi:</b> {stats.totalProducts || 0} xil</p>
                     <p><b>Jami qoldiq:</b> {stats.totalStock || 0} dona</p>
+                    <p><b>Ombordagi tovarlar summasi:</b> {formatSum(stats.totalStockValue)} so'm</p>
                 </div>
                 <div className="stat-card">
                     <h4>Bugungi Hisobot</h4>
@@ -486,6 +488,12 @@ const DashboardPage = () => {
                     <p><b>Bugun:</b> {formatSum(stats.dailyExpense)} so'm</p>
                     <p><b>Shu Oy:</b> {formatSum(stats.monthlyExpense)} so'm</p>
                     <p><b>Jami:</b> {formatSum(stats.totalExpense)} so'm</p>
+                </div>
+                <div className="stat-card">
+                    <h4>Umumiy Hisobot (Butun Davr)</h4>
+                    <p><b>Jami sotilgan:</b> {stats.totalSold || 0} dona</p>
+                    <p><b>Jami tushum:</b> {formatSum(stats.totalRevenue)} so'm</p>
+                    <p><b>Jami sof foyda:</b> <span className={(stats.totalProfit || 0) >= 0 ? "profit-plus" : "profit-minus"}>{formatSum(stats.totalProfit)} so'm</span></p>
                 </div>
             </section>
 
