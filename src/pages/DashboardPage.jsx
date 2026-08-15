@@ -518,7 +518,7 @@ const DashboardPage = () => {
                                 <th>Kategoriya</th>
                                 <th>Tovar Nomi</th>
                                 <th className="col-hide-mobile">Rangi</th>
-                                <th>Kelgan Narxi (Tannarx)</th>
+                                <th className="col-hide-narrow">Kelgan Narxi (Tannarx)</th>
                                 <th className="col-hide-mobile">O'lchamlar / Qoldiq</th>
                                 <th className="col-hide-mobile">QR</th>
                                 <th>Jami Qoldiq</th>
@@ -535,7 +535,7 @@ const DashboardPage = () => {
                                             <td><span className="category-badge">{g.category || 'Umumiy'}</span></td>
                                             <td><b>{g.name}</b></td>
                                             <td className="col-hide-mobile">{g.color ? <span className="color-badge">{g.color}</span> : '-'}</td>
-                                            <td>{formatSum(g.cost_price)} so'm</td>
+                                            <td className="col-hide-narrow">{formatSum(g.cost_price)} so'm</td>
                                             <td className="col-hide-mobile">
                                                 <div className="size-badge-list">
                                                     {g.variants.map((v) => (

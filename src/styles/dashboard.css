@@ -930,6 +930,14 @@ body {
     }
 }
 
+/* 735px va undan kichik oynalarda: Kelgan Narxi ustuni ham yashiriladi,
+   u faqat "Batafsil" modalida ko'rinadi. */
+@media (max-width: 735px) {
+    .col-hide-narrow {
+        display: none !important;
+    }
+}
+
 @media (max-width: 768px) {
     .dashboard-container {
         padding: 14px !important;
@@ -978,4 +986,4 @@ body {
     .search-input {
         max-width: 100% !important;
     }
-}
+}g
