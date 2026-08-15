@@ -53,6 +53,7 @@ const DashboardPage = () => {
     const [sellModal, setSellModal] = useState(false);
     const [expenseModal, setExpenseModal] = useState(false);
     const [deleteModal, setDeleteModal] = useState(false);
+    const [detailsGroup, setDetailsGroup] = useState(null);
 
     const [newProduct, setNewProduct] = useState({
         category: '',
@@ -509,58 +510,70 @@ const DashboardPage = () => {
                     />
                 </div>
 
-                <table className="products-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Kategoriya</th>
-                            <th>Tovar Nomi</th>
-                            <th>Rangi</th>
-                            <th>Kelgan Narxi (Tannarx)</th>
-                            <th>O'lchamlar / Qoldiq</th>
-                            <th>QR</th>
-                            <th>Jami Qoldiq</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredGroups.length > 0 ? (
-                            filteredGroups.map((g) => {
-                                const totalQty = g.variants.reduce((sum, v) => sum + v.quantity, 0);
-                                return (
-                                    <tr key={g.local_id}>
-                                        <td><b>#{g.local_id}</b></td>
-                                        <td><span className="category-badge">{g.category || 'Umumiy'}</span></td>
-                                        <td><b>{g.name}</b></td>
-                                        <td>{g.color ? <span className="color-badge">{g.color}</span> : '-'}</td>
-                                        <td>{formatSum(g.cost_price)} so'm</td>
-                                        <td>
-                                            <div className="size-badge-list">
-                                                {g.variants.map((v) => (
-                                                    <span
-                                                        key={v.id}
-                                                        className={`size-badge ${v.quantity < 3 ? "size-badge-low" : ""}`}
-                                                    >
-                                                        {v.size ? v.size : "Standart"}: {v.quantity} ta
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div className="qr-list">
-                                                {g.variants.map((v) => <ProductQR key={v.id} product={{ ...v, name: g.name }} />)}
-                                            </div>
-                                        </td>
-                                        <td><b className={totalQty < 5 ? "warning-stock" : ""}>{totalQty} ta</b></td>
-                                    </tr>
-                                );
-                            })
-                        ) : (
+                <div className="table-wrapper">
+                    <table className="products-table">
+                        <thead>
                             <tr>
-                                <td colSpan="8" className="no-data">Tovar topilmadi!</td>
+                                <th>ID</th>
+                                <th>Kategoriya</th>
+                                <th>Tovar Nomi</th>
+                                <th>Rangi</th>
+                                <th>Kelgan Narxi (Tannarx)</th>
+                                <th className="col-hide-mobile">O'lchamlar / Qoldiq</th>
+                                <th className="col-hide-mobile">QR</th>
+                                <th>Jami Qoldiq</th>
+                                <th className="col-details-only">Amal</th>
                             </tr>
-                        )}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {filteredGroups.length > 0 ? (
+                                filteredGroups.map((g) => {
+                                    const totalQty = g.variants.reduce((sum, v) => sum + v.quantity, 0);
+                                    return (
+                                        <tr key={g.local_id}>
+                                            <td><b>#{g.local_id}</b></td>
+                                            <td><span className="category-badge">{g.category || 'Umumiy'}</span></td>
+                                            <td><b>{g.name}</b></td>
+                                            <td>{g.color ? <span className="color-badge">{g.color}</span> : '-'}</td>
+                                            <td>{formatSum(g.cost_price)} so'm</td>
+                                            <td className="col-hide-mobile">
+                                                <div className="size-badge-list">
+                                                    {g.variants.map((v) => (
+                                                        <span
+                                                            key={v.id}
+                                                            className={`size-badge ${v.quantity < 3 ? "size-badge-low" : ""}`}
+                                                        >
+                                                            {v.size ? v.size : "Standart"}: {v.quantity} ta
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </td>
+                                            <td className="col-hide-mobile">
+                                                <div className="qr-list">
+                                                    {g.variants.map((v) => <ProductQR key={v.id} product={{ ...v, name: g.name }} />)}
+                                                </div>
+                                            </td>
+                                            <td><b className={totalQty < 5 ? "warning-stock" : ""}>{totalQty} ta</b></td>
+                                            <td className="col-details-only">
+                                                <button
+                                                    type="button"
+                                                    className="btn-details"
+                                                    onClick={() => setDetailsGroup(g)}
+                                                >
+                                                    🔍 Batafsil
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            ) : (
+                                <tr>
+                                    <td colSpan="9" className="no-data">Tovar topilmadi!</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </section>
 
             {addProductModal && (
@@ -1040,6 +1053,55 @@ const DashboardPage = () => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+            {detailsGroup && (
+                <div className="modal-overlay" onClick={() => setDetailsGroup(null)}>
+                    <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>🔍 Tovar Tafsilotlari — #{detailsGroup.local_id}</h3>
+                        </div>
+
+                        <div className="details-info">
+                            <p><b>Nomi:</b> {detailsGroup.name}</p>
+                            <p><b>Kategoriya:</b> {detailsGroup.category || 'Umumiy'}</p>
+                            <p><b>Rangi:</b> {detailsGroup.color || '-'}</p>
+                            <p><b>Kelgan narxi:</b> {formatSum(detailsGroup.cost_price)} so'm</p>
+                        </div>
+
+                        <div className="details-section">
+                            <h4>O'lchamlar / Qoldiq</h4>
+                            <div className="size-badge-list">
+                                {detailsGroup.variants.map((v) => (
+                                    <span
+                                        key={v.id}
+                                        className={`size-badge ${v.quantity < 3 ? "size-badge-low" : ""}`}
+                                    >
+                                        {v.size ? v.size : "Standart"}: {v.quantity} ta
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="details-section">
+                            <h4>QR Kodlar</h4>
+                            <div className="qr-list">
+                                {detailsGroup.variants.map((v) => (
+                                    <ProductQR key={v.id} product={{ ...v, name: detailsGroup.name }} />
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="modal-actions">
+                            <button
+                                type="button"
+                                onClick={() => setDetailsGroup(null)}
+                                className="btn btn-secondary"
+                            >
+                                Yopish
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
