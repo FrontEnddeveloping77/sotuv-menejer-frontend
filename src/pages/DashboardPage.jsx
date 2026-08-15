@@ -517,7 +517,7 @@ const DashboardPage = () => {
                                 <th>ID</th>
                                 <th>Kategoriya</th>
                                 <th>Tovar Nomi</th>
-                                <th>Rangi</th>
+                                <th className="col-hide-mobile">Rangi</th>
                                 <th>Kelgan Narxi (Tannarx)</th>
                                 <th className="col-hide-mobile">O'lchamlar / Qoldiq</th>
                                 <th className="col-hide-mobile">QR</th>
@@ -534,7 +534,7 @@ const DashboardPage = () => {
                                             <td><b>#{g.local_id}</b></td>
                                             <td><span className="category-badge">{g.category || 'Umumiy'}</span></td>
                                             <td><b>{g.name}</b></td>
-                                            <td>{g.color ? <span className="color-badge">{g.color}</span> : '-'}</td>
+                                            <td className="col-hide-mobile">{g.color ? <span className="color-badge">{g.color}</span> : '-'}</td>
                                             <td>{formatSum(g.cost_price)} so'm</td>
                                             <td className="col-hide-mobile">
                                                 <div className="size-badge-list">

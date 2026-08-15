@@ -906,6 +906,30 @@ body {
     letter-spacing: 0.5px !important;
 }
 
+/* 950px va undan kichik oynalarda: Rangi, O'lchamlar/Qoldiq va QR
+   ustunlari yashiriladi, o'rniga "Batafsil" tugmasi chiqadi. */
+@media (max-width: 950px) {
+    .col-hide-mobile {
+        display: none !important;
+    }
+
+    .col-details-only {
+        display: table-cell !important;
+    }
+
+    .products-table {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .products-table th,
+    .products-table td {
+        white-space: normal !important;
+        padding: 10px 8px !important;
+        font-size: 12px !important;
+    }
+}
+
 @media (max-width: 768px) {
     .dashboard-container {
         padding: 14px !important;
@@ -943,29 +967,6 @@ body {
         max-width: 94vw !important;
         width: 94vw !important;
         padding: 16px !important;
-    }
-
-    /* Telefon/planshetda ID, Nom, Kategoriya, Rang, Narx, Jami qoldiq va
-       "Batafsil" tugmasi qoladi; O'lchamlar va QR ustunlari berkitiladi,
-       shu tufayli jadval torayadi va yon scroll shart bo'lmaydi. */
-    .col-hide-mobile {
-        display: none !important;
-    }
-
-    .col-details-only {
-        display: table-cell !important;
-    }
-
-    .products-table {
-        width: 100% !important;
-        min-width: 0 !important;
-    }
-
-    .products-table th,
-    .products-table td {
-        white-space: normal !important;
-        padding: 10px 8px !important;
-        font-size: 12px !important;
     }
 
     .cart-row-fields,
