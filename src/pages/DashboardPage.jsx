@@ -470,8 +470,8 @@ const DashboardPage = () => {
                 alert("Kelgan narx kiritilishi shart!");
                 return;
             }
-            if (!newProduct.sizes?.trim()) {
-                alert("Razmerlar kiritilishi shart!");
+            if (!newProduct.color?.trim()) {
+                alert("Rang kiritilishi shart!");
                 return;
             }
             if (!newProduct.quantity || Number(newProduct.quantity) <= 0) {
@@ -497,10 +497,10 @@ const DashboardPage = () => {
             const body = {
                 category: newProduct.category.trim(),
                 name: newProduct.name.trim(),
-                color: newProduct.color?.trim() || null,
+                color: newProduct.color.trim(),
                 cost_price: Number(newProduct.cost_price) || 0,
                 quantity: Number(newProduct.quantity) || 1,
-                sizes: newProduct.sizes.trim(),
+                sizes: newProduct.sizes?.trim() || '',
                 payment_type: newProduct.payment_type || 'cash',
                 supplier: newProduct.payment_type === 'credit' ? newProduct.supplier.trim() : null,
                 supplier_phone: newProduct.payment_type === 'credit' ? newProduct.supplier_phone.trim() : null,
