@@ -499,9 +499,10 @@ const DashboardPage = () => {
                 return;
             }
 
+            // To‘langan summa ixtiyoriy (bo‘sh qoldirilsa 0 deb olinadi)
             if (newProduct.payment_type === 'credit') {
-                if (newProduct.paid_amount === '' || newProduct.paid_amount === null || Number(newProduct.paid_amount) < 0) {
-                    alert("To‘langan summani to‘g‘ri kiriting!");
+                if (newProduct.paid_amount !== '' && newProduct.paid_amount != null && Number(newProduct.paid_amount) < 0) {
+                    alert("To‘langan summa manfiy bo‘lishi mumkin emas!");
                     return;
                 }
             }
@@ -1183,20 +1184,19 @@ const DashboardPage = () => {
                                 />
                             </div>
 
-                            {/* To‘langan summa faqat nasiya bo‘lsa */}
+                            {/* To‘langan summa faqat nasiya bo‘lsa — ixtiyoriy */}
                             {newProduct.payment_type === 'credit' && (
                                 <div className="form-group">
-                                    <label>To‘langan summa * :</label>
+                                    <label>To‘langan summa (ixtiyoriy) :</label>
                                     <input
                                         type="number"
-                                        placeholder="Masalan: 50000"
+                                        placeholder="Masalan: 50000 (bo‘sh qoldirish mumkin)"
                                         value={newProduct.paid_amount || ''}
                                         onChange={(e) => setNewProduct({ ...newProduct, paid_amount: e.target.value })}
-                                        required
                                         className="form-input"
                                     />
                                     <small className="form-hint">
-                                        Qancha pul oldindan berilganini kiriting
+                                        Qancha pul oldindan berilganini kiriting. Bo‘sh qoldirilsa 0 deb hisoblanadi.
                                     </small>
                                 </div>
                             )}
