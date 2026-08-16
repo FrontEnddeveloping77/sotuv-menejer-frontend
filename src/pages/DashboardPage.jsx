@@ -72,6 +72,8 @@ const DashboardPage = () => {
     const [deleteModal, setDeleteModal] = useState(false);
     const [detailsGroup, setDetailsGroup] = useState(null);
     const [editModal, setEditModal] = useState(false);
+    const [editSelectModal, setEditSelectModal] = useState(false);
+    const [editSelectSearch, setEditSelectSearch] = useState('');
 
     // --- VOZVRAT (SOTUVLAR RO'YXATI) ---
     const [returnModal, setReturnModal] = useState(false);
@@ -927,6 +929,15 @@ const DashboardPage = () => {
                 <h2>🏬 {stats.storeName || "Mening Do'konim"} Boshqaruv Paneli</h2>
                 <div className="header-buttons">
                     <button onClick={() => setAddProductModal(true)} className="btn btn-add">➕ Tovar Qo'shish</button>
+                    <button
+                        onClick={() => {
+                            setEditSelectSearch('');
+                            setEditSelectModal(true);
+                        }}
+                        className="btn btn-edit-header"
+                    >
+                        ✏️ Tovarni tahrirlash
+                    </button>
                     <button onClick={() => setSellModal(true)} className="btn btn-sell">🛒 Tovar Sotish</button>
                     <button onClick={() => setExpenseModal(true)} className="btn btn-expense">💸 Rasxod Yozish</button>
                     <button onClick={() => setDeleteModal(true)} className="btn btn-delete">🗑️ Tovarni O'chirish</button>
@@ -1649,6 +1660,109 @@ const DashboardPage = () => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ✏️ TOVARNI TAHRIRLASH — TANLASH MODALI */}
+            {editSelectModal && (
+                <div className="modal-overlay" onClick={() => setEditSelectModal(false)}>
+                    <div className="modal-box modal-box-wide" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>✏️ Tovarni tahrirlash</h3>
+                        </div>
+
+                        <div className="form-group">
+                            <label>Tovar nomi, kategoriya yoki ID bo‘yicha qidirish :</label>
+                            <input
+                                type="text"
+                                placeholder="Masalan: Nike, KRASOVKA, #12..."
+                                value={editSelectSearch}
+                                onChange={(e) => setEditSelectSearch(e.target.value)}
+                                className="form-input"
+                                autoFocus
+                            />
+                        </div>
+
+                        <div className="info-banner info-success">
+                            Faqat qo‘shilganiga {PRODUCT_EDIT_WINDOW_DAYS} kundan oshmagan tovarlarni tahrirlash mumkin.
+                        </div>
+
+                        <div className="expense-list" style={{ maxHeight: '420px', overflowY: 'auto' }}>
+                            {(() => {
+                                const q = editSelectSearch.toLowerCase().trim();
+                                const list = productGroups.filter((g) => {
+                                    if (!q) return true;
+                                    const idStr = g.local_id ? String(g.local_id) : '';
+                                    const nameStr = (g.name || '').toLowerCase();
+                                    const categoryStr = (g.category || '').toLowerCase();
+                                    const colorStr = (g.color || '').toLowerCase();
+                                    return (
+                                        idStr.includes(q) ||
+                                        nameStr.includes(q) ||
+                                        categoryStr.includes(q) ||
+                                        colorStr.includes(q)
+                                    );
+                                });
+
+                                if (list.length === 0) {
+                                    return <p className="empty-text">Tovar topilmadi!</p>;
+                                }
+
+                                return list.map((g) => {
+                                    const totalQty = g.variants.reduce((s, v) => s + v.quantity, 0);
+                                    const editable = isProductEditable(g);
+                                    return (
+                                        <div className="expense-list-item" key={g.local_id}>
+                                            <div>
+                                                <div>
+                                                    <b>#{g.local_id}</b> — {g.name}
+                                                    {g.color ? ` (${g.color})` : ''}
+                                                </div>
+                                                <div className="expense-meta">
+                                                    {g.category || 'Umumiy'}
+                                                    {' • '}
+                                                    {totalQty} dona
+                                                    {' • '}
+                                                    {formatSum(g.cost_price)} so‘m
+                                                    {!editable && (
+                                                        <span style={{ color: '#ef4444', marginLeft: 8 }}>
+                                                            (muddati o‘tgan)
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className="btn-edit-product btn-small"
+                                                disabled={!editable}
+                                                title={
+                                                    !editable
+                                                        ? `${PRODUCT_EDIT_WINDOW_DAYS} kundan ko‘p vaqt o‘tgan, tahrirlab bo‘lmaydi`
+                                                        : 'Tahrirlash'
+                                                }
+                                                onClick={() => {
+                                                    setEditSelectModal(false);
+                                                    openEditProduct(g);
+                                                }}
+                                            >
+                                                ✏️ Tahrirlash
+                                            </button>
+                                        </div>
+                                    );
+                                });
+                            })()}
+                        </div>
+
+                        <div className="modal-actions">
+                            <button
+                                type="button"
+                                onClick={() => setEditSelectModal(false)}
+                                className="btn btn-secondary"
+                            >
+                                Yopish
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
