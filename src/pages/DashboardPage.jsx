@@ -24,10 +24,6 @@ const SALE_RETURN_WINDOW_DAYS = 7;
 // Rasxodni tahrirlash/o'chirish uchun ruxsat etilgan muddat (kun)
 const EXPENSE_EDIT_WINDOW_DAYS = 30;
 
-const [debtsModal, setDebtsModal] = useState(false);
-const [debts, setDebts] = useState([]);
-const [loadingDebts, setLoadingDebts] = useState(false);
-
 const daysSince = (dateValue) => {
     if (!dateValue) return Infinity;
     const then = new Date(dateValue).getTime();
@@ -115,6 +111,11 @@ const DashboardPage = () => {
         paid_amount: '',        // nasiya bo‘lsa
         supplier_phone: '',
     });
+
+    // --- QARZLAR ---
+    const [debtsModal, setDebtsModal] = useState(false);
+    const [debts, setDebts] = useState([]);
+    const [loadingDebts, setLoadingDebts] = useState(false);
 
     const emptySellRow = () => ({ size: '', sell_quantity: 1, selling_price: '' });
     const [sellSearch, setSellSearch] = useState('');
@@ -1230,72 +1231,6 @@ const DashboardPage = () => {
                 </div>
             )}
 
-            {debtsModal && (
-                <div className="modal-overlay">
-                    <div className="modal-box" style={{ maxWidth: '720px' }}>
-                        <h3>💳 Qarzlar ro‘yxati</h3>
-
-                        {loadingDebts ? (
-                            <p style={{ textAlign: 'center', padding: '20px' }}>Yuklanmoqda...</p>
-                        ) : debts.length === 0 ? (
-                            <div className="debts-empty">
-                                Hozircha hech qanday qarz yo‘q ✅
-                            </div>
-                        ) : (
-                            <div className="debts-list">
-                                {debts.map((debt, index) => (
-                                    <div key={index} className="debt-card">
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
-                                            <strong style={{ fontSize: '16px' }}>👤 {debt.supplier}</strong>
-                                            <span className="debt-amount">
-                                                {Number(debt.total_debt).toLocaleString('uz-UZ')} so‘m
-                                            </span>
-                                        </div>
-
-                                        {debt.supplier_phone && (
-                                            <div className="debt-phone">
-                                                📞 {debt.supplier_phone}
-                                            </div>
-                                        )}
-
-                                        <div className="debt-meta">
-                                            <span>📦 {debt.products_count} ta tovar</span>
-                                            <span>💰 Tannarx: {Number(debt.total_cost).toLocaleString('uz-UZ')} so‘m</span>
-                                            <span>✅ To‘langan: {Number(debt.total_paid).toLocaleString('uz-UZ')} so‘m</span>
-                                        </div>
-
-                                        {debt.products?.length > 0 && (
-                                            <details>
-                                                <summary>Batafsil ko‘rish</summary>
-                                                <ul>
-                                                    {debt.products.map((p, i) => (
-                                                        <li key={i}>
-                                                            #{p.local_id} — {p.name}
-                                                            {p.size ? ` (${p.size})` : ''} —
-                                                            <strong> {Number(p.debt).toLocaleString('uz-UZ')} so‘m</strong>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </details>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        <div className="modal-actions">
-                            <button
-                                type="button"
-                                onClick={() => setDebtsModal(false)}
-                                className="btn btn-danger"
-                            >
-                                Yopish
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             {/* 🛒 TOVAR SOTISH MODALI — endi FAQAT NOM bo'yicha qidiradi */}
             {sellModal && (
                 <div className="modal-overlay">
@@ -2072,6 +2007,58 @@ const DashboardPage = () => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* 💳 QARZLAR MODALI */}
+            {debtsModal && (
+                <div className="modal-overlay" onClick={() => setDebtsModal(false)}>
+                    <div className="modal-box" style={{ maxWidth: '720px' }} onClick={(e) => e.stopPropagation()}>
+                        <h3>💳 Qarzlar ro‘yxati</h3>
+
+                        {loadingDebts ? (
+                            <p style={{ textAlign: 'center', padding: '20px' }}>Yuklanmoqda...</p>
+                        ) : debts.length === 0 ? (
+                            <div className="info-banner">
+                                Hozircha hech qanday qarz yo‘q ✅
+                            </div>
+                        ) : (
+                            <div className="debts-list">
+                                {debts.map((debt, index) => (
+                                    <div key={index} className="debt-card">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                                            <strong style={{ fontSize: '16px' }}>👤 {debt.supplier}</strong>
+                                            <span className="debt-amount">
+                                                {Number(debt.total_debt).toLocaleString('uz-UZ')} so‘m
+                                            </span>
+                                        </div>
+
+                                        {debt.supplier_phone && (
+                                            <div className="debt-phone">
+                                                📞 {debt.supplier_phone}
+                                            </div>
+                                        )}
+
+                                        <div className="debt-meta">
+                                            <span>📦 {debt.products_count} ta tovar</span>
+                                            <span>💰 Tannarx: {Number(debt.total_cost).toLocaleString('uz-UZ')} so‘m</span>
+                                            <span>✅ To‘langan: {Number(debt.total_paid).toLocaleString('uz-UZ')} so‘m</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        <div className="modal-actions">
+                            <button
+                                type="button"
+                                onClick={() => setDebtsModal(false)}
+                                className="btn btn-danger"
+                            >
+                                Yopish
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
