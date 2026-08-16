@@ -74,13 +74,7 @@ const DashboardPage = () => {
         cost_price: '',
         color: '',
         sizes: '',
-        quantity: '',
-
-        // YANGI
-        payment_type: 'cash',
-        supplier_name: '',
-        supplier_phone: '',
-        initial_paid: ''
+        quantity: ''
     });
 
     const emptySellRow = () => ({ size: '', sell_quantity: 1, selling_price: '' });
@@ -1177,6 +1171,7 @@ const DashboardPage = () => {
                                                         <div className="form-group checkbox-group">
                                                             <label>
                                                                 <input
+                                                                    type="checkbox"
                                                                     checked={row.remove_all}
                                                                     onChange={(e) => updateDeleteRow(index, { remove_all: e.target.checked })}
                                                                 />
