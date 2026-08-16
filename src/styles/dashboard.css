@@ -1463,3 +1463,67 @@ body {
         font-size: 13px;
     }
 }
+
+/* ===== NASIYAGA SOTISH TUGMASI ===== */
+.btn-credit-sell {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
+    color: #ffffff !important;
+    border: none !important;
+    padding: 10px 16px !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+    transition: all 0.25s ease !important;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.35) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.btn-credit-sell:hover {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 14px rgba(139, 92, 246, 0.45) !important;
+}
+
+.btn-credit-sell:active {
+    transform: translateY(0) !important;
+}
+
+/* ===== QARZ TO‘LOVINI BEKOR QILISH TUGMASI ===== */
+.btn-undo-debt {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    color: #ffffff !important;
+    border: none !important;
+    padding: 10px 16px !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+    transition: all 0.25s ease !important;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.btn-undo-debt:hover {
+    background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.45) !important;
+}
+
+.btn-undo-debt:active {
+    transform: translateY(0) !important;
+}
+
+/* Mobile uchun */
+@media (max-width: 768px) {
+
+    .btn-credit-sell,
+    .btn-undo-debt {
+        padding: 8px 12px !important;
+        font-size: 13px !important;
+    }
+}

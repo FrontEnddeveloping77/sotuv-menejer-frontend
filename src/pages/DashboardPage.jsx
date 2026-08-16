@@ -1260,6 +1260,9 @@ const DashboardPage = () => {
                                         </option>
                                     ))}
                                 </select>
+                                {creditSellSearch && filteredCreditSellGroups.length === 0 && (
+                                    <div className="error-text">⚠️ Qidiruvga mos tovar topilmadi!</div>
+                                )}
                             </div>
 
                             <div className="form-group">
@@ -1300,7 +1303,8 @@ const DashboardPage = () => {
                             {creditSellGroup && (
                                 <>
                                     <div className="info-banner info-success">
-                                        ✅ Tanlangan: <b>{creditSellGroup.name}</b> ({creditSellGroup.color || 'Rangsiz'})
+                                        ✅ Tanlangan: <b>{creditSellGroup.name}</b> ({creditSellGroup.color || 'Rangsiz'}) —
+                                        mavjud razmerlar: {creditSellGroup.variants.map((v) => `${v.size || 'Standart'} (${v.quantity} ta)`).join(', ')}
                                     </div>
 
                                     {creditSellData.rows.map((row, index) => {
@@ -1375,11 +1379,67 @@ const DashboardPage = () => {
                                             + Yana razmer qo'shish
                                         </button>
                                     )}
+
+                                    {/* ===== KUTILAYOTGAN FOYDA HISOBI ===== */}
+                                    {(() => {
+                                        const validRows = creditSellData.rows
+                                            .map((row) => ({ row, variant: resolveVariant(creditSellGroup, row) }))
+                                            .filter(({ variant, row }) =>
+                                                variant &&
+                                                Number(row.selling_price) >= 0 &&
+                                                row.selling_price !== '' &&
+                                                Number(row.sell_quantity) > 0
+                                            );
+
+                                        if (validRows.length === 0) return null;
+
+                                        const totalRevenue = validRows.reduce(
+                                            (s, { row }) => s + Number(row.selling_price) * Number(row.sell_quantity),
+                                            0
+                                        );
+
+                                        const totalProfit = validRows.reduce((s, { row, variant }) => {
+                                            const cost = Number(variant.cost_price ?? creditSellGroup.cost_price ?? 0);
+                                            return s + (Number(row.selling_price) - cost) * Number(row.sell_quantity);
+                                        }, 0);
+
+                                        const paidNow = Number(creditSellData.paid_now) || 0;
+                                        const remainingDebt = Math.max(0, totalRevenue - paidNow);
+
+                                        return (
+                                            <div className="calculation-box">
+                                                <div className="calc-row">
+                                                    <span>Jami tushum:</span>
+                                                    <strong>{formatSum(totalRevenue)} so'm</strong>
+                                                </div>
+                                                <div className="calc-row">
+                                                    <span>Hozir to‘langan:</span>
+                                                    <strong>{formatSum(paidNow)} so'm</strong>
+                                                </div>
+                                                <div className="calc-row">
+                                                    <span>Mijoz qarziga qoladi:</span>
+                                                    <strong style={{ color: remainingDebt > 0 ? '#ef4444' : '#16a34a' }}>
+                                                        {formatSum(remainingDebt)} so'm
+                                                    </strong>
+                                                </div>
+                                                <div className="calc-row calc-total">
+                                                    <span>Kutilayotgan foyda:</span>
+                                                    <strong className={totalProfit >= 0 ? "profit-plus" : "profit-minus"}>
+                                                        {totalProfit >= 0 ? '+' : ''}{formatSum(totalProfit)} so'm
+                                                    </strong>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
                                 </>
                             )}
 
                             <div className="modal-actions">
-                                <button type="submit" disabled={isSubmitting || !creditSellGroup} className="btn btn-primary">
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting || !creditSellGroup}
+                                    className="btn btn-primary"
+                                >
                                     {isSubmitting ? "Saqlanmoqda..." : "Nasiyaga sotish"}
                                 </button>
                                 <button
