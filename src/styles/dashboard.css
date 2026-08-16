@@ -411,6 +411,7 @@ select:focus {
 
 .size-badge-list {
     display: flex !important;
+    max-width: 181px;
     flex-wrap: wrap !important;
     gap: 6px !important;
 }
@@ -835,7 +836,7 @@ select:focus {
     flex-wrap: wrap;
     gap: 6px;
     min-width: 70px;
-    max-width: 180px
+    max-width: 181px
 }
 
 /* ==========================================

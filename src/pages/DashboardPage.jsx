@@ -17,6 +17,20 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+// Tovarni tahrirlash uchun ruxsat etilgan muddat (kun)
+const PRODUCT_EDIT_WINDOW_DAYS = 7;
+// Sotuvni vozvrat qilish uchun ruxsat etilgan muddat (kun)
+const SALE_RETURN_WINDOW_DAYS = 7;
+// Rasxodni tahrirlash/o'chirish uchun ruxsat etilgan muddat (kun)
+const EXPENSE_EDIT_WINDOW_DAYS = 30;
+
+const daysSince = (dateValue) => {
+    if (!dateValue) return Infinity;
+    const then = new Date(dateValue).getTime();
+    if (Number.isNaN(then)) return Infinity;
+    return (Date.now() - then) / (1000 * 60 * 60 * 24);
+};
+
 const DashboardPage = () => {
     const navigate = useNavigate();
 
@@ -57,6 +71,23 @@ const DashboardPage = () => {
     const [deleteModal, setDeleteModal] = useState(false);
     const [detailsGroup, setDetailsGroup] = useState(null);
     const [editModal, setEditModal] = useState(false);
+
+    // --- VOZVRAT (SOTUVLAR RO'YXATI) ---
+    const [returnModal, setReturnModal] = useState(false);
+    const [salesList, setSalesList] = useState([]);
+    const [salesLoading, setSalesLoading] = useState(false);
+
+    // --- RASXODLAR RO'YXATI VA TAHRIRLASH ---
+    const [expenseListModal, setExpenseListModal] = useState(false);
+    const [expensesList, setExpensesList] = useState([]);
+    const [expensesLoading, setExpensesLoading] = useState(false);
+    const [editExpenseModal, setEditExpenseModal] = useState(false);
+    const [editExpenseData, setEditExpenseData] = useState({
+        id: '',
+        title: '',
+        amount: '',
+        expense_type: 'daily'
+    });
 
     const [editProduct, setEditProduct] = useState({
         local_id: '',
@@ -194,10 +225,24 @@ const DashboardPage = () => {
                     name: p.title || p.name,
                     color: p.color,
                     cost_price: p.cost_price,
+                    createdAt: p.created_at || null,
                     variants: []
                 });
             }
-            map.get(key).variants.push({
+
+            const group = map.get(key);
+
+            if (
+                p.created_at &&
+                (
+                    !group.createdAt ||
+                    new Date(p.created_at) < new Date(group.createdAt)
+                )
+            ) {
+                group.createdAt = p.created_at;
+            }
+
+            group.variants.push({
                 id: p.id,
                 size: p.size,
                 quantity: Number(p.quantity) || 0,
@@ -208,6 +253,11 @@ const DashboardPage = () => {
     };
 
     const productGroups = groupProductsByLocalId(products);
+
+    const isProductEditable = (group) => {
+        if (!group.createdAt) return true;
+        return daysSince(group.createdAt) <= PRODUCT_EDIT_WINDOW_DAYS;
+    };
 
     // --- SOTUV VA O'CHIRISH UCHUN QIDIRUV: ENDI FAQAT NOM BO'YICHA ---
     const matchesQuery = (group, query) => {
@@ -300,6 +350,13 @@ const DashboardPage = () => {
     };
 
     const openEditProduct = (group) => {
+        if (!isProductEditable(group)) {
+            alert(
+                `Bu tovar qo'shilganiga ${PRODUCT_EDIT_WINDOW_DAYS} kundan ko'p vaqt o'tgan, tahrirlab bo'lmaydi!`
+            );
+            return;
+        }
+
         setEditProduct({
             local_id: group.local_id,
             category: group.category || '',
@@ -579,6 +636,135 @@ const DashboardPage = () => {
         }
     };
 
+    // --- VOZVRAT (SOTUVLAR) ---
+
+    const openReturnModal = async () => {
+        setReturnModal(true);
+        setSalesLoading(true);
+        try {
+            const res = await api.get('/api/sales');
+            setSalesList(res.data?.sales || []);
+        } catch (err) {
+            alert(err.response?.data?.message || "Sotuvlarni yuklashda xatolik!");
+        } finally {
+            setSalesLoading(false);
+        }
+    };
+
+    const isSaleReturnable = (sale) => {
+        if (sale.returned) return false;
+        return daysSince(sale.sold_at) <= SALE_RETURN_WINDOW_DAYS;
+    };
+
+    const handleReturnSale = async (saleId) => {
+        if (!window.confirm("Ushbu sotuvni vozvrat qilishni tasdiqlaysizmi? Tovar omborga qaytariladi.")) {
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            await api.post(`/api/sales/${saleId}/return`);
+            alert("Tovar muvaffaqiyatli vozvrat qilindi!");
+
+            const res = await api.get('/api/sales');
+            setSalesList(res.data?.sales || []);
+            await fetchData(false);
+        } catch (err) {
+            alert(err.response?.data?.message || "Vozvrat qilishda xatolik!");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    // --- RASXODLAR RO'YXATI / TAHRIRLASH / O'CHIRISH ---
+
+    const openExpenseListModal = async () => {
+        setExpenseListModal(true);
+        setExpensesLoading(true);
+        try {
+            const res = await api.get('/api/expenses');
+            setExpensesList(res.data?.expenses || []);
+        } catch (err) {
+            alert(err.response?.data?.message || "Rasxodlarni yuklashda xatolik!");
+        } finally {
+            setExpensesLoading(false);
+        }
+    };
+
+    const isExpenseEditable = (expense) => {
+        return daysSince(expense.created_at) <= EXPENSE_EDIT_WINDOW_DAYS;
+    };
+
+    const openEditExpense = (expense) => {
+        if (!isExpenseEditable(expense)) {
+            alert(`Bu rasxod qo'shilganiga 1 oydan ko'p vaqt o'tgan, tahrirlab bo'lmaydi!`);
+            return;
+        }
+
+        setEditExpenseData({
+            id: expense.id,
+            title: expense.title,
+            amount: expense.amount,
+            expense_type: expense.expense_type || 'daily'
+        });
+
+        setEditExpenseModal(true);
+    };
+
+    const handleEditExpense = async (e) => {
+        e.preventDefault();
+
+        if (!editExpenseData.title.trim()) {
+            alert("Rasxod nomini kiriting!");
+            return;
+        }
+
+        if (!editExpenseData.amount || Number(editExpenseData.amount) <= 0) {
+            alert("Rasxod summasini to'g'ri kiriting!");
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            await api.put(`/api/expenses/${editExpenseData.id}`, {
+                title: editExpenseData.title.trim(),
+                amount: Number(editExpenseData.amount),
+                expense_type: editExpenseData.expense_type
+            });
+
+            setEditExpenseModal(false);
+            alert("Rasxod muvaffaqiyatli tahrirlandi!");
+
+            const res = await api.get('/api/expenses');
+            setExpensesList(res.data?.expenses || []);
+            await fetchData(false);
+        } catch (err) {
+            alert(err.response?.data?.message || "Rasxodni tahrirlashda xatolik!");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDeleteExpense = async (expenseId) => {
+        if (!window.confirm("Ushbu rasxodni o'chirishni tasdiqlaysizmi?")) {
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            await api.delete(`/api/expenses/${expenseId}`);
+            alert("Rasxod muvaffaqiyatli o'chirildi!");
+
+            const res = await api.get('/api/expenses');
+            setExpensesList(res.data?.expenses || []);
+            await fetchData(false);
+        } catch (err) {
+            alert(err.response?.data?.message || "Rasxodni o'chirishda xatolik!");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     const filteredGroups = productGroups.filter((g) => {
         const query = searchQuery.toLowerCase().trim();
         if (!query) return true;
@@ -634,6 +820,8 @@ const DashboardPage = () => {
                     <button onClick={() => setSellModal(true)} className="btn btn-sell">🛒 Tovar Sotish</button>
                     <button onClick={() => setExpenseModal(true)} className="btn btn-expense">💸 Rasxod Yozish</button>
                     <button onClick={() => setDeleteModal(true)} className="btn btn-delete">🗑️ Tovarni O'chirish</button>
+                    <button onClick={openReturnModal} className="btn btn-return">↩️ Vozvrat</button>
+                    <button onClick={openExpenseListModal} className="btn btn-edit-expense">📋 Rasxodlar</button>
                     <button onClick={handleLogout} className="btn btn-logout">🚪 Chiqish</button>
                 </div>
             </header>
@@ -702,6 +890,7 @@ const DashboardPage = () => {
                             {filteredGroups.length > 0 ? (
                                 filteredGroups.map((g) => {
                                     const totalQty = g.variants.reduce((sum, v) => sum + v.quantity, 0);
+                                    const editable = isProductEditable(g);
                                     return (
                                         <tr key={g.local_id}>
                                             <td><b>#{g.local_id}</b></td>
@@ -740,8 +929,10 @@ const DashboardPage = () => {
 
                                                     <button
                                                         type="button"
-                                                        className="btn-edit"
+                                                        className="btn-edit-product"
                                                         onClick={() => openEditProduct(g)}
+                                                        disabled={!editable}
+                                                        title={!editable ? `${PRODUCT_EDIT_WINDOW_DAYS} kundan ko'p vaqt o'tgan, tahrirlab bo'lmaydi` : ''}
                                                     >
                                                         ✏️ Tahrirlash
                                                     </button>
@@ -1376,7 +1567,8 @@ const DashboardPage = () => {
 
                             <div className="info-banner info-success">
                                 ⚠️ Tovar ma'lumotlari yangilanadi.
-                                Mavjud sotuvlar o‘zgartirilmaydi.
+                                Mavjud sotuvlar o‘zgartirilmaydi. Tovar faqat
+                                qo'shilganiga {PRODUCT_EDIT_WINDOW_DAYS} kun bo'lmagunicha tahrirlanadi.
                             </div>
 
                             <div className="modal-actions">
@@ -1453,6 +1645,195 @@ const DashboardPage = () => {
                                 Yopish
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ↩️ VOZVRAT MODALI */}
+            {returnModal && (
+                <div className="modal-overlay" onClick={() => setReturnModal(false)}>
+                    <div className="modal-box modal-box-wide" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>↩️ Tovarni Vozvrat Qilish</h3>
+                        </div>
+
+                        <div className="info-banner info-success">
+                            Faqat oxirgi {SALE_RETURN_WINDOW_DAYS} kun ichida sotilgan va hali vozvrat
+                            qilinmagan tovarlarni qaytarish mumkin.
+                        </div>
+
+                        {salesLoading ? (
+                            <p className="empty-text">Yuklanmoqda...</p>
+                        ) : (
+                            <div className="expense-list">
+                                {salesList.filter((s) => !s.returned).length === 0 ? (
+                                    <p className="empty-text">Sotuvlar topilmadi!</p>
+                                ) : (
+                                    salesList
+                                        .filter((s) => !s.returned)
+                                        .map((s) => {
+                                            const returnable = isSaleReturnable(s);
+                                            return (
+                                                <div className="expense-list-item" key={s.id}>
+                                                    <div>
+                                                        <div>
+                                                            <b>{s.title}</b> {s.size ? `(${s.size})` : ''}
+                                                        </div>
+                                                        <div className="expense-meta">
+                                                            {s.quantity} dona × {formatSum(s.selling_price)} so'm = {formatSum(Number(s.selling_price) * Number(s.quantity))} so'm
+                                                            {' '}— {new Date(s.sold_at).toLocaleString('uz-UZ')}
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        className="btn-return btn-small"
+                                                        disabled={!returnable || isSubmitting}
+                                                        title={!returnable ? `${SALE_RETURN_WINDOW_DAYS} kundan ko'p vaqt o'tgan, vozvrat qilib bo'lmaydi` : ''}
+                                                        onClick={() => handleReturnSale(s.id)}
+                                                    >
+                                                        ↩️ Vozvrat
+                                                    </button>
+                                                </div>
+                                            );
+                                        })
+                                )}
+                            </div>
+                        )}
+
+                        <div className="modal-actions">
+                            <button type="button" onClick={() => setReturnModal(false)} className="btn btn-secondary">
+                                Yopish
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 📋 RASXODLAR RO'YXATI MODALI */}
+            {expenseListModal && (
+                <div className="modal-overlay" onClick={() => setExpenseListModal(false)}>
+                    <div className="modal-box modal-box-wide" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>📋 Rasxodlar Ro'yxati</h3>
+                        </div>
+
+                        <div className="info-banner info-success">
+                            Faqat oxirgi {EXPENSE_EDIT_WINDOW_DAYS} kun (1 oy) ichida qo'shilgan rasxodlarni
+                            tahrirlash yoki o'chirish mumkin.
+                        </div>
+
+                        {expensesLoading ? (
+                            <p className="empty-text">Yuklanmoqda...</p>
+                        ) : (
+                            <div className="expense-list">
+                                {expensesList.length === 0 ? (
+                                    <p className="empty-text">Rasxodlar topilmadi!</p>
+                                ) : (
+                                    expensesList.map((exp) => {
+                                        const editable = isExpenseEditable(exp);
+                                        return (
+                                            <div className="expense-list-item" key={exp.id}>
+                                                <div>
+                                                    <div><b>{exp.title}</b> — {formatSum(exp.amount)} so'm</div>
+                                                    <div className="expense-meta">
+                                                        {exp.expense_type === 'monthly' ? 'Oylik' : exp.expense_type === 'yearly' ? 'Yillik' : 'Kunlik'}
+                                                        {' '}— {new Date(exp.created_at).toLocaleString('uz-UZ')}
+                                                    </div>
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '6px' }}>
+                                                    <button
+                                                        type="button"
+                                                        className="btn-edit-expense btn-small"
+                                                        disabled={!editable || isSubmitting}
+                                                        title={!editable ? "1 oydan ko'p vaqt o'tgan, tahrirlab bo'lmaydi" : ''}
+                                                        onClick={() => openEditExpense(exp)}
+                                                    >
+                                                        ✏️
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="btn-delete-expense btn-small"
+                                                        disabled={!editable || isSubmitting}
+                                                        title={!editable ? "1 oydan ko'p vaqt o'tgan, o'chirib bo'lmaydi" : ''}
+                                                        onClick={() => handleDeleteExpense(exp.id)}
+                                                    >
+                                                        🗑️
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        )}
+
+                        <div className="modal-actions">
+                            <button type="button" onClick={() => setExpenseListModal(false)} className="btn btn-secondary">
+                                Yopish
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ✏️ RASXODNI TAHRIRLASH MODALI */}
+            {editExpenseModal && (
+                <div
+                    className="modal-overlay"
+                    onClick={() => {
+                        if (!isSubmitting) setEditExpenseModal(false);
+                    }}
+                >
+                    <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>✏️ Rasxodni Tahrirlash</h3>
+                        </div>
+                        <form onSubmit={handleEditExpense} className="product-form">
+                            <div className="form-group">
+                                <label>Rasxod Nomi/Sababi * :</label>
+                                <input
+                                    type="text"
+                                    value={editExpenseData.title}
+                                    onChange={(e) => setEditExpenseData({ ...editExpenseData, title: e.target.value })}
+                                    required
+                                    className="form-input"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Summa (So'm) * :</label>
+                                <input
+                                    type="number"
+                                    value={editExpenseData.amount}
+                                    onChange={(e) => setEditExpenseData({ ...editExpenseData, amount: e.target.value })}
+                                    required
+                                    className="form-input"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Rasxod Turi :</label>
+                                <select
+                                    value={editExpenseData.expense_type}
+                                    onChange={(e) => setEditExpenseData({ ...editExpenseData, expense_type: e.target.value })}
+                                    className="form-input"
+                                >
+                                    <option value="daily">Kunlik</option>
+                                    <option value="monthly">Oylik</option>
+                                </select>
+                            </div>
+                            <div className="modal-actions">
+                                <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+                                    {isSubmitting ? "Saqlanmoqda..." : "💾 Saqlash"}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-danger"
+                                    disabled={isSubmitting}
+                                    onClick={() => setEditExpenseModal(false)}
+                                >
+                                    Bekor qilish
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}
