@@ -1064,6 +1064,9 @@ body {
 .btn-edit-product {
     background-color: #6366f1;
     color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
 }
 
 .btn-edit-product:hover {

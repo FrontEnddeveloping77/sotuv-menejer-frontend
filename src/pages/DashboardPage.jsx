@@ -120,11 +120,13 @@ const DashboardPage = () => {
     const [debtsModal, setDebtsModal] = useState(false);
     const [debts, setDebts] = useState([]);
     const [loadingDebts, setLoadingDebts] = useState(false);
+    const [debtsSearch, setDebtsSearch] = useState('');
 
     // --- TOVAR BERGANLAR ---
     const [suppliersModal, setSuppliersModal] = useState(false);
     const [suppliersList, setSuppliersList] = useState([]);
     const [loadingSuppliers, setLoadingSuppliers] = useState(false);
+    const [suppliersSearch, setSuppliersSearch] = useState('');
 
     const emptySellRow = () => ({ size: '', sell_quantity: 1, selling_price: '' });
     const [sellSearch, setSellSearch] = useState('');
@@ -721,6 +723,7 @@ const DashboardPage = () => {
 
     const openDebtsModal = async () => {
         setDebtsModal(true);
+        setDebtsSearch('');
         setLoadingDebts(true);
         try {
             const res = await api.get('/api/debts');
@@ -736,6 +739,7 @@ const DashboardPage = () => {
     // --- TOVAR BERGANLAR ---
     const openSuppliersModal = async () => {
         setSuppliersModal(true);
+        setSuppliersSearch('');
         setLoadingSuppliers(true);
         try {
             const res = await api.get('/api/suppliers');
@@ -1055,17 +1059,6 @@ const DashboardPage = () => {
                                                     >
                                                         🔍 Batafsil
                                                     </button>
-
-                                                    <button
-                                                        type="button"
-                                                        className="btn-edit-product"
-                                                        onClick={() => openEditProduct(g)}
-                                                        disabled={!editable}
-                                                        title={!editable ? `${PRODUCT_EDIT_WINDOW_DAYS} kundan ko'p vaqt o'tgan, tahrirlab bo'lmaydi` : ''}
-                                                    >
-                                                        ✏️ Tahrirlash
-                                                    </button>
-
                                                 </div>
                                             </td>
                                         </tr>
@@ -2178,6 +2171,16 @@ const DashboardPage = () => {
                     <div className="modal-box" style={{ maxWidth: '720px' }} onClick={(e) => e.stopPropagation()}>
                         <h3>💳 Qarzlar ro‘yxati</h3>
 
+                        <div className="form-group" style={{ marginBottom: '12px' }}>
+                            <input
+                                type="text"
+                                placeholder="Ism, telefon yoki tovar nomi bo‘yicha qidirish..."
+                                value={debtsSearch}
+                                onChange={(e) => setDebtsSearch(e.target.value)}
+                                className="form-input"
+                            />
+                        </div>
+
                         {loadingDebts ? (
                             <p style={{ textAlign: 'center', padding: '20px' }}>Yuklanmoqda...</p>
                         ) : debts.length === 0 ? (
@@ -2186,78 +2189,110 @@ const DashboardPage = () => {
                             </div>
                         ) : (
                             <div className="debts-list">
-                                {debts.map((debt, index) => (
-                                    <div key={index} className="debt-card">
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
-                                            <strong style={{ fontSize: '16px' }}>👤 {debt.supplier}</strong>
-                                            <span className="debt-amount">
-                                                {Number(debt.total_debt).toLocaleString('uz-UZ')} so‘m
-                                            </span>
-                                        </div>
-
-                                        {debt.supplier_phone && (
-                                            <div className="debt-phone">
-                                                📞 {debt.supplier_phone}
+                                {debts
+                                    .filter((debt) => {
+                                        const q = debtsSearch.toLowerCase().trim();
+                                        if (!q) return true;
+                                        const name = (debt.supplier || '').toLowerCase();
+                                        const phone = (debt.supplier_phone || '').toLowerCase();
+                                        const productsText = (debt.products || [])
+                                            .map((p) => `${p.name || ''} ${p.category || ''}`)
+                                            .join(' ')
+                                            .toLowerCase();
+                                        return name.includes(q) || phone.includes(q) || productsText.includes(q);
+                                    })
+                                    .map((debt, index) => (
+                                        <div key={index} className="debt-card">
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                                                <strong style={{ fontSize: '16px' }}>👤 {debt.supplier}</strong>
+                                                <span className="debt-amount">
+                                                    {Number(debt.total_debt).toLocaleString('uz-UZ')} so‘m
+                                                </span>
                                             </div>
-                                        )}
 
-                                        <div className="debt-meta">
-                                            <span>📦 {debt.products_count} ta tovar</span>
-                                            <span>💰 Tannarx: {Number(debt.total_cost).toLocaleString('uz-UZ')} so‘m</span>
-                                            <span>✅ To‘langan: {Number(debt.total_paid).toLocaleString('uz-UZ')} so‘m</span>
+                                            {debt.supplier_phone && (
+                                                <div className="debt-phone">
+                                                    📞 {debt.supplier_phone}
+                                                </div>
+                                            )}
+
+                                            <div className="debt-meta">
+                                                <span>📦 {debt.products_count} ta tovar</span>
+                                                <span>💰 Tannarx: {Number(debt.total_cost).toLocaleString('uz-UZ')} so‘m</span>
+                                                <span>✅ To‘langan: {Number(debt.total_paid).toLocaleString('uz-UZ')} so‘m</span>
+                                            </div>
+
+                                            {Array.isArray(debt.products) && debt.products.length > 0 && (
+                                                <div style={{ marginTop: '10px', fontSize: '13px' }}>
+                                                    <b>Qarzga olingan tovarlar:</b>
+                                                    <ul style={{ margin: '6px 0 0 16px', padding: 0 }}>
+                                                        {debt.products.map((p, i) => (
+                                                            <li key={i} style={{ marginBottom: '4px' }}>
+                                                                <b>#{p.local_id}</b> {p.name || 'Nomsiz'}
+                                                                {p.category ? ` — ${p.category}` : ''}
+                                                                {p.color ? ` (${p.color})` : ''}
+                                                                {p.quantity ? ` — ${p.quantity} ta` : ''}
+                                                                {' — qarz: '}
+                                                                <span style={{ color: '#ef4444', fontWeight: 600 }}>
+                                                                    {formatSum(p.debt)} so‘m
+                                                                </span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+
+                                            {/* ===== QARZNI TO‘LASH TUGMASI ===== */}
+                                            <button
+                                                type="button"
+                                                className="btn btn-primary btn-pay-debt"
+                                                style={{ marginTop: '14px', width: '100%' }}
+                                                onClick={async () => {
+                                                    const maxDebt = Number(debt.total_debt) || 0;
+                                                    const input = prompt(
+                                                        `"${debt.supplier}" ga qancha to'layapsiz?\n\nMaksimal qarz: ${maxDebt.toLocaleString('uz-UZ')} so'm`,
+                                                        maxDebt
+                                                    );
+
+                                                    if (input === null) return; // Bekor qilindi
+
+                                                    const amount = Number(input);
+                                                    if (!amount || amount <= 0) {
+                                                        alert("To'g'ri summa kiriting!");
+                                                        return;
+                                                    }
+                                                    if (amount > maxDebt) {
+                                                        alert(`Eng ko'p ${maxDebt.toLocaleString('uz-UZ')} so'm to'lash mumkin!`);
+                                                        return;
+                                                    }
+
+                                                    try {
+                                                        setLoadingDebts(true);
+                                                        const res = await api.post('/api/debts/pay', {
+                                                            supplier: debt.supplier,
+                                                            supplier_phone: debt.supplier_phone || null,
+                                                            amount: amount
+                                                        });
+
+                                                        alert(res.data?.message || "Qarz muvaffaqiyatli to'landi!");
+
+                                                        // Qarzlar ro'yxatini yangilash
+                                                        const debtsRes = await api.get('/api/debts');
+                                                        setDebts(debtsRes.data?.debts || []);
+
+                                                        // Dashboard statistikasini yangilash
+                                                        await fetchData(false);
+                                                    } catch (err) {
+                                                        alert(err.response?.data?.message || "Qarz to'lashda xatolik yuz berdi!");
+                                                    } finally {
+                                                        setLoadingDebts(false);
+                                                    }
+                                                }}
+                                            >
+                                                💰 Qarzni to‘lash
+                                            </button>
                                         </div>
-
-                                        {/* ===== QARZNI TO‘LASH TUGMASI ===== */}
-                                        <button
-                                            type="button"
-                                            className="btn btn-primary btn-pay-debt"
-                                            style={{ marginTop: '14px', width: '100%' }}
-                                            onClick={async () => {
-                                                const maxDebt = Number(debt.total_debt) || 0;
-                                                const input = prompt(
-                                                    `"${debt.supplier}" ga qancha to'layapsiz?\n\nMaksimal qarz: ${maxDebt.toLocaleString('uz-UZ')} so'm`,
-                                                    maxDebt
-                                                );
-
-                                                if (input === null) return; // Bekor qilindi
-
-                                                const amount = Number(input);
-                                                if (!amount || amount <= 0) {
-                                                    alert("To'g'ri summa kiriting!");
-                                                    return;
-                                                }
-                                                if (amount > maxDebt) {
-                                                    alert(`Eng ko'p ${maxDebt.toLocaleString('uz-UZ')} so'm to'lash mumkin!`);
-                                                    return;
-                                                }
-
-                                                try {
-                                                    setLoadingDebts(true);
-                                                    const res = await api.post('/api/debts/pay', {
-                                                        supplier: debt.supplier,
-                                                        supplier_phone: debt.supplier_phone || null,
-                                                        amount: amount
-                                                    });
-
-                                                    alert(res.data?.message || "Qarz muvaffaqiyatli to'landi!");
-
-                                                    // Qarzlar ro'yxatini yangilash
-                                                    const debtsRes = await api.get('/api/debts');
-                                                    setDebts(debtsRes.data?.debts || []);
-
-                                                    // Dashboard statistikasini yangilash
-                                                    await fetchData(false);
-                                                } catch (err) {
-                                                    alert(err.response?.data?.message || "Qarz to'lashda xatolik yuz berdi!");
-                                                } finally {
-                                                    setLoadingDebts(false);
-                                                }
-                                            }}
-                                        >
-                                            💰 Qarzni to‘lash
-                                        </button>
-                                    </div>
-                                ))}
+                                    ))}
                             </div>
                         )}
 
@@ -2280,6 +2315,16 @@ const DashboardPage = () => {
                     <div className="modal-box" style={{ maxWidth: '800px' }} onClick={(e) => e.stopPropagation()}>
                         <h3>👥 Tovar berganlar ro‘yxati</h3>
 
+                        <div className="form-group" style={{ marginBottom: '12px' }}>
+                            <input
+                                type="text"
+                                placeholder="Ism, telefon yoki kategoriya/tovar bo‘yicha qidirish..."
+                                value={suppliersSearch}
+                                onChange={(e) => setSuppliersSearch(e.target.value)}
+                                className="form-input"
+                            />
+                        </div>
+
                         {loadingSuppliers ? (
                             <p style={{ textAlign: 'center', padding: '20px' }}>Yuklanmoqda...</p>
                         ) : suppliersList.length === 0 ? (
@@ -2288,45 +2333,57 @@ const DashboardPage = () => {
                             </div>
                         ) : (
                             <div className="debts-list">
-                                {suppliersList.map((sup, index) => (
-                                    <div key={index} className="debt-card">
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                                            <strong style={{ fontSize: '16px' }}>👤 {sup.supplier || 'Noma\'lum'}</strong>
-                                            {sup.supplier_phone && (
-                                                <span className="debt-phone">📞 {sup.supplier_phone}</span>
-                                            )}
-                                        </div>
+                                {suppliersList
+                                    .filter((sup) => {
+                                        const q = suppliersSearch.toLowerCase().trim();
+                                        if (!q) return true;
+                                        const name = (sup.supplier || '').toLowerCase();
+                                        const phone = (sup.supplier_phone || '').toLowerCase();
+                                        const productsText = (sup.products || [])
+                                            .map((p) => `${p.name || ''} ${p.category || ''}`)
+                                            .join(' ')
+                                            .toLowerCase();
+                                        return name.includes(q) || phone.includes(q) || productsText.includes(q);
+                                    })
+                                    .map((sup, index) => (
+                                        <div key={index} className="debt-card">
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                                                <strong style={{ fontSize: '16px' }}>👤 {sup.supplier || 'Noma\'lum'}</strong>
+                                                {sup.supplier_phone && (
+                                                    <span className="debt-phone">📞 {sup.supplier_phone}</span>
+                                                )}
+                                            </div>
 
-                                        <div className="debt-meta" style={{ marginTop: '8px' }}>
-                                            <span>📦 {sup.products_count ?? (sup.products?.length || 0)} ta tovar turi</span>
-                                            {sup.total_cost != null && (
-                                                <span>💰 Jami tannarx: {formatSum(sup.total_cost)} so‘m</span>
-                                            )}
-                                            {sup.total_quantity != null && (
-                                                <span>🔢 Jami soni: {sup.total_quantity} ta</span>
-                                            )}
-                                        </div>
+                                            <div className="debt-meta" style={{ marginTop: '8px' }}>
+                                                <span>📦 {sup.products_count ?? (sup.products?.length || 0)} ta tovar turi</span>
+                                                {sup.total_cost != null && (
+                                                    <span>💰 Jami tannarx: {formatSum(sup.total_cost)} so‘m</span>
+                                                )}
+                                                {sup.total_quantity != null && (
+                                                    <span>🔢 Jami soni: {sup.total_quantity} ta</span>
+                                                )}
+                                            </div>
 
-                                        {Array.isArray(sup.products) && sup.products.length > 0 && (() => {
-                                            // Kategoriyalarni unique qilib chiqaramiz
-                                            const categories = [...new Set(
-                                                sup.products.map((p) => (p.category || 'Umumiy').trim()).filter(Boolean)
-                                            )];
-                                            return (
-                                                <div style={{ marginTop: '12px', fontSize: '14px' }}>
-                                                    <b>Bergan tovarlar (kategoriya):</b>
-                                                    <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                                        {categories.map((cat, i) => (
-                                                            <span key={i} className="category-badge">
-                                                                {cat}
-                                                            </span>
-                                                        ))}
+                                            {Array.isArray(sup.products) && sup.products.length > 0 && (() => {
+                                                // Kategoriyalarni unique qilib chiqaramiz
+                                                const categories = [...new Set(
+                                                    sup.products.map((p) => (p.category || 'Umumiy').trim()).filter(Boolean)
+                                                )];
+                                                return (
+                                                    <div style={{ marginTop: '12px', fontSize: '14px' }}>
+                                                        <b>Bergan tovarlar (kategoriya):</b>
+                                                        <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                            {categories.map((cat, i) => (
+                                                                <span key={i} className="category-badge">
+                                                                    {cat}
+                                                                </span>
+                                                            ))}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            );
-                                        })()}
-                                    </div>
-                                ))}
+                                                );
+                                            })()}
+                                        </div>
+                                    ))}
                             </div>
                         )}
 
