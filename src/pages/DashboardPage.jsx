@@ -2056,8 +2056,8 @@ const DashboardPage = () => {
                                         {/* ===== QARZNI TO‘LASH TUGMASI ===== */}
                                         <button
                                             type="button"
-                                            className="btn btn-primary"
-                                            style={{ marginTop: '12px', width: '100%' }}
+                                            className="btn btn-primary btn-pay-debt"
+                                            style={{ marginTop: '14px', width: '100%' }}
                                             onClick={() => {
                                                 alert(`"${debt.supplier}" ga bo'lgan ${Number(debt.total_debt).toLocaleString('uz-UZ')} so'm qarzni to'lash funksiyasi tez orada qo'shiladi`);
                                             }}
