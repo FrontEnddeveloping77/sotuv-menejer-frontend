@@ -483,7 +483,7 @@ const DashboardPage = () => {
                 alert("Kelgan narx kiritilishi shart!");
                 return;
             }
-            // Rang ixtiyoriy (formada ham shunday yozilgan)
+            // Rang ixtiyoriy
             if (!newProduct.quantity || Number(newProduct.quantity) <= 0) {
                 alert("Umumiy soni 0 dan katta bo‘lishi kerak!");
                 return;
@@ -1014,7 +1014,7 @@ const DashboardPage = () => {
                                             <td><b>#{g.local_id}</b></td>
                                             <td><span className="category-badge">{g.category || 'Umumiy'}</span></td>
                                             <td><b>{g.name}</b></td>
-                                            <td className="col-hide-mobile">{g.color ? <span className="color-badge">{g.color}</span> : '-'}</td>
+                                            <td className="col-hide-mobile">{g.color ? <span className="color-badge">{g.color}</span> : ''}</td>
                                             <td className="col-hide-narrow">{formatSum(g.cost_price)} so'm</td>
                                             <td className="col-hide-mobile">
                                                 <div className="size-badge-list">
@@ -1203,30 +1203,30 @@ const DashboardPage = () => {
 
                             {/* Rang - ixtiyoriy */}
                             <div className="form-group">
-                                <label>Rangi (xohlasangiz qo‘shing):</label>
+                                <label>Rangi (ixtiyoriy) :</label>
                                 <input
                                     type="text"
-                                    placeholder="Qora"
+                                    placeholder="Qora (bo‘sh qoldirish mumkin)"
                                     value={newProduct.color}
                                     onChange={(e) => setNewProduct({ ...newProduct, color: e.target.value })}
                                     className="form-input"
                                 />
                             </div>
 
-                            {/* Razmerlar - majburiy */}
+                            {/* Razmerlar - ixtiyoriy */}
                             <div className="form-group">
-                                <label>Razmerlar * :</label>
+                                <label>Razmerlar (ixtiyoriy) :</label>
                                 <input
                                     type="text"
-                                    placeholder="Masalan: 39, 40, 41, 42, 43"
+                                    placeholder="Masalan: 39, 40, 41, 42, 43 (bo‘sh qoldirish mumkin)"
                                     value={newProduct.sizes}
                                     onChange={(e) => setNewProduct({ ...newProduct, sizes: e.target.value })}
-                                    required
                                     className="form-input"
                                 />
                                 <small className="form-hint">
-                                    Bir nechta razmer kiritsangiz, pastdagi "Umumiy Soni" ular orasida
-                                    avtomatik ravishda (imkon qadar teng) taqsimlanadi.
+                                    Bo‘sh qoldirilsa bitta "Standart" sifatida saqlanadi.
+                                    Bir nechta razmer kiritsangiz, "Umumiy Soni" ular orasida
+                                    avtomatik taqsimlanadi.
                                 </small>
                             </div>
 
@@ -1829,7 +1829,7 @@ const DashboardPage = () => {
                         <div className="details-info">
                             <p><b>Nomi:</b> {detailsGroup.name}</p>
                             <p><b>Kategoriya:</b> {detailsGroup.category || 'Umumiy'}</p>
-                            <p><b>Rangi:</b> {detailsGroup.color || '-'}</p>
+                            {detailsGroup.color ? <p><b>Rangi:</b> {detailsGroup.color}</p> : null}
                             <p><b>Kelgan narxi:</b> {formatSum(detailsGroup.cost_price)} so'm</p>
                         </div>
 

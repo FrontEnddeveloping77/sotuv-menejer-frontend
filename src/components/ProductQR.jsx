@@ -52,15 +52,18 @@ const ProductQR = ({ product }) => {
         const gap = 22;
         const lineHeight = 26;
 
-        // Matn qatorlarini oldindan hisoblaymiz
+        // Matn qatorlari — faqat kiritilgan maydonlar chiqadi
         const lines = [];
-        lines.push(`${product.name || product.title || "Noma'lum"}`);
-        lines.push(`${product.color || "Ko'rsatilmagan"}`);
-        if (product.size) {
-            lines.push(`${product.size}`);
+        lines.push(`Tovar: ${product.name || product.title || "Noma'lum"}`);
+        if (product.color && String(product.color).trim()) {
+            lines.push(`Rangi: ${product.color.trim()}`);
+        }
+        lines.push(`ID: #${product.local_id || product.id}`);
+        if (product.size && String(product.size).trim()) {
+            lines.push(`Razmer: ${product.size}`);
         }
         if (product.selling_price != null && product.selling_price !== '' && Number(product.selling_price) >= 0) {
-            lines.push(`${formatSum(product.selling_price)} so'm`);
+            lines.push(`Sotilish narxi: ${formatSum(product.selling_price)} so'm`);
         }
 
         // Taxminiy matn balandligi
@@ -170,10 +173,12 @@ const ProductQR = ({ product }) => {
 
                         <p className="qr-meta">
                             ID: #{product.local_id || product.id}
-                            {' • '}
-                            Rangi: {product.color || "Yo'q"}
-                            {' • '}
-                            {product.size || 'Standart'}
+                            {product.color && String(product.color).trim() ? (
+                                <> {' • '} Rangi: {product.color.trim()}</>
+                            ) : null}
+                            {product.size && String(product.size).trim() ? (
+                                <> {' • '} Razmer: {product.size}</>
+                            ) : null}
                             {' • '}
                             {product.quantity} dona
                             {product.selling_price != null && Number(product.selling_price) >= 0 && (
