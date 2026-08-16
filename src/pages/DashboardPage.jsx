@@ -55,6 +55,7 @@ const DashboardPage = () => {
         yearlyRevenue: 0,
         yearlyProfit: 0,
         yearlyExpense: 0,
+        totalDebt: 0,
     });
 
     const [products, setProducts] = useState([]);
@@ -935,6 +936,12 @@ const DashboardPage = () => {
                     <p><b>Jami sotilgan:</b> {stats.totalSold || 0} dona</p>
                     <p><b>Jami tushum:</b> {formatSum(stats.totalRevenue)} so'm</p>
                     <p><b>Jami sof foyda:</b> <span className={(stats.totalProfit || 0) >= 0 ? "profit-plus" : "profit-minus"}>{formatSum(stats.totalProfit)} so'm</span></p>
+                </div>
+
+                {/* YANGI KARTA – JAMI QARZ */}
+                <div className="stat-card">
+                    <h4>💳 Jami Qarzimiz</h4>
+                    <p><b>Jami qarz:</b> <span style={{ color: '#ef4444', fontWeight: 'bold' }}>{formatSum(stats.totalDebt || 0)} so'm</span></p>
                 </div>
             </section>
 
