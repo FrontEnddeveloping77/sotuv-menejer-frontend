@@ -56,12 +56,11 @@ const ProductQR = ({ product }) => {
         const lines = [];
         lines.push(`Tovar: ${product.name || product.title || "Noma'lum"}`);
         lines.push(`Rangi: ${product.color || "Ko'rsatilmagan"}`);
-        lines.push(`ID: #${product.local_id || product.id}`);
         if (product.size) {
             lines.push(`Razmer: ${product.size}`);
         }
         if (product.selling_price != null && product.selling_price !== '' && Number(product.selling_price) >= 0) {
-            lines.push(`Sotilish narxi: ${formatSum(product.selling_price)} so'm`);
+            lines.push(`${formatSum(product.selling_price)} so'm`);
         }
 
         // Taxminiy matn balandligi
