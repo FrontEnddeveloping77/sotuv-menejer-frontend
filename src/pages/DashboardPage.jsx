@@ -1926,11 +1926,26 @@ const DashboardPage = () => {
                                     className="form-input"
                                 >
                                     <option value="">-- Sotuvni tanlang --</option>
-                                    {filteredSales.map((s) => (
-                                        <option key={s.id} value={s.id}>
-                                            {s.name || s.title || s.product_name} {s.size ? `(${s.size})` : ''} — {s.sell_quantity ?? s.quantity} ta sotilgan
-                                        </option>
-                                    ))}
+                                    {filteredSales.map((s) => {
+                                        const soldDate = s.sold_at
+                                            ? new Date(s.sold_at).toLocaleString('uz-UZ', {
+                                                day: '2-digit',
+                                                month: '2-digit',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })
+                                            : '';
+
+                                        return (
+                                            <option key={s.id} value={s.id}>
+                                                {s.name || s.title || s.product_name}
+                                                {s.size ? ` (${s.size} razmer)` : ' (Standart)'}
+                                                {' — '}{s.sell_quantity ?? s.quantity} ta
+                                                {' • '}{formatSum(s.selling_price)} so'm/dona
+                                                {soldDate ? ` • ${soldDate}` : ''}
+                                            </option>
+                                        );
+                                    })}
                                 </select>
                                 {returnSearch && filteredSales.length === 0 && (
                                     <div className="error-text">⚠️ Qidiruvga mos sotuv topilmadi!</div>
