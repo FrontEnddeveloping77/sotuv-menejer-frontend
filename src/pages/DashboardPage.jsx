@@ -97,6 +97,37 @@ const DashboardPage = () => {
         rows: [emptyDeleteRow()]
     });
 
+    // ===================================================================
+    // YANGI STATE'LAR — Tovarni tahrirlash tanlovi, Rasxod, Vozvrat uchun
+    // ===================================================================
+
+    // --- Headerdan "Tovarni Tahrirlash" tugmasi uchun (tanlash bosqichi) ---
+    const [editSelectModal, setEditSelectModal] = useState(false);
+    const [editSelectSearch, setEditSelectSearch] = useState('');
+
+    // --- Rasxodlarni boshqarish uchun ---
+    const [expenses, setExpenses] = useState([]);
+    const [expenseSearch, setExpenseSearch] = useState('');
+
+    const [editExpenseModal, setEditExpenseModal] = useState(false);
+    const [editExpenseData, setEditExpenseData] = useState({
+        id: '',
+        title: '',
+        amount: '',
+        expense_type: 'daily'
+    });
+
+    const [deleteExpenseModal, setDeleteExpenseModal] = useState(false);
+
+    // --- Sotilgan tovarni vozvrat qilish uchun ---
+    const [sales, setSales] = useState([]);
+    const [returnModal, setReturnModal] = useState(false);
+    const [returnSearch, setReturnSearch] = useState('');
+    const [returnData, setReturnData] = useState({
+        sale_id: '',
+        quantity: 1
+    });
+
     const handleLogout = () => {
         if (window.confirm("Tizimdan chiqishni tasdiqlaysizmi?")) {
             localStorage.removeItem('token');
@@ -219,6 +250,7 @@ const DashboardPage = () => {
 
     const filteredSellGroups = productGroups.filter((g) => matchesQuery(g, sellSearch));
     const filteredDeleteGroups = productGroups.filter((g) => matchesQuery(g, deleteSearch));
+    const filteredEditGroups = productGroups.filter((g) => matchesQuery(g, editSelectSearch));
 
     const sellGroup = productGroups.find((g) => String(g.local_id) === String(sellData.product_id)) || null;
     const deleteGroup = productGroups.find((g) => String(g.local_id) === String(deleteData.product_id)) || null;
@@ -579,6 +611,179 @@ const DashboardPage = () => {
         }
     };
 
+    // ===================================================================
+    // YANGI FUNKSIYALAR — Tovarni tahrirlash tanlovi, Rasxod, Vozvrat
+    // ===================================================================
+
+    // --- Headerdan "Tovarni Tahrirlash": tanlangач mavjud editModal ochiladi ---
+    const handleEditGroupSelect = (localId) => {
+        if (!localId) return;
+        const group = productGroups.find((g) => String(g.local_id) === String(localId));
+        if (!group) return;
+
+        openEditProduct(group);
+        setEditSelectModal(false);
+        setEditSelectSearch('');
+    };
+
+    // --- RASXODLAR: yuklash ---
+    const fetchExpenses = async () => {
+        try {
+            const res = await api.get('/api/dashboard/expenses');
+            const list = res.data?.expenses || res.data || [];
+            setExpenses(Array.isArray(list) ? list : []);
+        } catch (err) {
+            console.error("Rasxodlarni yuklashda xatolik:", err);
+            alert(err.response?.data?.message || "Rasxodlarni yuklab bo'lmadi!");
+        }
+    };
+
+    const filteredExpenses = expenses.filter((exp) => {
+        const q = expenseSearch.toLowerCase().trim();
+        if (!q) return true;
+        return (exp.title || '').toLowerCase().includes(q);
+    });
+
+    // --- RASXODNI TAHRIRLASH ---
+    const openEditExpense = (expense) => {
+        setEditExpenseData({
+            id: expense.id,
+            title: expense.title || '',
+            amount: expense.amount || '',
+            expense_type: expense.expense_type || 'daily'
+        });
+    };
+
+    const cancelEditExpense = () => {
+        setEditExpenseData({ id: '', title: '', amount: '', expense_type: 'daily' });
+    };
+
+    const handleEditExpense = async (e) => {
+        e.preventDefault();
+
+        if (!editExpenseData.id) {
+            alert("Iltimos, tahrirlanadigan rasxodni tanlang!");
+            return;
+        }
+        if (!editExpenseData.title.trim()) {
+            alert("Rasxod nomini kiriting!");
+            return;
+        }
+        if (!editExpenseData.amount || Number(editExpenseData.amount) <= 0) {
+            alert("Rasxod summasini to'g'ri kiriting!");
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const res = await api.put(`/api/dashboard/expenses/${editExpenseData.id}`, {
+                title: editExpenseData.title.trim(),
+                amount: Number(editExpenseData.amount),
+                expense_type: editExpenseData.expense_type
+            });
+
+            setEditExpenseModal(false);
+            cancelEditExpense();
+            setExpenseSearch('');
+            await fetchExpenses();
+            await fetchData(false);
+
+            alert(res.data?.message || "Rasxod muvaffaqiyatli tahrirlandi!");
+        } catch (err) {
+            console.error("Rasxodni tahrirlash xatosi:", err);
+            alert(err.response?.data?.message || "Rasxodni tahrirlashda xatolik yuz berdi!");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    // --- RASXODNI O'CHIRISH ---
+    const handleDeleteExpense = async (expenseId) => {
+        if (!window.confirm("Ushbu rasxodni o'chirishni tasdiqlaysizmi?")) {
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const res = await api.delete(`/api/dashboard/expenses/${expenseId}`);
+            await fetchExpenses();
+            await fetchData(false);
+            alert(res.data?.message || "Rasxod muvaffaqiyatli o'chirildi!");
+        } catch (err) {
+            console.error("Rasxodni o'chirish xatosi:", err);
+            alert(err.response?.data?.message || "Rasxodni o'chirishda xatolik yuz berdi!");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    // --- TOVARNI VOZVRAT QILISH: sotuvlarni yuklash ---
+    const fetchSales = async () => {
+        try {
+            const res = await api.get('/api/dashboard/sales');
+            const list = res.data?.sales || res.data || [];
+            setSales(Array.isArray(list) ? list : []);
+        } catch (err) {
+            console.error("Sotuvlarni yuklashda xatolik:", err);
+            alert(err.response?.data?.message || "Sotuvlar tarixini yuklab bo'lmadi!");
+        }
+    };
+
+    const filteredSales = sales.filter((s) => {
+        const q = returnSearch.toLowerCase().trim();
+        if (!q) return true;
+        const nameStr = (s.name || s.title || s.product_name || '').toLowerCase();
+        return nameStr.includes(q);
+    });
+
+    const selectedSale = sales.find((s) => String(s.id) === String(returnData.sale_id)) || null;
+
+    const handleSelectSale = (saleId) => {
+        setReturnData({ sale_id: saleId, quantity: 1 });
+    };
+
+    const handleReturnProduct = async (e) => {
+        e.preventDefault();
+
+        if (!returnData.sale_id) {
+            alert("Iltimos, vozvrat qilinadigan sotuvni tanlang!");
+            return;
+        }
+
+        const qty = Number(returnData.quantity);
+        if (!qty || qty <= 0) {
+            alert("Vozvrat qilinadigan sonni to'g'ri kiriting!");
+            return;
+        }
+
+        const maxQty = Number(selectedSale?.sell_quantity ?? selectedSale?.quantity ?? 0);
+        if (selectedSale && qty > maxQty) {
+            alert(`Bu sotuvda faqat ${maxQty} ta sotilgan, undan ko'p vozvrat qila olmaysiz!`);
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const res = await api.post('/api/dashboard/return', {
+                sale_id: Number(returnData.sale_id),
+                quantity: qty
+            });
+
+            setReturnModal(false);
+            setReturnData({ sale_id: '', quantity: 1 });
+            setReturnSearch('');
+            await fetchSales();
+            await fetchData(false); // ombordagi son va statistikalar yangilanadi
+
+            alert(res.data?.message || "Tovar muvaffaqiyatli omborga qaytarildi!");
+        } catch (err) {
+            console.error("Vozvrat qilish xatosi:", err);
+            alert(err.response?.data?.message || "Vozvrat qilishda xatolik yuz berdi!");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     const filteredGroups = productGroups.filter((g) => {
         const query = searchQuery.toLowerCase().trim();
         if (!query) return true;
@@ -634,6 +839,35 @@ const DashboardPage = () => {
                     <button onClick={() => setSellModal(true)} className="btn btn-sell">🛒 Tovar Sotish</button>
                     <button onClick={() => setExpenseModal(true)} className="btn btn-expense">💸 Rasxod Yozish</button>
                     <button onClick={() => setDeleteModal(true)} className="btn btn-delete">🗑️ Tovarni O'chirish</button>
+
+                    <button
+                        onClick={() => setEditSelectModal(true)}
+                        className="btn btn-edit-product"
+                    >
+                        ✏️ Tovarni Tahrirlash
+                    </button>
+
+                    <button
+                        onClick={() => { setEditExpenseModal(true); fetchExpenses(); }}
+                        className="btn btn-edit-expense"
+                    >
+                        ✏️ Rasxodni Tahrirlash
+                    </button>
+
+                    <button
+                        onClick={() => { setDeleteExpenseModal(true); fetchExpenses(); }}
+                        className="btn btn-delete-expense"
+                    >
+                        🗑️ Rasxodni O'chirish
+                    </button>
+
+                    <button
+                        onClick={() => { setReturnModal(true); fetchSales(); }}
+                        className="btn btn-return"
+                    >
+                        ↩️ Tovarni Vozvrat Qilish
+                    </button>
+
                     <button onClick={handleLogout} className="btn btn-logout">🚪 Chiqish</button>
                 </div>
             </header>
@@ -1402,6 +1636,354 @@ const DashboardPage = () => {
 
                             </div>
 
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ✏️ HEADERDAN "TOVARNI TAHRIRLASH" — tanlash modali.
+                Tovar tanlangач yuqoridagi editModal avtomatik ochiladi. */}
+            {editSelectModal && (
+                <div
+                    className="modal-overlay"
+                    onClick={() => {
+                        setEditSelectModal(false);
+                        setEditSelectSearch('');
+                    }}
+                >
+                    <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>✏️ Tahrirlash uchun tovarni tanlang</h3>
+                        </div>
+
+                        <div className="product-form">
+                            <div className="form-group">
+                                <label>Tovar nomi bo'yicha qidirish :</label>
+                                <input
+                                    type="text"
+                                    placeholder="Masalan: Nike, Divan..."
+                                    value={editSelectSearch}
+                                    onChange={(e) => setEditSelectSearch(e.target.value)}
+                                    className="form-input"
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Tovarni tanlang * :</label>
+                                <select
+                                    value=""
+                                    onChange={(e) => handleEditGroupSelect(e.target.value)}
+                                    className="form-input"
+                                >
+                                    <option value="">-- Tovarni tanlang --</option>
+                                    {filteredEditGroups.map((g) => (
+                                        <option key={g.local_id} value={g.local_id}>
+                                            #{g.local_id} — {g.name} {g.color ? `(${g.color})` : ''} — jami: {g.variants.reduce((s, v) => s + v.quantity, 0)} ta
+                                        </option>
+                                    ))}
+                                </select>
+                                {editSelectSearch && filteredEditGroups.length === 0 && (
+                                    <div className="error-text">⚠️ Qidiruvga mos tovar topilmadi!</div>
+                                )}
+                            </div>
+
+                            <div className="modal-actions">
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    onClick={() => {
+                                        setEditSelectModal(false);
+                                        setEditSelectSearch('');
+                                    }}
+                                >
+                                    Bekor qilish
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ✏️ RASXODNI TAHRIRLASH MODALI */}
+            {editExpenseModal && (
+                <div
+                    className="modal-overlay"
+                    onClick={() => {
+                        if (!isSubmitting) {
+                            setEditExpenseModal(false);
+                            cancelEditExpense();
+                            setExpenseSearch('');
+                        }
+                    }}
+                >
+                    <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>✏️ Rasxodni Tahrirlash</h3>
+                        </div>
+
+                        <form onSubmit={handleEditExpense} className="product-form">
+                            <div className="form-group">
+                                <label>Rasxod nomi bo'yicha qidirish :</label>
+                                <input
+                                    type="text"
+                                    placeholder="Masalan: Arenda, Tushlik..."
+                                    value={expenseSearch}
+                                    onChange={(e) => setExpenseSearch(e.target.value)}
+                                    className="form-input"
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Rasxodni tanlang * :</label>
+                                <select
+                                    value={editExpenseData.id}
+                                    onChange={(e) => {
+                                        const exp = expenses.find((x) => String(x.id) === e.target.value);
+                                        if (exp) openEditExpense(exp);
+                                    }}
+                                    className="form-input"
+                                >
+                                    <option value="">-- Rasxodni tanlang --</option>
+                                    {filteredExpenses.map((exp) => (
+                                        <option key={exp.id} value={exp.id}>
+                                            {exp.title} — {formatSum(exp.amount)} so'm ({exp.expense_type === 'daily' ? 'Kunlik' : exp.expense_type === 'monthly' ? 'Oylik' : exp.expense_type})
+                                        </option>
+                                    ))}
+                                </select>
+                                {filteredExpenses.length === 0 && (
+                                    <div className="error-text">⚠️ Rasxod topilmadi!</div>
+                                )}
+                            </div>
+
+                            {editExpenseData.id && (
+                                <>
+                                    <div className="form-group">
+                                        <label>Rasxod Nomi/Sababi * :</label>
+                                        <input
+                                            type="text"
+                                            value={editExpenseData.title}
+                                            onChange={(e) => setEditExpenseData({ ...editExpenseData, title: e.target.value })}
+                                            required
+                                            className="form-input"
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Suma (So'm) * :</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={editExpenseData.amount}
+                                            onChange={(e) => setEditExpenseData({ ...editExpenseData, amount: e.target.value })}
+                                            required
+                                            className="form-input"
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Rasxod Turi :</label>
+                                        <select
+                                            value={editExpenseData.expense_type}
+                                            onChange={(e) => setEditExpenseData({ ...editExpenseData, expense_type: e.target.value })}
+                                            className="form-input"
+                                        >
+                                            <option value="daily">Kunlik</option>
+                                            <option value="monthly">Oylik</option>
+                                        </select>
+                                    </div>
+                                </>
+                            )}
+
+                            <div className="modal-actions">
+                                <button
+                                    type="submit"
+                                    className="btn btn-primary"
+                                    disabled={isSubmitting || !editExpenseData.id}
+                                >
+                                    {isSubmitting ? "Saqlanmoqda..." : "💾 Saqlash"}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-danger"
+                                    disabled={isSubmitting}
+                                    onClick={() => {
+                                        setEditExpenseModal(false);
+                                        cancelEditExpense();
+                                        setExpenseSearch('');
+                                    }}
+                                >
+                                    Bekor qilish
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* 🗑️ RASXODNI O'CHIRISH MODALI */}
+            {deleteExpenseModal && (
+                <div
+                    className="modal-overlay"
+                    onClick={() => {
+                        setDeleteExpenseModal(false);
+                        setExpenseSearch('');
+                    }}
+                >
+                    <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>🗑️ Rasxodni O'chirish</h3>
+                        </div>
+
+                        <div className="product-form">
+                            <div className="form-group">
+                                <label>Rasxod nomi bo'yicha qidirish :</label>
+                                <input
+                                    type="text"
+                                    placeholder="Masalan: Arenda, Tushlik..."
+                                    value={expenseSearch}
+                                    onChange={(e) => setExpenseSearch(e.target.value)}
+                                    className="form-input"
+                                />
+                            </div>
+
+                            <div className="expense-list">
+                                {filteredExpenses.length === 0 ? (
+                                    <p className="no-data">Rasxod topilmadi!</p>
+                                ) : (
+                                    filteredExpenses.map((exp) => (
+                                        <div className="expense-list-item" key={exp.id}>
+                                            <div>
+                                                <b>{exp.title}</b>
+                                                <div className="expense-meta">
+                                                    {formatSum(exp.amount)} so'm • {exp.expense_type === 'daily' ? 'Kunlik' : exp.expense_type === 'monthly' ? 'Oylik' : exp.expense_type}
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className="btn btn-delete btn-small"
+                                                disabled={isSubmitting}
+                                                onClick={() => handleDeleteExpense(exp.id)}
+                                            >
+                                                🗑️ O'chirish
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+
+                            <div className="modal-actions">
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    onClick={() => {
+                                        setDeleteExpenseModal(false);
+                                        setExpenseSearch('');
+                                    }}
+                                >
+                                    Yopish
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ↩️ TOVARNI VOZVRAT QILISH MODALI */}
+            {returnModal && (
+                <div
+                    className="modal-overlay"
+                    onClick={() => {
+                        if (!isSubmitting) {
+                            setReturnModal(false);
+                            setReturnData({ sale_id: '', quantity: 1 });
+                            setReturnSearch('');
+                        }
+                    }}
+                >
+                    <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>↩️ Tovarni Vozvrat Qilish</h3>
+                        </div>
+
+                        <form onSubmit={handleReturnProduct} className="product-form">
+                            <div className="form-group">
+                                <label>Sotilgan tovar nomi bo'yicha qidirish :</label>
+                                <input
+                                    type="text"
+                                    placeholder="Masalan: Nike, Divan..."
+                                    value={returnSearch}
+                                    onChange={(e) => setReturnSearch(e.target.value)}
+                                    className="form-input"
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Sotuvni tanlang * :</label>
+                                <select
+                                    value={returnData.sale_id}
+                                    onChange={(e) => handleSelectSale(e.target.value)}
+                                    required
+                                    className="form-input"
+                                >
+                                    <option value="">-- Sotuvni tanlang --</option>
+                                    {filteredSales.map((s) => (
+                                        <option key={s.id} value={s.id}>
+                                            {s.name || s.title || s.product_name} {s.size ? `(${s.size})` : ''} — {s.sell_quantity ?? s.quantity} ta sotilgan
+                                        </option>
+                                    ))}
+                                </select>
+                                {returnSearch && filteredSales.length === 0 && (
+                                    <div className="error-text">⚠️ Qidiruvga mos sotuv topilmadi!</div>
+                                )}
+                            </div>
+
+                            {selectedSale && (
+                                <>
+                                    <div className="info-banner info-success">
+                                        ✅ Tanlangan: <b>{selectedSale.name || selectedSale.title || selectedSale.product_name}</b> —
+                                        jami sotilgan: {selectedSale.sell_quantity ?? selectedSale.quantity} ta,
+                                        narxi: {formatSum(selectedSale.selling_price)} so'm/dona
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>
+                                            Vozvrat qilinadigan son
+                                            (max: {selectedSale.sell_quantity ?? selectedSale.quantity} ta) * :
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max={selectedSale.sell_quantity ?? selectedSale.quantity}
+                                            value={returnData.quantity}
+                                            onChange={(e) => setReturnData((prev) => ({ ...prev, quantity: e.target.value }))}
+                                            required
+                                            className="form-input"
+                                        />
+                                    </div>
+                                </>
+                            )}
+
+                            <div className="modal-actions">
+                                <button
+                                    type="submit"
+                                    className="btn btn-primary"
+                                    disabled={isSubmitting || !selectedSale}
+                                >
+                                    {isSubmitting ? "Yuborilmoqda..." : "↩️ Vozvrat qilish"}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-danger"
+                                    disabled={isSubmitting}
+                                    onClick={() => {
+                                        setReturnModal(false);
+                                        setReturnData({ sale_id: '', quantity: 1 });
+                                        setReturnSearch('');
+                                    }}
+                                >
+                                    Bekor qilish
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>

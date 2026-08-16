@@ -1049,16 +1049,110 @@ body {
     gap: 8px;
 }
 
-.btn-edit {
-    border: none;
-    background: #f59e0b;
-    color: white;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
+/* =====================================================================
+   YANGI TUGMALAR VA MODALLAR UCHUN QO'SHIMCHA STILLAR
+   Bu faylni dashboard.css oxiriga qo'shib qo'ying.
+   (mavjud .btn, .modal-overlay, .modal-box, .form-group, .form-input,
+   .modal-actions, .info-banner klasslaringiz bilan ishlaydi)
+   ===================================================================== */
+
+/* ---------- Header'dagi yangi tugmalar ---------- */
+
+.btn-edit-product {
+    background-color: #6366f1;
+    color: #fff;
 }
 
-.btn-edit:hover {
-    opacity: 0.9;
+.btn-edit-product:hover {
+    background-color: #4f46e5;
+}
+
+.btn-edit-expense {
+    background-color: #f59e0b;
+    color: #fff;
+}
+
+.btn-edit-expense:hover {
+    background-color: #d97706;
+}
+
+.btn-delete-expense {
+    background-color: #ef4444;
+    color: #fff;
+}
+
+.btn-delete-expense:hover {
+    background-color: #dc2626;
+}
+
+.btn-return {
+    background-color: #0ea5e9;
+    color: #fff;
+}
+
+.btn-return:hover {
+    background-color: #0284c7;
+}
+
+/* ---------- Rasxodni o'chirish modalidagi ro'yxat ---------- */
+
+.expense-list {
+    max-height: 320px;
+    overflow-y: auto;
+    border: 1px solid #f1f5f9;
+    border-radius: 10px;
+    margin-bottom: 16px;
+}
+
+.expense-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.expense-list-item:last-child {
+    border-bottom: none;
+}
+
+.expense-list-item:hover {
+    background-color: #f8fafc;
+}
+
+.expense-meta {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 3px;
+}
+
+/* Kichik o'lchamdagi tugma (ro'yxat ichidagi "O'chirish" tugmasi uchun) */
+.btn-small {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    flex-shrink: 0;
+}
+
+/* ---------- Mobil moslashuv ---------- */
+
+@media (max-width: 600px) {
+    .header-buttons {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .header-buttons .btn {
+        flex: 1 1 calc(50% - 8px);
+        text-align: center;
+    }
+
+    .expense-list-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .expense-list-item .btn-small {
+        align-self: flex-end;
+    }
 }
