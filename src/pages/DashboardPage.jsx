@@ -1185,7 +1185,6 @@ const DashboardPage = () => {
             {/* Men faqat yangi qo'shilgan qismlarni to'liq yozaman, qolganlari sizning asl kodingiz bilan bir xil */}
 
             <section className="stats-grid">
-                {/* ... mavjud statistika kartalari o'z holicha ... */}
                 <div className="stat-card">
                     <h4>Ombor Holati</h4>
                     <p><b>Jami tovar turi:</b> {stats.totalProducts || 0} xil</p>
@@ -1222,8 +1221,100 @@ const DashboardPage = () => {
                 </div>
             </section>
 
-            {/* Products section, barcha eski modallar (add, sell, expense, delete, edit, details, return, expense-list, debts, suppliers) o'z holicha qoladi */}
-            {/* Men faqat YANGI 2 ta modalni to'liq yozaman */}
+            <section className="products-section">
+                <div className="section-header">
+                    <h3>📦 Ombordagi Tovarlar</h3>
+                    <input
+                        type="text"
+                        placeholder="ID, Nomi, Kategoriya, Rang yoki O'lchami bo'yicha qidirish..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="search-input"
+                    />
+                </div>
+
+                <div className="table-wrapper">
+                    <table className="products-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Kategoriya</th>
+                                <th>Tovar Nomi</th>
+                                <th className="col-hide-mobile">Rangi</th>
+                                <th className="col-hide-narrow">Kelgan Narxi (Tannarx)</th>
+                                <th className="col-hide-mobile">O'lchamlar / Qoldiq</th>
+                                <th className="col-hide-mobile">QR</th>
+                                <th className="col-hide-tiny">Jami Qoldiq</th>
+                                <th className="col-details-only">Amal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredGroups.length > 0 ? (
+                                filteredGroups.map((g) => {
+                                    const totalQty = g.variants.reduce((sum, v) => sum + v.quantity, 0);
+                                    return (
+                                        <tr key={g.local_id}>
+                                            <td><b>#{g.local_id}</b></td>
+                                            <td><span className="category-badge">{g.category || 'Umumiy'}</span></td>
+                                            <td><b>{g.name}</b></td>
+                                            <td className="col-hide-mobile">
+                                                {g.color ? <span className="color-badge">{g.color}</span> : ''}
+                                            </td>
+                                            <td className="col-hide-narrow">{formatSum(g.cost_price)} so'm</td>
+                                            <td className="col-hide-mobile">
+                                                <div className="size-badge-list">
+                                                    {g.variants.map((v) => (
+                                                        <span
+                                                            key={v.id}
+                                                            className={`size-badge ${v.quantity < 3 ? "size-badge-low" : ""}`}
+                                                        >
+                                                            {v.size ? v.size : "Standart"}: {v.quantity} ta
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </td>
+                                            <td className="col-hide-mobile">
+                                                <div className="qr-list">
+                                                    {g.variants.map((v) => (
+                                                        <ProductQR
+                                                            key={v.id}
+                                                            product={{
+                                                                ...v,
+                                                                name: g.name,
+                                                                color: g.color,
+                                                                local_id: g.local_id,
+                                                                selling_price: v.selling_price ?? g.selling_price
+                                                            }}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </td>
+                                            <td className="col-hide-tiny">
+                                                <b className={totalQty < 5 ? "warning-stock" : ""}>{totalQty} ta</b>
+                                            </td>
+                                            <td className="col-details-only">
+                                                <div className="product-action-buttons">
+                                                    <button
+                                                        type="button"
+                                                        className="btn-details"
+                                                        onClick={() => setDetailsGroup(g)}
+                                                    >
+                                                        🔍 Batafsil
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            ) : (
+                                <tr>
+                                    <td colSpan="9" className="no-data">Tovar topilmadi!</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
 
             {/* ========== 🛒 NASIYAGA SOTISH MODALI ========== */}
             {creditSellModal && (
