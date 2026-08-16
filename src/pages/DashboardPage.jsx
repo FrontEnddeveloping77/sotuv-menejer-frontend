@@ -58,14 +58,6 @@ const DashboardPage = () => {
     const [detailsGroup, setDetailsGroup] = useState(null);
     const [editModal, setEditModal] = useState(false);
 
-    const [debtModal, setDebtModal] = useState(false);
-    const [debts, setDebts] = useState([]);
-    const [debtSearch, setDebtSearch] = useState('');
-    const [selectedDebt, setSelectedDebt] = useState(null);
-    const [debtPayModal, setDebtPayModal] = useState(false);
-    const [debtPayAmount, setDebtPayAmount] = useState('');
-    const [debtLoading, setDebtLoading] = useState(false);
-
     const [editProduct, setEditProduct] = useState({
         local_id: '',
         category: '',
@@ -82,13 +74,7 @@ const DashboardPage = () => {
         cost_price: '',
         color: '',
         sizes: '',
-        quantity: '',
-
-        // YANGI
-        payment_type: 'cash',
-        supplier_name: '',
-        supplier_phone: '',
-        initial_paid: ''
+        quantity: ''
     });
 
     const emptySellRow = () => ({ size: '', sell_quantity: 1, selling_price: '' });
@@ -187,54 +173,6 @@ const DashboardPage = () => {
             }
         }
     };
-
-    const fetchDebts = async () => {
-        try {
-            setDebtLoading(true);
-
-            const res = await api.get('/api/debts');
-
-            const list =
-                res.data?.debts ||
-                res.data ||
-                [];
-
-            setDebts(
-                Array.isArray(list)
-                    ? list.filter(
-                        (debt) =>
-                            debt.status === 'open' &&
-                            Number(debt.remaining_amount) > 0
-                    )
-                    : []
-            );
-
-        } catch (err) {
-
-            console.error(
-                "Qarzlarni yuklashda xatolik:",
-                err
-            );
-
-            alert(
-                err.response?.data?.message ||
-                "Qarzlarni yuklashda xatolik!"
-            );
-
-        } finally {
-            setDebtLoading(false);
-        }
-    };
-
-    const openDebtModal = async () => {
-        setDebtModal(true);
-        setDebtSearch('');
-        setSelectedDebt(null);
-
-        await fetchDebts();
-    };
-
-    
 
     useEffect(() => {
         fetchData(true);
@@ -1519,6 +1457,7 @@ const DashboardPage = () => {
             )}
         </div>
     );
+
 };
 
 export default DashboardPage;
