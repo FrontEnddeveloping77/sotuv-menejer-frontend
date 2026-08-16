@@ -118,6 +118,11 @@ const DashboardPage = () => {
     const [debts, setDebts] = useState([]);
     const [loadingDebts, setLoadingDebts] = useState(false);
 
+    // --- TOVAR BERGANLAR ---
+    const [suppliersModal, setSuppliersModal] = useState(false);
+    const [suppliersList, setSuppliersList] = useState([]);
+    const [loadingSuppliers, setLoadingSuppliers] = useState(false);
+
     const emptySellRow = () => ({ size: '', sell_quantity: 1, selling_price: '' });
     const [sellSearch, setSellSearch] = useState('');
     const [sellData, setSellData] = useState({
@@ -471,24 +476,23 @@ const DashboardPage = () => {
                 alert("Kelgan narx kiritilishi shart!");
                 return;
             }
-            if (!newProduct.color?.trim()) {
-                alert("Rang kiritilishi shart!");
-                return;
-            }
+            // Rang ixtiyoriy (formada ham shunday yozilgan)
             if (!newProduct.quantity || Number(newProduct.quantity) <= 0) {
                 alert("Umumiy soni 0 dan katta bo‘lishi kerak!");
                 return;
             }
 
+            // Har doim (naqd ham, nasiya ham) kimdan olingani va telefon majburiy
+            if (!newProduct.supplier?.trim()) {
+                alert("Kimdan olinganini kiritish shart!");
+                return;
+            }
+            if (!newProduct.supplier_phone?.trim()) {
+                alert("Telefon raqamini kiritish shart!");
+                return;
+            }
+
             if (newProduct.payment_type === 'credit') {
-                if (!newProduct.supplier?.trim()) {
-                    alert("Nasiya bo‘lsa, kimdan olinganini kiritish shart!");
-                    return;
-                }
-                if (!newProduct.supplier_phone?.trim()) {
-                    alert("Nasiya bo‘lsa, telefon raqamini kiritish shart!");
-                    return;
-                }
                 if (newProduct.paid_amount === '' || newProduct.paid_amount === null || Number(newProduct.paid_amount) < 0) {
                     alert("To‘langan summani to‘g‘ri kiriting!");
                     return;
@@ -503,8 +507,8 @@ const DashboardPage = () => {
                 quantity: Number(newProduct.quantity) || 1,
                 sizes: newProduct.sizes?.trim() || '',
                 payment_type: newProduct.payment_type || 'cash',
-                supplier: newProduct.payment_type === 'credit' ? newProduct.supplier.trim() : null,
-                supplier_phone: newProduct.payment_type === 'credit' ? newProduct.supplier_phone.trim() : null,
+                supplier: newProduct.supplier.trim(),
+                supplier_phone: newProduct.supplier_phone.trim(),
                 paid_amount: newProduct.payment_type === 'credit' ? Number(newProduct.paid_amount) || 0 : 0,
             };
 
@@ -715,6 +719,21 @@ const DashboardPage = () => {
         }
     };
 
+    // --- TOVAR BERGANLAR ---
+    const openSuppliersModal = async () => {
+        setSuppliersModal(true);
+        setLoadingSuppliers(true);
+        try {
+            const res = await api.get('/api/suppliers');
+            setSuppliersList(res.data?.suppliers || res.data || []);
+        } catch (err) {
+            alert(err.response?.data?.message || "Tovar berganlarni yuklashda xatolik!");
+            setSuppliersList([]);
+        } finally {
+            setLoadingSuppliers(false);
+        }
+    };
+
     // --- VOZVRAT (SOTUVLAR) ---
 
     const openReturnModal = async () => {
@@ -900,6 +919,7 @@ const DashboardPage = () => {
                     <button onClick={() => setExpenseModal(true)} className="btn btn-expense">💸 Rasxod Yozish</button>
                     <button onClick={() => setDeleteModal(true)} className="btn btn-delete">🗑️ Tovarni O'chirish</button>
                     <button onClick={openDebtsModal} className="btn btn-debts">💳 Qarzlar</button>
+                    <button onClick={openSuppliersModal} className="btn btn-suppliers">👥 Tovar berganlar</button>
                     <button onClick={openReturnModal} className="btn btn-return">↩️ Vozvrat</button>
                     <button onClick={openExpenseListModal} className="btn btn-edit-expense">📋 Rasxodlarni taxrirlash</button>
                     <button onClick={handleLogout} className="btn btn-logout">🚪 Chiqish</button>
@@ -1095,7 +1115,6 @@ const DashboardPage = () => {
                                             onChange={(e) => setNewProduct({
                                                 ...newProduct,
                                                 payment_type: e.target.value,
-                                                supplier: '',
                                                 paid_amount: ''
                                             })}
                                         />
@@ -1114,51 +1133,47 @@ const DashboardPage = () => {
                                 </div>
                             </div>
 
-                            {/* Nasiya tanlanganda chiqadigan maydonlar */}
+                            {/* Kimdan olindi va telefon — har doim majburiy (naqd ham, nasiya ham) */}
+                            <div className="form-group">
+                                <label>Kimdan olindi * :</label>
+                                <input
+                                    type="text"
+                                    placeholder="Masalan: Ali aka, Optom bozor..."
+                                    value={newProduct.supplier || ''}
+                                    onChange={(e) => setNewProduct({ ...newProduct, supplier: e.target.value })}
+                                    required
+                                    className="form-input"
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Telefon raqami * :</label>
+                                <input
+                                    type="text"
+                                    placeholder="+998 90 123 45 67"
+                                    value={newProduct.supplier_phone || ''}
+                                    onChange={(e) => setNewProduct({ ...newProduct, supplier_phone: e.target.value })}
+                                    required
+                                    className="form-input"
+                                />
+                            </div>
+
+                            {/* To‘langan summa faqat nasiya bo‘lsa */}
                             {newProduct.payment_type === 'credit' && (
-                                <>
-                                    {/* 1. Kimdan olindi */}
-                                    <div className="form-group">
-                                        <label>Kimdan olindi * :</label>
-                                        <input
-                                            type="text"
-                                            placeholder="Masalan: Ali aka, Optom bozor..."
-                                            value={newProduct.supplier || ''}
-                                            onChange={(e) => setNewProduct({ ...newProduct, supplier: e.target.value })}
-                                            required
-                                            className="form-input"
-                                        />
-                                    </div>
-
-                                    {/* 2. TELEFON RAQAMI (yangi qo‘shiladigan qism) */}
-                                    <div className="form-group">
-                                        <label>Telefon raqami * :</label>
-                                        <input
-                                            type="text"
-                                            placeholder="+998 90 123 45 67"
-                                            value={newProduct.supplier_phone || ''}
-                                            onChange={(e) => setNewProduct({ ...newProduct, supplier_phone: e.target.value })}
-                                            required
-                                            className="form-input"
-                                        />
-                                    </div>
-
-                                    {/* 3. To‘langan summa */}
-                                    <div className="form-group">
-                                        <label>To‘langan summa * :</label>
-                                        <input
-                                            type="number"
-                                            placeholder="Masalan: 50000"
-                                            value={newProduct.paid_amount || ''}
-                                            onChange={(e) => setNewProduct({ ...newProduct, paid_amount: e.target.value })}
-                                            required
-                                            className="form-input"
-                                        />
-                                        <small className="form-hint">
-                                            Qancha pul oldindan berilganini kiriting
-                                        </small>
-                                    </div>
-                                </>
+                                <div className="form-group">
+                                    <label>To‘langan summa * :</label>
+                                    <input
+                                        type="number"
+                                        placeholder="Masalan: 50000"
+                                        value={newProduct.paid_amount || ''}
+                                        onChange={(e) => setNewProduct({ ...newProduct, paid_amount: e.target.value })}
+                                        required
+                                        className="form-input"
+                                    />
+                                    <small className="form-hint">
+                                        Qancha pul oldindan berilganini kiriting
+                                    </small>
+                                </div>
                             )}
 
                             {/* Rang - ixtiyoriy */}
@@ -2111,6 +2126,77 @@ const DashboardPage = () => {
                             <button
                                 type="button"
                                 onClick={() => setDebtsModal(false)}
+                                className="btn btn-danger"
+                            >
+                                Yopish
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 👥 TOVAR BERGANLAR MODALI */}
+            {suppliersModal && (
+                <div className="modal-overlay" onClick={() => setSuppliersModal(false)}>
+                    <div className="modal-box" style={{ maxWidth: '800px' }} onClick={(e) => e.stopPropagation()}>
+                        <h3>👥 Tovar berganlar ro‘yxati</h3>
+
+                        {loadingSuppliers ? (
+                            <p style={{ textAlign: 'center', padding: '20px' }}>Yuklanmoqda...</p>
+                        ) : suppliersList.length === 0 ? (
+                            <div className="info-banner">
+                                Hozircha hech qanday tovar berganlar yo‘q ✅
+                            </div>
+                        ) : (
+                            <div className="debts-list">
+                                {suppliersList.map((sup, index) => (
+                                    <div key={index} className="debt-card">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                                            <strong style={{ fontSize: '16px' }}>👤 {sup.supplier || 'Noma\'lum'}</strong>
+                                            {sup.supplier_phone && (
+                                                <span className="debt-phone">📞 {sup.supplier_phone}</span>
+                                            )}
+                                        </div>
+
+                                        <div className="debt-meta" style={{ marginTop: '8px' }}>
+                                            <span>📦 {sup.products_count ?? (sup.products?.length || 0)} ta tovar turi</span>
+                                            {sup.total_cost != null && (
+                                                <span>💰 Jami tannarx: {formatSum(sup.total_cost)} so‘m</span>
+                                            )}
+                                            {sup.total_quantity != null && (
+                                                <span>🔢 Jami soni: {sup.total_quantity} ta</span>
+                                            )}
+                                        </div>
+
+                                        {Array.isArray(sup.products) && sup.products.length > 0 && (
+                                            <div style={{ marginTop: '12px', fontSize: '14px' }}>
+                                                <b>Bergan tovarlar:</b>
+                                                <ul style={{ margin: '6px 0 0 18px', padding: 0 }}>
+                                                    {sup.products.map((p, i) => (
+                                                        <li key={i} style={{ marginBottom: '4px' }}>
+                                                            {p.name || p.title || 'Nomsiz'}
+                                                            {p.color ? ` (${p.color})` : ''}
+                                                            {p.size ? ` — ${p.size}` : ''}
+                                                            {' — '}
+                                                            {p.quantity != null ? `${p.quantity} ta` : '? ta'}
+                                                            {p.cost_price != null ? `, ${formatSum(p.cost_price)} so'm` : ''}
+                                                            {p.created_at
+                                                                ? ` (${new Date(p.created_at).toLocaleDateString('uz-UZ')})`
+                                                                : ''}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        <div className="modal-actions">
+                            <button
+                                type="button"
+                                onClick={() => setSuppliersModal(false)}
                                 className="btn btn-danger"
                             >
                                 Yopish
