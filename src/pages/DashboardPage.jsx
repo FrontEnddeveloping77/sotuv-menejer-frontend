@@ -234,7 +234,7 @@ const DashboardPage = () => {
         await fetchDebts();
     };
 
-
+    
 
     useEffect(() => {
         fetchData(true);
@@ -242,135 +242,6 @@ const DashboardPage = () => {
 
     const formatSum = (val) => {
         return Number(val || 0).toLocaleString('uz-UZ');
-    };
-
-    const filteredDebts = debts.filter((debt) => {
-
-        const q =
-            debtSearch
-                .toLowerCase()
-                .trim();
-
-        if (!q) return true;
-
-        const name =
-            String(
-                debt.supplier_name || ''
-            ).toLowerCase();
-
-        const phone =
-            String(
-                debt.supplier_phone || ''
-            ).toLowerCase();
-
-        const items =
-            Array.isArray(debt.items)
-                ? debt.items
-                : [];
-
-        const productMatch =
-            items.some((item) => {
-
-                const productName =
-                    String(
-                        item.product_name || ''
-                    ).toLowerCase();
-
-                const productId =
-                    String(
-                        item.product_local_id || ''
-                    ).toLowerCase();
-
-                return (
-                    productName.includes(q) ||
-                    productId.includes(q)
-                );
-            });
-
-        return (
-            name.includes(q) ||
-            phone.includes(q) ||
-            productMatch
-        );
-    });
-
-    const handlePayDebt = async (e) => {
-
-        e.preventDefault();
-
-        if (!selectedDebt) {
-            alert("Qarz tanlanmagan!");
-            return;
-        }
-
-        const amount =
-            Number(debtPayAmount);
-
-        const remaining =
-            Number(
-                selectedDebt.remaining_amount
-            );
-
-        if (
-            !Number.isFinite(amount) ||
-            amount <= 0
-        ) {
-
-            alert(
-                "Qancha pul uzilganini to'g'ri kiriting!"
-            );
-
-            return;
-        }
-
-        if (amount > remaining) {
-
-            alert(
-                `Qolgan qarz ${formatSum(remaining)} so'm.`
-            );
-
-            return;
-        }
-
-        setDebtLoading(true);
-
-        try {
-
-            const res =
-                await api.post(
-                    `/api/debts/${selectedDebt.id}/pay`,
-                    {
-                        amount
-                    }
-                );
-
-            setDebtPayModal(false);
-            setDebtPayAmount('');
-            setSelectedDebt(null);
-
-            await fetchDebts();
-            await fetchData(false);
-
-            alert(
-                res.data?.message ||
-                "Qarz to'lovi saqlandi!"
-            );
-
-        } catch (err) {
-
-            console.error(
-                "Qarz uzish xatosi:",
-                err
-            );
-
-            alert(
-                err.response?.data?.message ||
-                "Qarzni uzishda xatolik!"
-            );
-
-        } finally {
-            setDebtLoading(false);
-        }
     };
 
     // --- RAZMERLARGA KO'RA GURUHLASH ---
