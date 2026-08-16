@@ -2170,11 +2170,13 @@ const DashboardPage = () => {
 
                                         {Array.isArray(sup.products) && sup.products.length > 0 && (
                                             <div style={{ marginTop: '12px', fontSize: '14px' }}>
-                                                <b>Bergan tovarlar:</b>
+                                                <b>Bergan tovarlar (kategoriya bo‘yicha):</b>
                                                 <ul style={{ margin: '6px 0 0 18px', padding: 0 }}>
                                                     {sup.products.map((p, i) => (
                                                         <li key={i} style={{ marginBottom: '4px' }}>
-                                                            {p.name || p.title || 'Nomsiz'}
+                                                            <span className="category-badge" style={{ marginRight: '6px' }}>
+                                                                {p.category || 'Umumiy'}
+                                                            </span>
                                                             {p.color ? ` (${p.color})` : ''}
                                                             {p.size ? ` — ${p.size}` : ''}
                                                             {' — '}
