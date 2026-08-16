@@ -2058,8 +2058,46 @@ const DashboardPage = () => {
                                             type="button"
                                             className="btn btn-primary btn-pay-debt"
                                             style={{ marginTop: '14px', width: '100%' }}
-                                            onClick={() => {
-                                                alert(`"${debt.supplier}" ga bo'lgan ${Number(debt.total_debt).toLocaleString('uz-UZ')} so'm qarzni to'lash funksiyasi tez orada qo'shiladi`);
+                                            onClick={async () => {
+                                                const maxDebt = Number(debt.total_debt) || 0;
+                                                const input = prompt(
+                                                    `"${debt.supplier}" ga qancha to'layapsiz?\n\nMaksimal qarz: ${maxDebt.toLocaleString('uz-UZ')} so'm`,
+                                                    maxDebt
+                                                );
+
+                                                if (input === null) return; // Bekor qilindi
+
+                                                const amount = Number(input);
+                                                if (!amount || amount <= 0) {
+                                                    alert("To'g'ri summa kiriting!");
+                                                    return;
+                                                }
+                                                if (amount > maxDebt) {
+                                                    alert(`Eng ko'p ${maxDebt.toLocaleString('uz-UZ')} so'm to'lash mumkin!`);
+                                                    return;
+                                                }
+
+                                                try {
+                                                    setLoadingDebts(true);
+                                                    const res = await api.post('/api/debts/pay', {
+                                                        supplier: debt.supplier,
+                                                        supplier_phone: debt.supplier_phone || null,
+                                                        amount: amount
+                                                    });
+
+                                                    alert(res.data?.message || "Qarz muvaffaqiyatli to'landi!");
+
+                                                    // Qarzlar ro'yxatini yangilash
+                                                    const debtsRes = await api.get('/api/debts');
+                                                    setDebts(debtsRes.data?.debts || []);
+
+                                                    // Dashboard statistikasini yangilash
+                                                    await fetchData(false);
+                                                } catch (err) {
+                                                    alert(err.response?.data?.message || "Qarz to'lashda xatolik yuz berdi!");
+                                                } finally {
+                                                    setLoadingDebts(false);
+                                                }
                                             }}
                                         >
                                             💰 Qarzni to‘lash
