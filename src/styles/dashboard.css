@@ -834,7 +834,6 @@ select:focus {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    min-width: 70px;
     max-width: 181px;
 }
 
