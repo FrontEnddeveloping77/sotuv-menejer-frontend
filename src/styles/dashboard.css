@@ -543,6 +543,7 @@ select:focus {
 .form-group {
     display: flex !important;
     flex-direction: column !important;
+    
 }
 
 .product-form label,
