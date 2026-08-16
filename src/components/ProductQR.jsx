@@ -14,9 +14,14 @@ const ProductQR = ({ product }) => {
 
     const url = `${publicBase}/qr/${product.qr_token}`;
 
+    const formatSum = (val) => {
+        return Number(val || 0).toLocaleString('uz-UZ');
+    };
+
     const wrapText = (ctx, text, x, y, maxWidth, lineHeight) => {
         const words = String(text || '').split(' ');
         let line = '';
+        let currentY = y;
 
         for (let n = 0; n < words.length; n++) {
             const testLine = line + words[n] + ' ';
@@ -24,135 +29,108 @@ const ProductQR = ({ product }) => {
             const testWidth = metrics.width;
 
             if (testWidth > maxWidth && n > 0) {
-                ctx.fillText(line.trim(), x, y);
+                ctx.fillText(line.trim(), x, currentY);
                 line = words[n] + ' ';
-                y += lineHeight;
+                currentY += lineHeight;
             } else {
                 line = testLine;
             }
         }
 
-        ctx.fillText(line.trim(), x, y);
-
-        return y;
+        ctx.fillText(line.trim(), x, currentY);
+        return currentY + lineHeight;
     };
 
     const downloadQR = () => {
         const qrCanvas = qrRef.current;
-
         if (!qrCanvas) return;
 
-        /*
-         * Yangi canvas:
-         * yuqorida QR kod
-         * pastida tovar ma'lumotlari
-         */
+        const width = 440;
+        const qrSize = 280;
+        const topPadding = 28;
+        const sidePadding = 24;
+        const gap = 22;
+        const lineHeight = 26;
+
+        // Matn qatorlarini oldindan hisoblaymiz
+        const lines = [];
+        lines.push(`Tovar: ${product.name || product.title || "Noma'lum"}`);
+        lines.push(`Rangi: ${product.color || "Ko'rsatilmagan"}`);
+        lines.push(`ID: #${product.local_id || product.id}`);
+        if (product.size) {
+            lines.push(`Razmer: ${product.size}`);
+        }
+        if (product.selling_price != null && product.selling_price !== '' && Number(product.selling_price) >= 0) {
+            lines.push(`Sotilish narxi: ${formatSum(product.selling_price)} so'm`);
+        }
+
+        // Taxminiy matn balandligi
+        const infoHeight = lines.length * lineHeight + 30;
+
         const outputCanvas = document.createElement('canvas');
-
-        const width = 420;
-        const qrSize = 300;
-        const topPadding = 30;
-        const gap = 20;
-        const infoHeight = 150;
-
         outputCanvas.width = width;
-        outputCanvas.height =
-            topPadding +
-            qrSize +
-            gap +
-            infoHeight;
+        outputCanvas.height = topPadding + qrSize + gap + infoHeight + 20;
 
         const ctx = outputCanvas.getContext('2d');
-
         if (!ctx) return;
 
         // Oq fon
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(
-            0,
-            0,
-            outputCanvas.width,
-            outputCanvas.height
-        );
+        ctx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
 
-        // QR kodni markazga joylashtirish
+        // QR kodni markazga
         const qrX = (width - qrSize) / 2;
+        ctx.drawImage(qrCanvas, qrX, topPadding, qrSize, qrSize);
 
-        ctx.drawImage(
-            qrCanvas,
-            qrX,
-            topPadding,
-            qrSize,
-            qrSize
-        );
-
+        // Matnlar
         const centerX = width / 2;
+        let textY = topPadding + qrSize + gap + 8;
 
-        let textY = topPadding + qrSize + 35;
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#111827';
 
         // Tovar nomi
-        ctx.fillStyle = '#111827';
-        ctx.textAlign = 'center';
-        ctx.font = 'bold 22px Arial';
-
+        ctx.font = 'bold 20px Arial, sans-serif';
         textY = wrapText(
             ctx,
-            `Tovar: ${product.name || product.title || "Noma'lum"}`,
+            lines[0],
             centerX,
             textY,
-            width - 40,
-            28
+            width - sidePadding * 2,
+            26
         );
 
-        textY += 8;
+        textY += 6;
 
-        // Rang
-        ctx.font = '18px Arial';
+        // Qolgan qatorlar
+        ctx.font = '16px Arial, sans-serif';
+        for (let i = 1; i < lines.length; i++) {
+            // Sotilish narxi qalinroq
+            if (lines[i].startsWith('Sotilish narxi')) {
+                ctx.font = 'bold 17px Arial, sans-serif';
+                ctx.fillStyle = '#0f766e';
+            } else {
+                ctx.font = '16px Arial, sans-serif';
+                ctx.fillStyle = '#111827';
+            }
 
-        ctx.fillText(
-            `Rangi: ${product.color || "Ko'rsatilmagan"}`,
-            centerX,
-            textY
-        );
-
-        textY += 28;
-
-        // ID
-        ctx.font = 'bold 18px Arial';
-
-        ctx.fillText(
-            `ID: #${product.local_id || product.id}`,
-            centerX,
-            textY
-        );
-
-        textY += 26;
-
-        // Razmer
-        if (product.size) {
-            ctx.font = '16px Arial';
-
-            ctx.fillText(
-                `Razmer: ${product.size}`,
+            textY = wrapText(
+                ctx,
+                lines[i],
                 centerX,
-                textY
+                textY,
+                width - sidePadding * 2,
+                lineHeight
             );
+            textY += 4;
         }
 
         const pngUrl = outputCanvas.toDataURL('image/png');
-
-        const downloadLink =
-            document.createElement('a');
-
+        const downloadLink = document.createElement('a');
         downloadLink.href = pngUrl;
-
-        downloadLink.download =
-            `QR-${product.name || product.title || 'tovar'}-${product.local_id || product.id}.png`;
-
+        downloadLink.download = `QR-${product.name || product.title || 'tovar'}-${product.local_id || product.id}.png`;
         document.body.appendChild(downloadLink);
-
         downloadLink.click();
-
         document.body.removeChild(downloadLink);
     };
 
@@ -199,6 +177,12 @@ const ProductQR = ({ product }) => {
                             {product.size || 'Standart'}
                             {' • '}
                             {product.quantity} dona
+                            {product.selling_price != null && Number(product.selling_price) >= 0 && (
+                                <>
+                                    {' • '}
+                                    Sotilish: {formatSum(product.selling_price)} so'm
+                                </>
+                            )}
                         </p>
 
                         <div
@@ -245,10 +229,7 @@ const ProductQR = ({ product }) => {
                                 type="button"
                                 className="btn btn-secondary"
                                 onClick={() =>
-                                    window.open(
-                                        url,
-                                        '_blank'
-                                    )
+                                    window.open(url, '_blank')
                                 }
                             >
                                 🔗 Sahifani ochish

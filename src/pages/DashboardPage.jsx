@@ -111,6 +111,7 @@ const DashboardPage = () => {
         supplier: '',           // nasiya bo‘lsa
         paid_amount: '',        // nasiya bo‘lsa
         supplier_phone: '',
+        selling_price: '',
     });
 
     // --- QARZLAR ---
@@ -240,6 +241,7 @@ const DashboardPage = () => {
                     name: p.title || p.name,
                     color: p.color,
                     cost_price: p.cost_price,
+                    selling_price: p.selling_price ?? null,
                     createdAt: p.created_at || null,
                     variants: []
                 });
@@ -257,11 +259,16 @@ const DashboardPage = () => {
                 group.createdAt = p.created_at;
             }
 
+            if (p.selling_price != null && group.selling_price == null) {
+                group.selling_price = p.selling_price;
+            }
+
             group.variants.push({
                 id: p.id,
                 size: p.size,
                 quantity: Number(p.quantity) || 0,
-                qr_token: p.qr_token
+                qr_token: p.qr_token,
+                selling_price: p.selling_price ?? group.selling_price ?? null
             });
         });
         return Array.from(map.values());
@@ -510,6 +517,9 @@ const DashboardPage = () => {
                 supplier: newProduct.supplier.trim(),
                 supplier_phone: newProduct.supplier_phone.trim(),
                 paid_amount: newProduct.payment_type === 'credit' ? Number(newProduct.paid_amount) || 0 : 0,
+                selling_price: newProduct.selling_price !== '' && newProduct.selling_price != null
+                    ? Number(newProduct.selling_price)
+                    : null,
             };
 
             const res = await api.post('/api/products', body);
@@ -526,6 +536,7 @@ const DashboardPage = () => {
                 supplier: '',
                 paid_amount: '',
                 supplier_phone: '',
+                selling_price: '',
             });
 
             await fetchData(false);
@@ -1018,7 +1029,7 @@ const DashboardPage = () => {
                                             </td>
                                             <td className="col-hide-mobile">
                                                 <div className="qr-list">
-                                                    {g.variants.map((v) => <ProductQR key={v.id} product={{ ...v, name: g.name }} />)}
+                                                    {g.variants.map((v) => <ProductQR key={v.id} product={{ ...v, name: g.name, color: g.color, local_id: g.local_id, selling_price: v.selling_price ?? g.selling_price }} />)}
                                                 </div>
                                             </td>
                                             <td className="col-hide-tiny"><b className={totalQty < 5 ? "warning-stock" : ""}>{totalQty} ta</b></td>
@@ -1101,6 +1112,20 @@ const DashboardPage = () => {
                                     required
                                     className="form-input"
                                 />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Sotilish narxi (ixtiyoriy) :</label>
+                                <input
+                                    type="number"
+                                    placeholder="Masalan: 250000 (bo'sh qoldirish mumkin)"
+                                    value={newProduct.selling_price || ''}
+                                    onChange={(e) => setNewProduct({ ...newProduct, selling_price: e.target.value })}
+                                    className="form-input"
+                                />
+                                <small className="form-hint">
+                                    Agar kiritsangiz, faqat QR kod rasmida chiqadi. Boshqa joyda ko‘rinmaydi.
+                                </small>
                             </div>
 
                             <div className="form-group">
@@ -1826,7 +1851,7 @@ const DashboardPage = () => {
                             <h4>QR Kodlar</h4>
                             <div className="qr-list">
                                 {detailsGroup.variants.map((v) => (
-                                    <ProductQR key={v.id} product={{ ...v, name: detailsGroup.name }} />
+                                    <ProductQR key={v.id} product={{ ...v, name: detailsGroup.name, color: detailsGroup.color, local_id: detailsGroup.local_id, selling_price: v.selling_price ?? detailsGroup.selling_price }} />
                                 ))}
                             </div>
                         </div>
@@ -2168,28 +2193,24 @@ const DashboardPage = () => {
                                             )}
                                         </div>
 
-                                        {Array.isArray(sup.products) && sup.products.length > 0 && (
-                                            <div style={{ marginTop: '12px', fontSize: '14px' }}>
-                                                <b>Bergan tovarlar (kategoriya bo‘yicha):</b>
-                                                <ul style={{ margin: '6px 0 0 18px', padding: 0 }}>
-                                                    {sup.products.map((p, i) => (
-                                                        <li key={i} style={{ marginBottom: '4px' }}>
-                                                            <span className="category-badge" style={{ marginRight: '6px' }}>
-                                                                {p.category || 'Umumiy'}
+                                        {Array.isArray(sup.products) && sup.products.length > 0 && (() => {
+                                            // Kategoriyalarni unique qilib chiqaramiz
+                                            const categories = [...new Set(
+                                                sup.products.map((p) => (p.category || 'Umumiy').trim()).filter(Boolean)
+                                            )];
+                                            return (
+                                                <div style={{ marginTop: '12px', fontSize: '14px' }}>
+                                                    <b>Bergan tovarlar (kategoriya):</b>
+                                                    <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                        {categories.map((cat, i) => (
+                                                            <span key={i} className="category-badge">
+                                                                {cat}
                                                             </span>
-                                                            {p.color ? ` (${p.color})` : ''}
-                                                            {p.size ? ` — ${p.size}` : ''}
-                                                            {' — '}
-                                                            {p.quantity != null ? `${p.quantity} ta` : '? ta'}
-                                                            {p.cost_price != null ? `, ${formatSum(p.cost_price)} so'm` : ''}
-                                                            {p.created_at
-                                                                ? ` (${new Date(p.created_at).toLocaleDateString('uz-UZ')})`
-                                                                : ''}
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        )}
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
                                     </div>
                                 ))}
                             </div>
