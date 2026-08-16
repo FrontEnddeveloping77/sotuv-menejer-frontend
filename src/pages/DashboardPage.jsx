@@ -57,12 +57,6 @@ const DashboardPage = () => {
     const [deleteModal, setDeleteModal] = useState(false);
     const [detailsGroup, setDetailsGroup] = useState(null);
     const [editModal, setEditModal] = useState(false);
-    const [debtModal, setDebtModal] = useState(false);
-    const [payDebtModal, setPayDebtModal] = useState(false);
-    const [debts, setDebts] = useState([]);
-    const [debtSearch, setDebtSearch] = useState('');
-    const [selectedDebt, setSelectedDebt] = useState(null);
-    const [debtPaymentAmount, setDebtPaymentAmount] = useState('');
 
     const [editProduct, setEditProduct] = useState({
         local_id: '',
@@ -71,11 +65,7 @@ const DashboardPage = () => {
         cost_price: '',
         color: '',
         sizes: '',
-        quantity: '',
-        payment_type: 'cash',
-        supplier_name: '',
-        supplier_phone: '',
-        initial_paid: ''
+        quantity: ''
     });
 
     const [newProduct, setNewProduct] = useState({
@@ -84,7 +74,13 @@ const DashboardPage = () => {
         cost_price: '',
         color: '',
         sizes: '',
-        quantity: ''
+        quantity: '',
+
+        // YANGI
+        payment_type: 'cash',
+        supplier_name: '',
+        supplier_phone: '',
+        initial_paid: ''
     });
 
     const emptySellRow = () => ({ size: '', sell_quantity: 1, selling_price: '' });
@@ -111,56 +107,6 @@ const DashboardPage = () => {
         if (window.confirm("Tizimdan chiqishni tasdiqlaysizmi?")) {
             localStorage.removeItem('token');
             navigate('/login');
-        }
-    };
-
-    const fetchDebts = async (query = debtSearch) => {
-        try {
-            const res = await api.get('/api/debts', { params: { q: query || '' } });
-            setDebts(Array.isArray(res.data?.debts) ? res.data.debts : []);
-        } catch (err) {
-            console.error('Qarzlarni olishda xatolik:', err);
-        }
-    };
-
-    const openDebtModal = async () => {
-        setDebtSearch('');
-        setDebtModal(true);
-        await fetchDebts('');
-    };
-
-    const handleDebtSearch = async (value) => {
-        setDebtSearch(value);
-        await fetchDebts(value);
-    };
-
-    const handlePayDebt = async (e) => {
-        e.preventDefault();
-        if (!selectedDebt) return;
-
-        const amount = Number(debtPaymentAmount);
-        const remaining = Number(selectedDebt.remaining_amount || 0);
-        if (!Number.isFinite(amount) || amount <= 0) {
-            alert("To'lov summasini to'g'ri kiriting!");
-            return;
-        }
-        if (amount > remaining) {
-            alert(`Kiritilgan summa qolgan qarzdan (${formatSum(remaining)} so'm) oshmasligi kerak!`);
-            return;
-        }
-
-        setIsSubmitting(true);
-        try {
-            await api.post(`/api/debts/${selectedDebt.id}/pay`, { amount });
-            setPayDebtModal(false);
-            setSelectedDebt(null);
-            setDebtPaymentAmount('');
-            await fetchDebts(debtSearch);
-            alert(amount === remaining ? "Qarz to'liq uzildi!" : "Qarz to'lovi saqlandi!");
-        } catch (err) {
-            alert(err.response?.data?.message || "Qarzni uzishda xatolik yuz berdi!");
-        } finally {
-            setIsSubmitting(false);
         }
     };
 
@@ -457,17 +403,11 @@ const DashboardPage = () => {
                 color: newProduct.color,
                 cost_price: Number(newProduct.cost_price) || 0,
                 quantity: Number(newProduct.quantity) || 1,
-                sizes: newProduct.sizes || '',
-                payment_type: newProduct.payment_type,
-                supplier_name: newProduct.supplier_name,
-                supplier_phone: newProduct.supplier_phone,
-                initial_paid: newProduct.payment_type === 'cash'
-                    ? (Number(newProduct.cost_price) || 0) * (Number(newProduct.quantity) || 1)
-                    : Number(newProduct.initial_paid) || 0
+                sizes: newProduct.sizes || ''
             });
 
             setAddProductModal(false);
-            setNewProduct({ category: '', name: '', color: '', cost_price: '', sizes: '', quantity: '', payment_type: 'cash', supplier_name: '', supplier_phone: '', initial_paid: '' });
+            setNewProduct({ category: '', name: '', color: '', cost_price: '', sizes: '', quantity: '' });
             await fetchData(false);
 
             const displayId = res.data?.local_id || res.data?.product?.local_id || '';
@@ -700,7 +640,6 @@ const DashboardPage = () => {
                     <button onClick={() => setSellModal(true)} className="btn btn-sell">🛒 Tovar Sotish</button>
                     <button onClick={() => setExpenseModal(true)} className="btn btn-expense">💸 Rasxod Yozish</button>
                     <button onClick={() => setDeleteModal(true)} className="btn btn-delete">🗑️ Tovarni O'chirish</button>
-                    <button onClick={openDebtModal} className="btn btn-debt">🔴 Qarzlar</button>
                     <button onClick={handleLogout} className="btn btn-logout">🚪 Chiqish</button>
                 </div>
             </header>
@@ -790,7 +729,7 @@ const DashboardPage = () => {
                                             </td>
                                             <td className="col-hide-mobile">
                                                 <div className="qr-list">
-                                                    {g.variants.map((v) => <ProductQR key={v.id} product={{ ...v, name: g.name, local_id: g.local_id, color: g.color }} />)}
+                                                    {g.variants.map((v) => <ProductQR key={v.id} product={{ ...v, name: g.name }} />)}
                                                 </div>
                                             </td>
                                             <td className="col-hide-tiny"><b className={totalQty < 5 ? "warning-stock" : ""}>{totalQty} ta</b></td>
@@ -866,62 +805,6 @@ const DashboardPage = () => {
                                 />
                             </div>
                             <div className="form-group">
-                                <label>To'lov turi * :</label>
-                                <select
-                                    value={newProduct.payment_type}
-                                    onChange={(e) => setNewProduct({ ...newProduct, payment_type: e.target.value, initial_paid: e.target.value === 'cash' ? '' : newProduct.initial_paid })}
-                                    className="form-input"
-                                >
-                                    <option value="cash">💵 Naqd</option>
-                                    <option value="credit">🔴 Nasiya</option>
-                                </select>
-                            </div>
-
-                            {newProduct.payment_type === 'credit' && (
-                                <>
-                                    <div className="form-group">
-                                        <label>Kimdan olindi * :</label>
-                                        <input
-                                            type="text"
-                                            placeholder="Ali Valiyev"
-                                            value={newProduct.supplier_name}
-                                            onChange={(e) => setNewProduct({ ...newProduct, supplier_name: e.target.value })}
-                                            required
-                                            className="form-input"
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Telefon raqami * :</label>
-                                        <input
-                                            type="tel"
-                                            placeholder="+998 90 123 45 67"
-                                            value={newProduct.supplier_phone}
-                                            onChange={(e) => setNewProduct({ ...newProduct, supplier_phone: e.target.value })}
-                                            required
-                                            className="form-input"
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Berilgan pul:</label>
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            placeholder="Masalan: 300000"
-                                            value={newProduct.initial_paid}
-                                            onChange={(e) => setNewProduct({ ...newProduct, initial_paid: e.target.value })}
-                                            className="form-input"
-                                        />
-                                    </div>
-                                    {newProduct.cost_price && newProduct.quantity ? (
-                                        <div className="debt-preview">
-                                            Jami: <b>{formatSum((Number(newProduct.cost_price) || 0) * (Number(newProduct.quantity) || 0))} so'm</b>
-                                            {' '}• Qarz: <b>{formatSum(Math.max(0, ((Number(newProduct.cost_price) || 0) * (Number(newProduct.quantity) || 0)) - (Number(newProduct.initial_paid) || 0)))} so'm</b>
-                                        </div>
-                                    ) : null}
-                                </>
-                            )}
-
-                            <div className="form-group">
                                 <label>Rangi:</label>
                                 <input
                                     type="text"
@@ -991,92 +874,6 @@ const DashboardPage = () => {
             )}
 
             {/* 🛒 TOVAR SOTISH MODALI — endi FAQAT NOM bo'yicha qidiradi */}
-            {debtModal && (
-                <div className="modal-overlay" onClick={() => setDebtModal(false)}>
-                    <div className="modal-box modal-box-wide debt-modal" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h3>🔴 Qarzlar</h3>
-                            <button type="button" className="modal-close-btn" onClick={() => setDebtModal(false)}>✕</button>
-                        </div>
-                        <input
-                            type="text"
-                            className="search-input debt-search"
-                            placeholder="Ism, telefon, tovar nomi yoki ID bo'yicha qidiring..."
-                            value={debtSearch}
-                            onChange={(e) => handleDebtSearch(e.target.value)}
-                        />
-
-                        <div className="debt-list">
-                            {debts.length > 0 ? debts.map((debt) => (
-                                <div className="debt-card" key={debt.id}>
-                                    <div className="debt-card-top">
-                                        <div>
-                                            <h4>👤 {debt.supplier_name}</h4>
-                                            <p>📞 {debt.supplier_phone}</p>
-                                        </div>
-                                        <div className="debt-amount">{formatSum(debt.remaining_amount)} so'm</div>
-                                    </div>
-                                    <div className="debt-items">
-                                        {(debt.items || []).map((item) => (
-                                            <div className="debt-item" key={item.id}>
-                                                <span>📦 #{item.product_local_id} — {item.product_name}</span>
-                                                <span>{item.quantity} dona · {formatSum(item.amount)} so'm</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="debt-card-bottom">
-                                        <span>Jami: {formatSum(debt.total_amount)} so'm · Berilgan: {formatSum(debt.paid_amount)} so'm</span>
-                                        <button
-                                            type="button"
-                                            className="btn btn-debt-pay"
-                                            onClick={() => { setSelectedDebt(debt); setDebtPaymentAmount(''); setPayDebtModal(true); }}
-                                        >
-                                            💵 Qarzni uzish
-                                        </button>
-                                    </div>
-                                </div>
-                            )) : (
-                                <div className="no-data debt-empty">🔎 Ochiq qarz topilmadi.</div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {payDebtModal && selectedDebt && (
-                <div className="modal-overlay" onClick={() => setPayDebtModal(false)}>
-                    <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-                        <h3>💵 Qarzni uzish</h3>
-                        <div className="details-info">
-                            <p><b>Kimdan:</b> {selectedDebt.supplier_name}</p>
-                            <p><b>Telefon:</b> {selectedDebt.supplier_phone}</p>
-                            <p><b>Qolgan qarz:</b> {formatSum(selectedDebt.remaining_amount)} so'm</p>
-                        </div>
-                        <form onSubmit={handlePayDebt} className="product-form">
-                            <div className="form-group">
-                                <label>Nechchi pul uzildi? *</label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max={Number(selectedDebt.remaining_amount || 0)}
-                                    value={debtPaymentAmount}
-                                    onChange={(e) => setDebtPaymentAmount(e.target.value)}
-                                    className="form-input"
-                                    placeholder={String(selectedDebt.remaining_amount || '')}
-                                    required
-                                />
-                            </div>
-                            <div className="modal-actions">
-                                <button type="submit" className="btn btn-success" disabled={isSubmitting}>
-                                    {isSubmitting ? 'Saqlanmoqda...' : '💾 Saqlash'}
-                                </button>
-                                <button type="button" className="btn btn-danger" onClick={() => setPayDebtModal(false)}>Bekor qilish</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
             {sellModal && (
                 <div className="modal-overlay">
                     <div className="modal-box modal-box-wide">
@@ -1647,7 +1444,7 @@ const DashboardPage = () => {
                             <h4>QR Kodlar</h4>
                             <div className="qr-list">
                                 {detailsGroup.variants.map((v) => (
-                                    <ProductQR key={v.id} product={{ ...v, name: detailsGroup.name, local_id: detailsGroup.local_id, color: detailsGroup.color }} />
+                                    <ProductQR key={v.id} product={{ ...v, name: detailsGroup.name }} />
                                 ))}
                             </div>
                         </div>
