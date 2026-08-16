@@ -821,7 +821,7 @@ const DashboardPage = () => {
                     <button onClick={() => setExpenseModal(true)} className="btn btn-expense">💸 Rasxod Yozish</button>
                     <button onClick={() => setDeleteModal(true)} className="btn btn-delete">🗑️ Tovarni O'chirish</button>
                     <button onClick={openReturnModal} className="btn btn-return">↩️ Vozvrat</button>
-                    <button onClick={openExpenseListModal} className="btn btn-edit-expense">📋 Rasxodlar</button>
+                    <button onClick={openExpenseListModal} className="btn btn-edit-expense">📋 Rasxodlarni taxrirlash</button>
                     <button onClick={handleLogout} className="btn btn-logout">🚪 Chiqish</button>
                 </div>
             </header>
