@@ -1262,51 +1262,163 @@ const DashboardPage = () => {
             {deleteModal && (
                 <div className="modal-overlay">
                     <div className="modal-box modal-box-wide">
-                        <div className="modal-header"><h3>🗑️ Tovarni o'chirish / kamaytirish</h3></div>
+                        <div className="modal-header">
+                            <h3>🗑️ Tovarni o'chirish / kamaytirish</h3>
+                        </div>
                         <form onSubmit={handleDeleteProduct} className="product-form">
                             <div className="form-group">
                                 <label>Tovar nomi bo'yicha qidirish :</label>
-                                <input type="text" value={deleteSearch} onChange={(e) => setDeleteSearch(e.target.value)} className="form-input" />
+                                <input
+                                    type="text"
+                                    value={deleteSearch}
+                                    onChange={(e) => setDeleteSearch(e.target.value)}
+                                    className="form-input"
+                                    placeholder="Masalan: Oscar, Nike..."
+                                />
                             </div>
+
                             <div className="form-group">
                                 <label>Tovarni tanlang * :</label>
-                                <select value={deleteData.product_id} onChange={(e) => handleDeleteGroupSelect(e.target.value)} required className="form-input">
+                                <select
+                                    value={deleteData.product_id}
+                                    onChange={(e) => handleDeleteGroupSelect(e.target.value)}
+                                    required
+                                    className="form-input"
+                                >
                                     <option value="">-- Tanlang --</option>
                                     {filteredDeleteGroups.map((g) => (
-                                        <option key={g.local_id} value={g.local_id}>{g.name} — jami: {g.variants.reduce((s, v) => s + v.quantity, 0)} ta</option>
+                                        <option key={g.local_id} value={g.local_id}>
+                                            {g.name} {g.color ? `(${g.color})` : ''} — jami:{' '}
+                                            {g.variants.reduce((s, v) => s + v.quantity, 0)} ta
+                                        </option>
                                     ))}
                                 </select>
                             </div>
-                            {deleteGroup && deleteData.rows.map((row, index) => {
-                                const variant = resolveVariant(deleteGroup, row);
-                                return (
-                                    <div className="cart-row" key={index}>
-                                        {deleteGroup.variants.length > 1 && (
-                                            <div className="form-group">
-                                                <label>Razmer :</label>
-                                                <select value={row.size} onChange={(e) => updateDeleteRow(index, { size: e.target.value })} className="form-input">
-                                                    <option value="">-- Tanlang --</option>
-                                                    {deleteGroup.variants.map((v) => (
-                                                        <option key={v.id} value={v.size || ''}>{v.size || 'Standart'} ({v.quantity} ta)</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        )}
-                                        {variant && (
-                                            <div className="form-group">
-                                                <label>Olib tashlanadigan son :</label>
-                                                <input type="number" min="1" max={variant.quantity} value={row.quantity_to_remove} onChange={(e) => updateDeleteRow(index, { quantity_to_remove: e.target.value, remove_all: false })} className="form-input" />
-                                                <label style={{ marginTop: 8 }}>
-                                                    <input type="checkbox" checked={row.remove_all} onChange={(e) => updateDeleteRow(index, { remove_all: e.target.checked })} /> Hammasini o'chirish
-                                                </label>
-                                            </div>
-                                        )}
+
+                            {deleteGroup && (
+                                <>
+                                    <div className="info-banner info-success">
+                                        ✅ Tanlangan: <b>{deleteGroup.name}</b>{' '}
+                                        {deleteGroup.color ? `(${deleteGroup.color})` : ''}
                                     </div>
-                                );
-                            })}
+
+                                    {deleteData.rows.map((row, index) => {
+                                        const variant = resolveVariant(deleteGroup, row);
+                                        const usedSizes = usedDeleteSizes(index);
+
+                                        return (
+                                            <div className="cart-row" key={index}>
+                                                {deleteGroup.variants.length > 1 && (
+                                                    <div className="form-group">
+                                                        <label>Razmer * ({index + 1}-qator) :</label>
+                                                        <select
+                                                            value={row.size}
+                                                            onChange={(e) =>
+                                                                updateDeleteRow(index, { size: e.target.value })
+                                                            }
+                                                            required
+                                                            className="form-input"
+                                                        >
+                                                            <option value="">-- Razmerni tanlang --</option>
+                                                            {deleteGroup.variants
+                                                                .filter(
+                                                                    (v) =>
+                                                                        !usedSizes.includes(v.size) ||
+                                                                        v.size === row.size
+                                                                )
+                                                                .map((v) => (
+                                                                    <option key={v.id} value={v.size || ''}>
+                                                                        {v.size || 'Standart'} (Qoldiq:{' '}
+                                                                        {v.quantity} ta)
+                                                                    </option>
+                                                                ))}
+                                                        </select>
+                                                    </div>
+                                                )}
+
+                                                {variant && (
+                                                    <div className="cart-row-fields">
+                                                        <div className="form-group">
+                                                            <label>Olib tashlanadigan son * :</label>
+                                                            <input
+                                                                type="number"
+                                                                min="1"
+                                                                max={variant.quantity}
+                                                                value={row.quantity_to_remove}
+                                                                onChange={(e) =>
+                                                                    updateDeleteRow(index, {
+                                                                        quantity_to_remove: e.target.value,
+                                                                        remove_all: false
+                                                                    })
+                                                                }
+                                                                disabled={row.remove_all}
+                                                                className="form-input"
+                                                            />
+                                                        </div>
+                                                        <div className="form-group" style={{ marginTop: 8 }}>
+                                                            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={row.remove_all}
+                                                                    onChange={(e) =>
+                                                                        updateDeleteRow(index, {
+                                                                            remove_all: e.target.checked,
+                                                                            quantity_to_remove: e.target.checked
+                                                                                ? variant.quantity
+                                                                                : row.quantity_to_remove
+                                                                        })
+                                                                    }
+                                                                />
+                                                                Hammasini o'chirish ({variant.quantity} ta)
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {deleteData.rows.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeDeleteRow(index)}
+                                                        className="btn btn-remove-row"
+                                                    >
+                                                        ✕ Qatorni olib tashlash
+                                                    </button>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+
+                                    {canAddMoreDeleteRows && (
+                                        <button
+                                            type="button"
+                                            onClick={addDeleteRow}
+                                            className="btn btn-add-row"
+                                        >
+                                            + Yana razmer qo'shish
+                                        </button>
+                                    )}
+                                </>
+                            )}
+
                             <div className="modal-actions">
-                                <button type="submit" disabled={isSubmitting || !deleteGroup} className="btn btn-primary">{isSubmitting ? "Bajarilmoqda..." : "Bajarish"}</button>
-                                <button type="button" onClick={() => setDeleteModal(false)} className="btn btn-danger">Bekor qilish</button>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting || !deleteGroup}
+                                    className="btn btn-primary"
+                                >
+                                    {isSubmitting ? 'Bajarilmoqda...' : 'Bajarish'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setDeleteModal(false);
+                                        setDeleteData({ product_id: '', rows: [emptyDeleteRow()] });
+                                        setDeleteSearch('');
+                                    }}
+                                    className="btn btn-danger"
+                                >
+                                    Bekor qilish
+                                </button>
                             </div>
                         </form>
                     </div>
