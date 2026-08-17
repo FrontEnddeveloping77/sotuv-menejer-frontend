@@ -87,8 +87,19 @@ const DashboardPage = () => {
     });
 
     const [editProduct, setEditProduct] = useState({
-        local_id: '', category: '', name: '', cost_price: '', color: '', sizes: '', quantity: ''
+        local_id: '',
+        category: '',
+        name: '',
+        cost_price: '',
+        color: '',
+        sizes: '',
+        quantity: '',
+        image_url: '',
+        remove_image: false
     });
+    
+    const [editImagePreview, setEditImagePreview] = useState('');
+    const [editImageFileName, setEditImageFileName] = useState('');
 
     const [newProduct, setNewProduct] = useState({
         category: '', name: '', cost_price: '', color: '', sizes: '', quantity: '',
@@ -268,6 +279,7 @@ const DashboardPage = () => {
                     color: p.color,
                     cost_price: p.cost_price,
                     selling_price: p.selling_price ?? null,
+                    image_url: p.image_url || null,
                     createdAt: p.created_at || null,
                     variants: []
                 });
@@ -380,6 +392,9 @@ const DashboardPage = () => {
             alert(`Bu tovar qo'shilganiga ${PRODUCT_EDIT_WINDOW_DAYS} kundan ko'p vaqt o'tgan, tahrirlab bo'lmaydi!`);
             return;
         }
+
+        const imageUrl = group.image_url || '';
+
         setEditProduct({
             local_id: group.local_id,
             category: group.category || '',
@@ -387,19 +402,59 @@ const DashboardPage = () => {
             cost_price: group.cost_price || '',
             color: group.color || '',
             sizes: group.variants.map((v) => v.size).filter(Boolean).join(', '),
-            quantity: group.variants.reduce((sum, v) => sum + Number(v.quantity || 0), 0)
+            quantity: group.variants.reduce((sum, v) => sum + Number(v.quantity || 0), 0),
+            image_url: imageUrl
         });
+
+        setEditImagePreview(imageUrl);
+        setEditImageFileName(imageUrl ? 'Mavjud rasm' : '');
         setEditModal(true);
+    };
+
+    const handleEditProductImageChange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            const dataUrl = await compressImage(file);
+
+            setEditProduct((prev) => ({
+                ...prev,
+                image_url: dataUrl
+            }));
+            setEditImagePreview(dataUrl);
+            setEditImageFileName(file.name || 'Rasm tanlandi');
+        } catch (err) {
+            alert(err.message || "Rasm yuklashda xatolik!");
+            e.target.value = '';
+        }
     };
 
     const handleEditProduct = async (e) => {
         e.preventDefault();
-        if (!editProduct.local_id) { alert("Tovar ID topilmadi!"); return; }
-        if (!editProduct.name.trim()) { alert("Tovar nomini kiriting!"); return; }
-        if (!editProduct.cost_price || Number(editProduct.cost_price) < 0) { alert("Tannarxni to'g'ri kiriting!"); return; }
-        if (!editProduct.quantity || Number(editProduct.quantity) < 0) { alert("Tovar sonini to'g'ri kiriting!"); return; }
+
+        if (!editProduct.local_id) {
+            alert("Tovar ID topilmadi!");
+            return;
+        }
+
+        if (!editProduct.name.trim()) {
+            alert("Tovar nomini kiriting!");
+            return;
+        }
+
+        if (editProduct.cost_price === '' || Number(editProduct.cost_price) < 0) {
+            alert("Tannarxni to'g'ri kiriting!");
+            return;
+        }
+
+        if (editProduct.quantity === '' || Number(editProduct.quantity) < 0) {
+            alert("Tovar sonini to'g'ri kiriting!");
+            return;
+        }
 
         setIsSubmitting(true);
+
         try {
             const res = await api.put(`/api/products/${editProduct.local_id}`, {
                 category: editProduct.category || 'Umumiy',
@@ -407,14 +462,31 @@ const DashboardPage = () => {
                 color: editProduct.color.trim(),
                 cost_price: Number(editProduct.cost_price),
                 quantity: Number(editProduct.quantity),
-                sizes: editProduct.sizes
+                sizes: editProduct.sizes,
+                image_url: editProduct.image_url || null
             });
+
             setEditModal(false);
-            setEditProduct({ local_id: '', category: '', name: '', cost_price: '', color: '', sizes: '', quantity: '' });
+            setEditProduct({
+                local_id: '',
+                category: '',
+                name: '',
+                cost_price: '',
+                color: '',
+                sizes: '',
+                quantity: '',
+                image_url: ''
+            });
+            setEditImagePreview('');
+            setEditImageFileName('');
+
             await fetchData(false);
             alert(res.data?.message || "Tovar muvaffaqiyatli tahrirlandi!");
         } catch (err) {
-            alert(err.response?.data?.message || "Tovarni tahrirlashda xatolik yuz berdi!");
+            alert(
+                err.response?.data?.message ||
+                "Tovarni tahrirlashda xatolik yuz berdi!"
+            );
         } finally {
             setIsSubmitting(false);
         }
@@ -1504,6 +1576,19 @@ const DashboardPage = () => {
                                     <div className="info-banner">Vozvrat qilinadigan sotuv yo'q</div>
                                 ) : salesList.filter(s => !s.returned).map((sale) => (
                                     <div key={sale.id} className="debt-card">
+                                        {sale.image_url && (
+                                            <img
+                                                src={sale.image_url}
+                                                alt={sale.title}
+                                                style={{
+                                                    width: '100%',
+                                                    maxHeight: 180,
+                                                    objectFit: 'contain',
+                                                    borderRadius: 10,
+                                                    marginBottom: 10
+                                                }}
+                                            />
+                                        )}
                                         <strong>{sale.title}</strong>
                                         <div>{sale.size || 'Standart'} — {sale.quantity} dona — {formatSum(sale.selling_price)} so'm</div>
                                         <div style={{ fontSize: 13, color: '#64748b' }}>{new Date(sale.sold_at).toLocaleString('uz-UZ')}</div>
@@ -1854,36 +1939,179 @@ const DashboardPage = () => {
             {/* ===================== TOVARNI TAHRIRLASH MODALI ===================== */}
             {editModal && (
                 <div className="modal-overlay">
-                    <div className="modal-box">
-                        <div className="modal-header"><h3>✏️ Tovarni tahrirlash</h3></div>
+                    <div className="modal-box modal-box-wide">
+                        <div className="modal-header">
+                            <h3>✏️ Tovarni tahrirlash</h3>
+                        </div>
+
                         <form onSubmit={handleEditProduct} className="product-form">
                             <div className="form-group">
-                                <label>Kategoriya :</label>
-                                <input type="text" value={editProduct.category} onChange={(e) => setEditProduct({ ...editProduct, category: e.target.value })} className="form-input" />
+                                <label>Kategoriya * :</label>
+                                <input
+                                    type="text"
+                                    value={editProduct.category}
+                                    onChange={(e) => setEditProduct({
+                                        ...editProduct,
+                                        category: e.target.value
+                                    })}
+                                    className="form-input"
+                                    required
+                                />
                             </div>
+
                             <div className="form-group">
                                 <label>Nomi * :</label>
-                                <input type="text" value={editProduct.name} onChange={(e) => setEditProduct({ ...editProduct, name: e.target.value })} required className="form-input" />
+                                <input
+                                    type="text"
+                                    value={editProduct.name}
+                                    onChange={(e) => setEditProduct({
+                                        ...editProduct,
+                                        name: e.target.value
+                                    })}
+                                    required
+                                    className="form-input"
+                                />
                             </div>
+
                             <div className="form-group">
                                 <label>Rang :</label>
-                                <input type="text" value={editProduct.color} onChange={(e) => setEditProduct({ ...editProduct, color: e.target.value })} className="form-input" />
+                                <input
+                                    type="text"
+                                    value={editProduct.color}
+                                    onChange={(e) => setEditProduct({
+                                        ...editProduct,
+                                        color: e.target.value
+                                    })}
+                                    className="form-input"
+                                />
                             </div>
+
                             <div className="form-group">
                                 <label>Tannarx * :</label>
-                                <input type="number" value={editProduct.cost_price} onChange={(e) => setEditProduct({ ...editProduct, cost_price: e.target.value })} required className="form-input" />
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={editProduct.cost_price}
+                                    onChange={(e) => setEditProduct({
+                                        ...editProduct,
+                                        cost_price: e.target.value
+                                    })}
+                                    required
+                                    className="form-input"
+                                />
                             </div>
+
                             <div className="form-group">
-                                <label>Razmerlar :</label>
-                                <input type="text" value={editProduct.sizes} onChange={(e) => setEditProduct({ ...editProduct, sizes: e.target.value })} className="form-input" />
+                                <label>Razmerlar (vergul bilan) :</label>
+                                <input
+                                    type="text"
+                                    value={editProduct.sizes}
+                                    onChange={(e) => setEditProduct({
+                                        ...editProduct,
+                                        sizes: e.target.value
+                                    })}
+                                    className="form-input"
+                                    placeholder="39, 40, 41 yoki S, M, L"
+                                />
+                                <small style={{ color: '#64748b' }}>
+                                    Bir nechta razmer bo'lsa, umumiy son razmerlarga taqsimlanadi.
+                                </small>
                             </div>
+
                             <div className="form-group">
-                                <label>Soni * :</label>
-                                <input type="number" value={editProduct.quantity} onChange={(e) => setEditProduct({ ...editProduct, quantity: e.target.value })} required className="form-input" />
+                                <label>Jami soni * :</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={editProduct.quantity}
+                                    onChange={(e) => setEditProduct({
+                                        ...editProduct,
+                                        quantity: e.target.value
+                                    })}
+                                    required
+                                    className="form-input"
+                                />
                             </div>
+
+                            <div className="form-group form-group-image">
+                                <label>Tovar rasmi :</label>
+
+                                <div className={`image-upload-box${editImagePreview ? ' has-preview' : ''}`}>
+                                    <input
+                                        id="edit-product-image-input"
+                                        type="file"
+                                        accept="image/*"
+                                        capture="environment"
+                                        onChange={handleEditProductImageChange}
+                                        className="image-upload-input"
+                                    />
+
+                                    <label
+                                        htmlFor="edit-product-image-input"
+                                        className="image-upload-btn"
+                                    >
+                                        📷 Rasmni almashtirish
+                                    </label>
+
+                                    <p className="image-upload-hint">
+                                        Tahrirlash xabari Telegramga rasm bilan yuboriladi.
+                                    </p>
+
+                                    {editImageFileName && (
+                                        <p className="image-upload-filename">
+                                            {editImageFileName}
+                                        </p>
+                                    )}
+
+                                    {editImagePreview && (
+                                        <div className="image-preview-wrap">
+                                            <img src={editImagePreview} alt="Tovar rasmi" />
+
+                                            <button
+                                                type="button"
+                                                className="image-preview-remove"
+                                                title="Rasmni olib tashlash"
+                                                onClick={() => {
+                                                    setEditImagePreview('');
+                                                    setEditImageFileName('');
+                                                    setEditProduct((p) => ({
+                                                        ...p,
+                                                        image_url: ''
+                                                    }));
+
+                                                    const el = document.getElementById(
+                                                        'edit-product-image-input'
+                                                    );
+                                                    if (el) el.value = '';
+                                                }}
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
                             <div className="modal-actions">
-                                <button type="submit" disabled={isSubmitting} className="btn btn-primary">{isSubmitting ? "Saqlanmoqda..." : "Saqlash"}</button>
-                                <button type="button" onClick={() => setEditModal(false)} className="btn btn-danger">Bekor qilish</button>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="btn btn-primary"
+                                >
+                                    {isSubmitting ? "Saqlanmoqda..." : "Saqlash"}
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setEditModal(false);
+                                        setEditImagePreview('');
+                                        setEditImageFileName('');
+                                    }}
+                                    className="btn btn-danger"
+                                >
+                                    Bekor qilish
+                                </button>
                             </div>
                         </form>
                     </div>
