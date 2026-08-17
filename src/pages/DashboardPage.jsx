@@ -104,6 +104,12 @@ const DashboardPage = () => {
     const [loadingSuppliers, setLoadingSuppliers] = useState(false);
     const [suppliersSearch, setSuppliersSearch] = useState('');
 
+    // O'chirilgan tovarlarni qaytarish
+    const [restoreModal, setRestoreModal] = useState(false);
+    const [deletedList, setDeletedList] = useState([]);
+    const [loadingDeleted, setLoadingDeleted] = useState(false);
+    const [restoreSearch, setRestoreSearch] = useState('');
+
     // Nasiyaga sotish
     const [creditSellModal, setCreditSellModal] = useState(false);
     const [creditSellSearch, setCreditSellSearch] = useState('');
@@ -645,6 +651,37 @@ const DashboardPage = () => {
         }
     };
 
+    const openRestoreModal = async () => {
+        setRestoreModal(true);
+        setRestoreSearch('');
+        setLoadingDeleted(true);
+        try {
+            const res = await api.get('/api/products/deleted');
+            setDeletedList(res.data?.products || []);
+        } catch (err) {
+            alert(err.response?.data?.message || "O'chirilgan tovarlarni yuklashda xatolik!");
+            setDeletedList([]);
+        } finally {
+            setLoadingDeleted(false);
+        }
+    };
+
+    const handleRestoreProduct = async (deletedId) => {
+        if (!window.confirm("Ushbu tovarni omborga qaytarishni tasdiqlaysizmi?")) return;
+        setIsSubmitting(true);
+        try {
+            const res = await api.post('/api/products/restore', { deleted_id: deletedId });
+            alert(res.data?.message || "Tovar qaytarildi!");
+            const listRes = await api.get('/api/products/deleted');
+            setDeletedList(listRes.data?.products || []);
+            await fetchData(false);
+        } catch (err) {
+            alert(err.response?.data?.message || "Qaytarishda xatolik!");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     const openReturnModal = async () => {
         setReturnModal(true);
         setSalesLoading(true);
@@ -788,6 +825,7 @@ const DashboardPage = () => {
                     <button onClick={openUndoDebtModal} className="btn btn-undo-debt">↩️ Qarz to‘lovini bekor qilish</button>
                     <button onClick={() => setExpenseModal(true)} className="btn btn-expense">💸 Rasxod Yozish</button>
                     <button onClick={() => setDeleteModal(true)} className="btn btn-delete">🗑️ Tovarni O'chirish</button>
+                    <button onClick={openRestoreModal} className="btn btn-restore-deleted">↩️ O'chirilganlarni qaytarish</button>
                     <button onClick={openDebtsModal} className="btn btn-debts">💳 Qarzlar</button>
                     <button onClick={openCustomerDebtsModal} className="btn btn-customer-debts">👥 Qarzga tovar berganlarimiz</button>
                     <button onClick={openSuppliersModal} className="btn btn-suppliers">👥 Tovar berganlar</button>
@@ -1262,80 +1300,44 @@ const DashboardPage = () => {
             {deleteModal && (
                 <div className="modal-overlay">
                     <div className="modal-box modal-box-wide">
-                        <div className="modal-header">
-                            <h3>🗑️ Tovarni o'chirish / kamaytirish</h3>
-                        </div>
+                        <div className="modal-header"><h3>🗑️ Tovarni o'chirish / kamaytirish</h3></div>
                         <form onSubmit={handleDeleteProduct} className="product-form">
                             <div className="form-group">
                                 <label>Tovar nomi bo'yicha qidirish :</label>
-                                <input
-                                    type="text"
-                                    value={deleteSearch}
-                                    onChange={(e) => setDeleteSearch(e.target.value)}
-                                    className="form-input"
-                                    placeholder="Masalan: Oscar, Nike..."
-                                />
+                                <input type="text" value={deleteSearch} onChange={(e) => setDeleteSearch(e.target.value)} className="form-input" placeholder="Masalan: Oscar, Nike..." />
                             </div>
-
                             <div className="form-group">
                                 <label>Tovarni tanlang * :</label>
-                                <select
-                                    value={deleteData.product_id}
-                                    onChange={(e) => handleDeleteGroupSelect(e.target.value)}
-                                    required
-                                    className="form-input"
-                                >
+                                <select value={deleteData.product_id} onChange={(e) => handleDeleteGroupSelect(e.target.value)} required className="form-input">
                                     <option value="">-- Tanlang --</option>
                                     {filteredDeleteGroups.map((g) => (
                                         <option key={g.local_id} value={g.local_id}>
-                                            {g.name} {g.color ? `(${g.color})` : ''} — jami:{' '}
-                                            {g.variants.reduce((s, v) => s + v.quantity, 0)} ta
+                                            {g.name} {g.color ? `(${g.color})` : ''} — jami: {g.variants.reduce((s, v) => s + v.quantity, 0)} ta
                                         </option>
                                     ))}
                                 </select>
                             </div>
-
                             {deleteGroup && (
                                 <>
                                     <div className="info-banner info-success">
-                                        ✅ Tanlangan: <b>{deleteGroup.name}</b>{' '}
-                                        {deleteGroup.color ? `(${deleteGroup.color})` : ''}
+                                        ✅ Tanlangan: <b>{deleteGroup.name}</b> {deleteGroup.color ? `(${deleteGroup.color})` : ''}
                                     </div>
-
                                     {deleteData.rows.map((row, index) => {
                                         const variant = resolveVariant(deleteGroup, row);
                                         const usedSizes = usedDeleteSizes(index);
-
                                         return (
                                             <div className="cart-row" key={index}>
                                                 {deleteGroup.variants.length > 1 && (
                                                     <div className="form-group">
                                                         <label>Razmer * ({index + 1}-qator) :</label>
-                                                        <select
-                                                            value={row.size}
-                                                            onChange={(e) =>
-                                                                updateDeleteRow(index, { size: e.target.value })
-                                                            }
-                                                            required
-                                                            className="form-input"
-                                                        >
+                                                        <select value={row.size} onChange={(e) => updateDeleteRow(index, { size: e.target.value })} required className="form-input">
                                                             <option value="">-- Razmerni tanlang --</option>
-                                                            {deleteGroup.variants
-                                                                .filter(
-                                                                    (v) =>
-                                                                        !usedSizes.includes(v.size) ||
-                                                                        v.size === row.size
-                                                                )
-                                                                .map((v) => (
-                                                                    <option key={v.id} value={v.size || ''}>
-                                                                        {v.size || 'Standart'} (Qoldiq:{' '}
-                                                                        {v.quantity} ta)
-                                                                    </option>
-                                                                ))}
+                                                            {deleteGroup.variants.filter((v) => !usedSizes.includes(v.size) || v.size === row.size).map((v) => (
+                                                                <option key={v.id} value={v.size || ''}>{v.size || 'Standart'} (Qoldiq: {v.quantity} ta)</option>
+                                                            ))}
                                                         </select>
                                                     </div>
                                                 )}
-
                                                 {variant && (
                                                     <div className="cart-row-fields">
                                                         <div className="form-group">
@@ -1345,12 +1347,7 @@ const DashboardPage = () => {
                                                                 min="1"
                                                                 max={variant.quantity}
                                                                 value={row.quantity_to_remove}
-                                                                onChange={(e) =>
-                                                                    updateDeleteRow(index, {
-                                                                        quantity_to_remove: e.target.value,
-                                                                        remove_all: false
-                                                                    })
-                                                                }
+                                                                onChange={(e) => updateDeleteRow(index, { quantity_to_remove: e.target.value, remove_all: false })}
                                                                 disabled={row.remove_all}
                                                                 className="form-input"
                                                             />
@@ -1360,65 +1357,30 @@ const DashboardPage = () => {
                                                                 <input
                                                                     type="checkbox"
                                                                     checked={row.remove_all}
-                                                                    onChange={(e) =>
-                                                                        updateDeleteRow(index, {
-                                                                            remove_all: e.target.checked,
-                                                                            quantity_to_remove: e.target.checked
-                                                                                ? variant.quantity
-                                                                                : row.quantity_to_remove
-                                                                        })
-                                                                    }
+                                                                    onChange={(e) => updateDeleteRow(index, {
+                                                                        remove_all: e.target.checked,
+                                                                        quantity_to_remove: e.target.checked ? variant.quantity : row.quantity_to_remove
+                                                                    })}
                                                                 />
                                                                 Hammasini o'chirish ({variant.quantity} ta)
                                                             </label>
                                                         </div>
                                                     </div>
                                                 )}
-
                                                 {deleteData.rows.length > 1 && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeDeleteRow(index)}
-                                                        className="btn btn-remove-row"
-                                                    >
-                                                        ✕ Qatorni olib tashlash
-                                                    </button>
+                                                    <button type="button" onClick={() => removeDeleteRow(index)} className="btn btn-remove-row">✕ Qatorni olib tashlash</button>
                                                 )}
                                             </div>
                                         );
                                     })}
-
                                     {canAddMoreDeleteRows && (
-                                        <button
-                                            type="button"
-                                            onClick={addDeleteRow}
-                                            className="btn btn-add-row"
-                                        >
-                                            + Yana razmer qo'shish
-                                        </button>
+                                        <button type="button" onClick={addDeleteRow} className="btn btn-add-row">+ Yana razmer qo'shish</button>
                                     )}
                                 </>
                             )}
-
                             <div className="modal-actions">
-                                <button
-                                    type="submit"
-                                    disabled={isSubmitting || !deleteGroup}
-                                    className="btn btn-primary"
-                                >
-                                    {isSubmitting ? 'Bajarilmoqda...' : 'Bajarish'}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setDeleteModal(false);
-                                        setDeleteData({ product_id: '', rows: [emptyDeleteRow()] });
-                                        setDeleteSearch('');
-                                    }}
-                                    className="btn btn-danger"
-                                >
-                                    Bekor qilish
-                                </button>
+                                <button type="submit" disabled={isSubmitting || !deleteGroup} className="btn btn-primary">{isSubmitting ? "Bajarilmoqda..." : "Bajarish"}</button>
+                                <button type="button" onClick={() => { setDeleteModal(false); setDeleteData({ product_id: '', rows: [emptyDeleteRow()] }); setDeleteSearch(''); }} className="btn btn-danger">Bekor qilish</button>
                             </div>
                         </form>
                     </div>
@@ -1813,6 +1775,79 @@ const DashboardPage = () => {
                         </div>
                         <div className="modal-actions">
                             <button type="button" onClick={() => setEditSelectModal(false)} className="btn btn-danger">Yopish</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ===================== O'CHIRILGAN TOVARLARNI QAYTARISH ===================== */}
+            {restoreModal && (
+                <div className="modal-overlay" onClick={() => setRestoreModal(false)}>
+                    <div className="modal-box modal-box-wide" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>↩️ O'chirilgan tovarlarni qaytarish</h3>
+                        </div>
+                        <p className="restore-hint">
+                            Faqat oxirgi <b>7 kun</b> ichida o'chirilgan tovarlar qaytariladi.
+                        </p>
+                        <div className="form-group" style={{ marginBottom: 12 }}>
+                            <input
+                                type="text"
+                                placeholder="Nomi, razmer yoki kategoriya bo'yicha qidirish..."
+                                value={restoreSearch}
+                                onChange={(e) => setRestoreSearch(e.target.value)}
+                                className="form-input"
+                            />
+                        </div>
+                        {loadingDeleted ? (
+                            <p style={{ textAlign: 'center', padding: 24 }}>Yuklanmoqda...</p>
+                        ) : deletedList.length === 0 ? (
+                            <div className="info-banner">7 kun ichida o'chirilgan tovar yo'q ✅</div>
+                        ) : (
+                            <div className="debts-list restore-list">
+                                {deletedList
+                                    .filter((p) => {
+                                        const q = restoreSearch.toLowerCase().trim();
+                                        if (!q) return true;
+                                        return (
+                                            (p.name || '').toLowerCase().includes(q) ||
+                                            (p.size || '').toLowerCase().includes(q) ||
+                                            (p.category || '').toLowerCase().includes(q) ||
+                                            (p.color || '').toLowerCase().includes(q) ||
+                                            String(p.local_id || '').includes(q)
+                                        );
+                                    })
+                                    .map((p) => (
+                                        <div key={p.id} className="debt-card restore-card">
+                                            <div className="restore-card-top">
+                                                <strong>#{p.local_id} — {p.name}</strong>
+                                                <span className="restore-date">
+                                                    {new Date(p.deleted_at).toLocaleString('uz-UZ')}
+                                                </span>
+                                            </div>
+                                            <div className="restore-meta">
+                                                <span>📏 {p.size || 'Standart'}</span>
+                                                <span>🎨 {p.color || '—'}</span>
+                                                <span>📦 {p.quantity} dona</span>
+                                                <span>💰 {formatSum(p.cost_price)} so'm</span>
+                                            </div>
+                                            {p.category && <span className="category-badge">{p.category}</span>}
+                                            <button
+                                                type="button"
+                                                className="btn btn-restore-action"
+                                                disabled={isSubmitting}
+                                                onClick={() => handleRestoreProduct(p.id)}
+                                            >
+                                                ↩️ Omborga qaytarish
+                                            </button>
+                                        </div>
+                                    ))}
+                            </div>
+                        )}
+                        <div className="modal-actions">
+                            <button type="button" onClick={() => setRestoreModal(false)} className="btn btn-danger">
+                                Yopish
+                            </button>
                         </div>
                     </div>
                 </div>

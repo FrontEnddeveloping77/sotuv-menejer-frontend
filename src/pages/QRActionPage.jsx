@@ -145,46 +145,31 @@ export default function QRActionPage() {
     };
 
     const handleCreditSell = async (event) => {
-    event.preventDefault();
+        event.preventDefault();
+        const amount = Number(String(soldAmount).replace(/\s/g, ''));
+        if (!Number.isFinite(amount) || amount <= 0) {
+            setError('Sotilgan summani to‘g‘ri kiriting!');
+            return;
+        }
+        if (!customerName.trim()) { setError('Mijoz ismini kiriting!'); return; }
+        if (!customerPhone.trim()) { setError('Mijoz telefonini kiriting!'); return; }
 
-    const amount = Number(String(soldAmount).replace(/\s/g, ''));
-    if (!Number.isFinite(amount) || amount <= 0) {
-        setError('Sotilgan summani to‘g‘ri kiriting!');
-        return;
-    }
-    if (!customerName.trim()) {
-        setError('Mijoz ismini kiriting!');
-        return;
-    }
-    if (!customerPhone.trim()) {
-        setError('Mijoz telefonini kiriting!');
-        return;
-    }
-
-    setSubmitting(true);
-    setError('');
-
-    try {
-        const res = await api.post(`/api/qr/${token}/sell-credit`, {
-            selling_price: amount,
-            customer_name: customerName.trim(),
-            customer_phone: customerPhone.trim(),
-            paid_now: Number(paidNow) || 0
-        });
-
-        setResult({
-            type: 'credit-sell',
-            data: res.data
-        });
-    } catch (err) {
-        setError(
-            err.response?.data?.message ||
-            'Nasiyaga sotishda xatolik!'
-        );
-    } finally {
-        setSubmitting(false);
-    }
-};
+        setSubmitting(true);
+        setError('');
+        try {
+            const res = await api.post(`/api/qr/${token}/sell-credit`, {
+                selling_price: amount,
+                customer_name: customerName.trim(),
+                customer_phone: customerPhone.trim(),
+                paid_now: Number(paidNow) || 0
+            });
+            setResult({ type: 'credit-sell', data: res.data });
+        } catch (err) {
+            setError(err.response?.data?.message || 'Nasiyaga sotishda xatolik!');
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     // -----------------------------------------
     // YUKLANMOQDA
