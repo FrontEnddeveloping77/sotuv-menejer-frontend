@@ -1607,3 +1607,21 @@ body {
         font-size: 13px !important;
     }
 }
+
+.modal-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(15, 23, 42, 0.55) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 9999 !important;
+    padding: 16px !important;
+}
+
+.modal-box {
+    position: relative !important;
+    z-index: 10000 !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+}

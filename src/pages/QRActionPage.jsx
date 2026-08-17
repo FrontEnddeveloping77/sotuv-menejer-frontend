@@ -23,6 +23,17 @@ export default function QRActionPage() {
     // Seller kiritadigan SOTILGAN SUMMA
     const [soldAmount, setSoldAmount] = useState('');
 
+    // Nasiyaga sotish uchun
+    const [customerName, setCustomerName] = useState('');
+    const [customerPhone, setCustomerPhone] = useState('');
+    const [paidNow, setPaidNow] = useState('');
+
+    // Tahrirlash uchun
+    const [editName, setEditName] = useState('');
+    const [editColor, setEditColor] = useState('');
+    const [editCost, setEditCost] = useState('');
+    const [editSize, setEditSize] = useState('');
+
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
@@ -35,7 +46,13 @@ export default function QRActionPage() {
     useEffect(() => {
         api.get(`/api/qr/${token}`)
             .then((res) => {
-                setProduct(res.data.product);
+                const p = res.data.product;
+                setProduct(p);
+                // Tahrirlash formasi uchun boshlang'ich qiymatlar
+                setEditName(p.name || '');
+                setEditColor(p.color || '');
+                setEditCost(p.cost_price || '');
+                setEditSize(p.size || '');
             })
             .catch((err) => {
                 setError(
@@ -99,7 +116,6 @@ export default function QRActionPage() {
             setError(
                 'Sotilgan summani to‘g‘ri kiriting!'
             );
-
             return;
         }
 
@@ -129,6 +145,116 @@ export default function QRActionPage() {
     };
 
     // -----------------------------------------
+    // NASIYAGA SOTISH
+    // -----------------------------------------
+
+    const handleCreditSell = async (event) => {
+        event.preventDefault();
+
+        const amount = Number(String(soldAmount).replace(/\s/g, ''));
+        if (!Number.isFinite(amount) || amount <= 0) {
+            setError('Sotilgan summani to‘g‘ri kiriting!');
+            return;
+        }
+        if (!customerName.trim()) {
+            setError('Mijoz ismini kiriting!');
+            return;
+        }
+        if (!customerPhone.trim()) {
+            setError('Mijoz telefonini kiriting!');
+            return;
+        }
+
+        setSubmitting(true);
+        setError('');
+
+        try {
+            // Avval oddiy sotish qilamiz, keyin nasiya sifatida belgilaymiz
+            // Yoki alohida endpoint bo'lsa undan foydalanamiz
+            const res = await api.post(`/api/qr/${token}/sell-credit`, {
+                selling_price: amount,
+                customer_name: customerName.trim(),
+                customer_phone: customerPhone.trim(),
+                paid_now: Number(paidNow) || 0
+            });
+
+            setResult({
+                type: 'credit-sell',
+                data: res.data
+            });
+        } catch (err) {
+            // Agar maxsus endpoint yo'q bo'lsa, oddiy sell + xabar
+            try {
+                const res = await api.post(`/api/qr/${token}/sell`, {
+                    selling_price: amount
+                });
+                setResult({
+                    type: 'credit-sell',
+                    data: {
+                        ...res.data,
+                        customer_name: customerName.trim(),
+                        customer_phone: customerPhone.trim(),
+                        paid_now: Number(paidNow) || 0
+                    }
+                });
+            } catch (err2) {
+                setError(
+                    err.response?.data?.message ||
+                    err2.response?.data?.message ||
+                    'Nasiyaga sotishda xatolik!'
+                );
+            }
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    // -----------------------------------------
+    // TOVARNI TAHRIRLASH
+    // -----------------------------------------
+
+    const handleEdit = async (event) => {
+        event.preventDefault();
+
+        if (!editName.trim()) {
+            setError('Tovar nomini kiriting!');
+            return;
+        }
+
+        setSubmitting(true);
+        setError('');
+
+        try {
+            const res = await api.post(`/api/qr/${token}/edit`, {
+                name: editName.trim(),
+                color: editColor.trim(),
+                cost_price: Number(editCost) || product.cost_price,
+                size: editSize.trim()
+            });
+
+            setProduct(res.data.product || {
+                ...product,
+                name: editName.trim(),
+                color: editColor.trim(),
+                cost_price: Number(editCost) || product.cost_price,
+                size: editSize.trim()
+            });
+
+            setResult({
+                type: 'edit',
+                message: res.data.message || 'Tovar muvaffaqiyatli tahrirlandi!'
+            });
+        } catch (err) {
+            setError(
+                err.response?.data?.message ||
+                'Tahrirlashda xatolik yuz berdi!'
+            );
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    // -----------------------------------------
     // YUKLANMOQDA
     // -----------------------------------------
 
@@ -137,10 +263,7 @@ export default function QRActionPage() {
             <main className="qr-page">
                 <div className="qr-card">
                     <div className="qr-spinner" />
-
-                    <p>
-                        Ma’lumot yuklanmoqda...
-                    </p>
+                    <p>Ma’lumot yuklanmoqda...</p>
                 </div>
             </main>
         );
@@ -154,17 +277,9 @@ export default function QRActionPage() {
         return (
             <main className="qr-page">
                 <div className="qr-card">
-                    <div className="qr-icon">
-                        ⚠️
-                    </div>
-
-                    <h2>
-                        QR kodi topilmadi
-                    </h2>
-
-                    <p>
-                        {error}
-                    </p>
+                    <div className="qr-icon">⚠️</div>
+                    <h2>QR kodi topilmadi</h2>
+                    <p>{error}</p>
                 </div>
             </main>
         );
@@ -175,80 +290,44 @@ export default function QRActionPage() {
     // -----------------------------------------
 
     if (result) {
-        const isSell =
-            result.type === 'sell';
-
-        if (isSell) {
+        if (result.type === 'sell' || result.type === 'credit-sell') {
             const data = result.data;
 
             return (
                 <main className="qr-page">
                     <div className="qr-card success-card">
-
-                        <div className="success-icon">
-                            ✓
-                        </div>
-
+                        <div className="success-icon">✓</div>
                         <h2>
-                            Sotuv muvaffaqiyatli!
+                            {result.type === 'credit-sell'
+                                ? 'Nasiyaga sotildi!'
+                                : 'Sotuv muvaffaqiyatli!'}
                         </h2>
-
                         <p>
-                            {data.product.name}
+                            {data.product?.name || product.name}
                             {' — '}
-                            {data.product.size ||
-                                'Standart'}
+                            {data.product?.size || product.size || 'Standart'}
                         </p>
 
+                        {result.type === 'credit-sell' && data.customer_name && (
+                            <div style={{ marginBottom: 12, padding: 12, background: '#f0f9ff', borderRadius: 10 }}>
+                                <div>👤 {data.customer_name}</div>
+                                {data.customer_phone && <div>📞 {data.customer_phone}</div>}
+                                {data.paid_now > 0 && <div>💵 Hozir to‘langan: {money(data.paid_now)} so‘m</div>}
+                            </div>
+                        )}
+
                         <div className="result-grid">
+                            <span>Sotilgan summa</span>
+                            <b>{money(data.selling_price)} so‘m</b>
 
-                            <span>
-                                Sotilgan summa
-                            </span>
+                            <span>Kelgan narxi</span>
+                            <b>{money(data.product?.cost_price || product.cost_price)} so‘m</b>
 
-                            <b>
-                                {money(
-                                    data.selling_price
-                                )}{' '}
-                                so‘m
-                            </b>
+                            <span>{(data.profit ?? 0) >= 0 ? 'Foyda' : 'Ziyon'}</span>
+                            <b>{money(Math.abs(data.profit ?? 0))} so‘m</b>
 
-                            <span>
-                                Kelgan narxi
-                            </span>
-
-                            <b>
-                                {money(
-                                    data.product
-                                        .cost_price
-                                )}{' '}
-                                so‘m
-                            </b>
-
-                            <span>
-                                {data.profit >= 0
-                                    ? 'Foyda'
-                                    : 'Ziyon'}
-                            </span>
-
-                            <b>
-                                {money(
-                                    Math.abs(
-                                        data.profit
-                                    )
-                                )}{' '}
-                                so‘m
-                            </b>
-
-                            <span>
-                                Qoldiq
-                            </span>
-
-                            <b>
-                                {data.remaining_quantity}{' '}
-                                dona
-                            </b>
-
+                            <span>Qoldiq</span>
+                            <b>{data.remaining_quantity ?? 0} dona</b>
                         </div>
 
                         <div
@@ -256,18 +335,36 @@ export default function QRActionPage() {
                                 marginTop: '20px',
                                 padding: '14px',
                                 borderRadius: '12px',
-                                background:
-                                    data.profit >= 0
-                                        ? '#e8f7ee'
-                                        : '#fdecec',
+                                background: (data.profit ?? 0) >= 0 ? '#e8f7ee' : '#fdecec',
                                 textAlign: 'center'
                             }}
                         >
-                            {data.profit >= 0
+                            {(data.profit ?? 0) >= 0
                                 ? '📈 Foydali sotuv'
                                 : '📉 Ziyon bilan sotuv'}
                         </div>
+                    </div>
+                </main>
+            );
+        }
 
+        if (result.type === 'edit') {
+            return (
+                <main className="qr-page">
+                    <div className="qr-card success-card">
+                        <div className="success-icon">✏️</div>
+                        <h2>Tovar tahrirlandi!</h2>
+                        <p>{result.message}</p>
+                        <button
+                            className="qr-primary"
+                            style={{ marginTop: 16 }}
+                            onClick={() => {
+                                setResult(null);
+                                setMode('choice');
+                            }}
+                        >
+                            Ortga qaytish
+                        </button>
                     </div>
                 </main>
             );
@@ -276,19 +373,9 @@ export default function QRActionPage() {
         return (
             <main className="qr-page">
                 <div className="qr-card success-card">
-
-                    <div className="success-icon">
-                        🗑️
-                    </div>
-
-                    <h2>
-                        Tovar o‘chirildi!
-                    </h2>
-
-                    <p>
-                        {result.message}
-                    </p>
-
+                    <div className="success-icon">🗑️</div>
+                    <h2>Tovar o‘chirildi!</h2>
+                    <p>{result.message}</p>
                 </div>
             </main>
         );
@@ -301,8 +388,7 @@ export default function QRActionPage() {
     const profitPreview =
         soldAmount === ''
             ? null
-            : Number(soldAmount) -
-            Number(product.cost_price || 0);
+            : Number(soldAmount) - Number(product.cost_price || 0);
 
     // -----------------------------------------
     // ASOSIY QR OYNASI
@@ -310,85 +396,40 @@ export default function QRActionPage() {
 
     return (
         <main className="qr-page">
-
             <div className="qr-card">
 
-                <div className="qr-icon">
-                    📦
-                </div>
+                <div className="qr-icon">📦</div>
+                <div className="qr-label">OMBORDAGI TOVAR</div>
 
-                <div className="qr-label">
-                    OMBORDAGI TOVAR
-                </div>
-
-                <h1>
-                    {product.name}
-                </h1>
+                <h1>{product.name}</h1>
 
                 <div className="product-details">
-
-                    <span>
-                        🆔 #{product.local_id}
-                    </span>
-
-                    <span>
-                        📏 {product.size ||
-                            'Standart'}
-                    </span>
-
-                    <span>
-                        🎨 {product.color ||
-                            'Ko‘rsatilmagan'}
-                    </span>
-
-                    <span>
-                        📦 {product.quantity}{' '}
-                        dona
-                    </span>
-
+                    <span>🆔 #{product.local_id}</span>
+                    <span>📏 {product.size || 'Standart'}</span>
+                    <span>🎨 {product.color || 'Ko‘rsatilmagan'}</span>
+                    <span>📦 {product.quantity} dona</span>
                 </div>
-
-                {/* KELGAN NARXI */}
 
                 <div className="cost-box">
                     💰 Kelgan narxi:{' '}
-                    <b>
-                        {money(
-                            product.cost_price
-                        )}{' '}
-                        so‘m
-                    </b>
+                    <b>{money(product.cost_price)} so‘m</b>
                 </div>
 
                 {error && (
-                    <div className="qr-error">
-                        ⚠️ {error}
-                    </div>
+                    <div className="qr-error">⚠️ {error}</div>
                 )}
 
-                {/* -------------------------------- */}
-                {/* TANLOV */}
-                {/* -------------------------------- */}
-
+                {/* ===================== TANLOV ===================== */}
                 {mode === 'choice' && (
                     <div className="qr-actions">
 
                         <button
                             className="qr-action delete"
-                            onClick={() =>
-                                setMode('delete')
-                            }
+                            onClick={() => setMode('delete')}
                         >
                             🗑️
-
-                            <span>
-                                O‘chirib yuborish
-                            </span>
-
-                            <small>
-                                Tovarni ombordan
-                                chiqarish
-                            </small>
+                            <span>O‘chirib yuborish</span>
+                            <small>Tovarni ombordan chiqarish</small>
                         </button>
 
                         <button
@@ -400,200 +441,264 @@ export default function QRActionPage() {
                             }}
                         >
                             💰
+                            <span>Sotish</span>
+                            <small>1 dona sotuvini qayd etish</small>
+                        </button>
 
-                            <span>
-                                Sotish
-                            </span>
+                        <button
+                            className="qr-action"
+                            style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', color: '#fff' }}
+                            onClick={() => {
+                                setMode('credit-sell');
+                                setSoldAmount('');
+                                setCustomerName('');
+                                setCustomerPhone('');
+                                setPaidNow('');
+                                setError('');
+                            }}
+                        >
+                            🛒
+                            <span>Nasiyaga sotish</span>
+                            <small>Mijozga qarzga berish</small>
+                        </button>
 
-                            <small>
-                                1 dona sotuvini
-                                qayd etish
-                            </small>
+                        <button
+                            className="qr-action"
+                            style={{ background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', color: '#fff' }}
+                            onClick={() => {
+                                setMode('edit');
+                                setError('');
+                            }}
+                        >
+                            ✏️
+                            <span>Tovarni tahrirlash</span>
+                            <small>Nom, rang, narx o‘zgartirish</small>
                         </button>
 
                     </div>
                 )}
 
-                {/* -------------------------------- */}
-                {/* O'CHIRISH */}
-                {/* -------------------------------- */}
-
+                {/* ===================== O'CHIRISH ===================== */}
                 {mode === 'delete' && (
                     <div className="qr-confirm">
-
-                        <h3>
-                            🗑️ O‘chirishni
-                            tasdiqlang
-                        </h3>
-
+                        <h3>🗑️ O‘chirishni tasdiqlang</h3>
                         <p>
                             Bu QR kodga biriktirilgan{' '}
-                            <b>
-                                {product.name}
-                            </b>{' '}
-                            tovar qatori ombordan
+                            <b>{product.name}</b> tovar qatori ombordan
                             butunlay chiqariladi.
                         </p>
-
                         <div className="confirm-actions">
-
                             <button
                                 className="qr-secondary"
-                                onClick={() =>
-                                    setMode('choice')
-                                }
+                                onClick={() => setMode('choice')}
                                 disabled={submitting}
                             >
                                 Ortga
                             </button>
-
                             <button
                                 className="qr-danger"
-                                onClick={
-                                    handleDelete
-                                }
+                                onClick={handleDelete}
                                 disabled={submitting}
                             >
-                                {submitting
-                                    ? 'O‘chirilmoqda...'
-                                    : 'Ha, o‘chirilsin'}
+                                {submitting ? 'O‘chirilmoqda...' : 'Ha, o‘chirilsin'}
                             </button>
-
                         </div>
-
                     </div>
                 )}
 
-                {/* -------------------------------- */}
-                {/* SOTISH */}
-                {/* -------------------------------- */}
-
+                {/* ===================== SOTISH ===================== */}
                 {mode === 'sell' && (
-                    <form
-                        className="qr-sell-form"
-                        onSubmit={handleSell}
-                    >
-
-                        <h3>
-                            💰 Tovarni sotish
-                        </h3>
-
-                        <p
-                            style={{
-                                marginBottom:
-                                    '15px'
-                            }}
-                        >
-                            <b>
-                                {product.name}
-                            </b>
-
-                            {' — '}
-
-                            {product.size ||
-                                'Standart'}
+                    <form className="qr-sell-form" onSubmit={handleSell}>
+                        <h3>💰 Tovarni sotish</h3>
+                        <p style={{ marginBottom: '15px' }}>
+                            <b>{product.name}</b> — {product.size || 'Standart'}
                         </p>
 
-                        {/* KELGAN NARXI */}
-
                         <div className="cost-box">
-                            💰 Kelgan narxi:{' '}
-                            <b>
-                                {money(
-                                    product.cost_price
-                                )}{' '}
-                                so‘m
-                            </b>
+                            💰 Kelgan narxi: <b>{money(product.cost_price)} so‘m</b>
                         </div>
 
-                        {/* SELLER KIRITADIGAN SUMMA */}
-
-                        <label>
-                            💵 Sotilgan summa
-                        </label>
-
+                        <label>💵 Sotilgan summa</label>
                         <input
                             autoFocus
                             type="number"
                             min="1"
                             step="1"
                             value={soldAmount}
-                            onChange={(e) =>
-                                setSoldAmount(
-                                    e.target.value
-                                )
-                            }
+                            onChange={(e) => setSoldAmount(e.target.value)}
                             placeholder="Masalan: 250000"
                             required
                             disabled={submitting}
                         />
 
-                        {/* FOYDA PREVIEW */}
-
-                        {profitPreview !==
-                            null && (
-                                <div
-                                    className={
-                                        profitPreview >=
-                                            0
-                                            ? 'profit-preview positive'
-                                            : 'profit-preview negative'
-                                    }
-                                >
-                                    {profitPreview >=
-                                        0
-                                        ? '📈 Kutilayotgan foyda'
-                                        : '📉 Kutilayotgan ziyon'}
-                                    :{' '}
-                                    <b>
-                                        {money(
-                                            Math.abs(
-                                                profitPreview
-                                            )
-                                        )}{' '}
-                                        so‘m
-                                    </b>
-                                </div>
-                            )}
+                        {profitPreview !== null && (
+                            <div className={profitPreview >= 0 ? 'profit-preview positive' : 'profit-preview negative'}>
+                                {profitPreview >= 0 ? '📈 Kutilayotgan foyda' : '📉 Kutilayotgan ziyon'}:{' '}
+                                <b>{money(Math.abs(profitPreview))} so‘m</b>
+                            </div>
+                        )}
 
                         <div className="confirm-actions">
-
                             <button
                                 type="button"
                                 className="qr-secondary"
                                 onClick={() => {
-                                    setMode(
-                                        'choice'
-                                    );
-                                    setSoldAmount(
-                                        ''
-                                    );
+                                    setMode('choice');
+                                    setSoldAmount('');
                                     setError('');
                                 }}
                                 disabled={submitting}
                             >
                                 Ortga
                             </button>
-
-                            <button
-                                type="submit"
-                                className="qr-primary"
-                                disabled={
-                                    submitting
-                                }
-                            >
-                                {submitting
-                                    ? 'Saqlanmoqda...'
-                                    : '✅ Sotishni tasdiqlash'}
+                            <button type="submit" className="qr-primary" disabled={submitting}>
+                                {submitting ? 'Saqlanmoqda...' : '✅ Sotishni tasdiqlash'}
                             </button>
+                        </div>
+                    </form>
+                )}
 
+                {/* ===================== NASIYAGA SOTISH ===================== */}
+                {mode === 'credit-sell' && (
+                    <form className="qr-sell-form" onSubmit={handleCreditSell}>
+                        <h3>🛒 Nasiyaga sotish</h3>
+                        <p style={{ marginBottom: '15px' }}>
+                            <b>{product.name}</b> — {product.size || 'Standart'}
+                        </p>
+
+                        <div className="cost-box">
+                            💰 Kelgan narxi: <b>{money(product.cost_price)} so‘m</b>
                         </div>
 
+                        <label>👤 Mijoz ismi *</label>
+                        <input
+                            type="text"
+                            value={customerName}
+                            onChange={(e) => setCustomerName(e.target.value)}
+                            placeholder="Ali Valiyev"
+                            required
+                            disabled={submitting}
+                        />
+
+                        <label>📞 Mijoz telefoni *</label>
+                        <input
+                            type="text"
+                            value={customerPhone}
+                            onChange={(e) => setCustomerPhone(e.target.value)}
+                            placeholder="+998 90 123 45 67"
+                            required
+                            disabled={submitting}
+                        />
+
+                        <label>💵 Sotilgan summa *</label>
+                        <input
+                            type="number"
+                            min="1"
+                            value={soldAmount}
+                            onChange={(e) => setSoldAmount(e.target.value)}
+                            placeholder="250000"
+                            required
+                            disabled={submitting}
+                        />
+
+                        <label>💰 Hozir to‘langan (ixtiyoriy)</label>
+                        <input
+                            type="number"
+                            min="0"
+                            value={paidNow}
+                            onChange={(e) => setPaidNow(e.target.value)}
+                            placeholder="0"
+                            disabled={submitting}
+                        />
+
+                        {profitPreview !== null && (
+                            <div className={profitPreview >= 0 ? 'profit-preview positive' : 'profit-preview negative'}>
+                                {profitPreview >= 0 ? '📈 Kutilayotgan foyda' : '📉 Kutilayotgan ziyon'}:{' '}
+                                <b>{money(Math.abs(profitPreview))} so‘m</b>
+                            </div>
+                        )}
+
+                        <div className="confirm-actions">
+                            <button
+                                type="button"
+                                className="qr-secondary"
+                                onClick={() => {
+                                    setMode('choice');
+                                    setSoldAmount('');
+                                    setCustomerName('');
+                                    setCustomerPhone('');
+                                    setPaidNow('');
+                                    setError('');
+                                }}
+                                disabled={submitting}
+                            >
+                                Ortga
+                            </button>
+                            <button type="submit" className="qr-primary" disabled={submitting}>
+                                {submitting ? 'Saqlanmoqda...' : '✅ Nasiyaga sotish'}
+                            </button>
+                        </div>
+                    </form>
+                )}
+
+                {/* ===================== TOVARNI TAHRIRLASH ===================== */}
+                {mode === 'edit' && (
+                    <form className="qr-sell-form" onSubmit={handleEdit}>
+                        <h3>✏️ Tovarni tahrirlash</h3>
+
+                        <label>Tovar nomi *</label>
+                        <input
+                            type="text"
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            required
+                            disabled={submitting}
+                        />
+
+                        <label>Rang</label>
+                        <input
+                            type="text"
+                            value={editColor}
+                            onChange={(e) => setEditColor(e.target.value)}
+                            disabled={submitting}
+                        />
+
+                        <label>Razmer</label>
+                        <input
+                            type="text"
+                            value={editSize}
+                            onChange={(e) => setEditSize(e.target.value)}
+                            disabled={submitting}
+                        />
+
+                        <label>Kelgan narxi (tannarx)</label>
+                        <input
+                            type="number"
+                            value={editCost}
+                            onChange={(e) => setEditCost(e.target.value)}
+                            disabled={submitting}
+                        />
+
+                        <div className="confirm-actions">
+                            <button
+                                type="button"
+                                className="qr-secondary"
+                                onClick={() => {
+                                    setMode('choice');
+                                    setError('');
+                                }}
+                                disabled={submitting}
+                            >
+                                Ortga
+                            </button>
+                            <button type="submit" className="qr-primary" disabled={submitting}>
+                                {submitting ? 'Saqlanmoqda...' : '✅ Saqlash'}
+                            </button>
+                        </div>
                     </form>
                 )}
 
             </div>
-
         </main>
     );
 }

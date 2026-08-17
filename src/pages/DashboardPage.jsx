@@ -1347,41 +1347,120 @@ const DashboardPage = () => {
 
             {/* ===================== QARZLAR (SUPPLIER) MODALI ===================== */}
             {debtsModal && (
-                <div className="modal-overlay" onClick={() => setDebtsModal(false)}>
-                    <div className="modal-box" style={{ maxWidth: 700 }} onClick={(e) => e.stopPropagation()}>
+                <div className="modal-overlay" onClick={() => setDebtsModal(false)} style={{ zIndex: 9999 }}>
+                    <div className="modal-box" style={{ maxWidth: 720, zIndex: 10000 }} onClick={(e) => e.stopPropagation()}>
                         <h3>💳 Qarzlar (Tovar berganlar)</h3>
-                        <input type="text" placeholder="Qidirish..." value={debtsSearch} onChange={(e) => setDebtsSearch(e.target.value)} className="form-input" style={{ marginBottom: 12 }} />
-                        {loadingDebts ? <p>Yuklanmoqda...</p> : debts.length === 0 ? (
-                            <div className="info-banner">Qarz yo'q ✅</div>
+
+                        <div className="form-group" style={{ marginBottom: 12 }}>
+                            <input
+                                type="text"
+                                placeholder="Ism yoki telefon bo‘yicha qidirish..."
+                                value={debtsSearch}
+                                onChange={(e) => setDebtsSearch(e.target.value)}
+                                className="form-input"
+                            />
+                        </div>
+
+                        {loadingDebts ? (
+                            <p style={{ textAlign: 'center', padding: 20 }}>Yuklanmoqda...</p>
+                        ) : debts.length === 0 ? (
+                            <div className="info-banner">Hozircha hech qanday qarz yo‘q ✅</div>
                         ) : (
                             <div className="debts-list">
-                                {debts.filter(d => {
-                                    const q = debtsSearch.toLowerCase();
-                                    if (!q) return true;
-                                    return (d.supplier || '').toLowerCase().includes(q) || (d.supplier_phone || '').toLowerCase().includes(q);
-                                }).map((debt, i) => (
-                                    <div key={i} className="debt-card">
-                                        <strong>{debt.supplier}</strong>
-                                        {debt.supplier_phone && <div>📞 {debt.supplier_phone}</div>}
-                                        <div className="debt-amount">{formatSum(debt.debt)} so'm</div>
-                                        <button type="button" className="btn btn-primary" style={{ marginTop: 10, width: '100%' }} onClick={async () => {
-                                            const amount = prompt(`"${debt.supplier}" ga qancha to'laysiz?`, debt.debt);
-                                            if (!amount || Number(amount) <= 0) return;
-                                            try {
-                                                await api.post('/api/debts/pay', { supplier: debt.supplier, supplier_phone: debt.supplier_phone, amount: Number(amount) });
-                                                alert("To'lov qabul qilindi!");
-                                                openDebtsModal();
-                                                fetchData(false);
-                                            } catch (err) {
-                                                alert(err.response?.data?.message || "Xatolik!");
-                                            }
-                                        }}>Pul berdim</button>
-                                    </div>
-                                ))}
+                                {debts
+                                    .filter((d) => {
+                                        const q = debtsSearch.toLowerCase().trim();
+                                        if (!q) return true;
+                                        const name = (d.supplier || '').toLowerCase();
+                                        const phone = (d.supplier_phone || '').toLowerCase();
+                                        return name.includes(q) || phone.includes(q);
+                                    })
+                                    .map((debt, index) => (
+                                        <div key={index} className="debt-card">
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                                                <strong style={{ fontSize: 16 }}>{debt.supplier}</strong>
+                                                <span className="debt-amount" style={{ background: '#ef4444', color: '#fff', padding: '4px 12px', borderRadius: 8, fontWeight: 700 }}>
+                                                    {formatSum(debt.debt)} so‘m
+                                                </span>
+                                            </div>
+
+                                            {debt.supplier_phone && (
+                                                <div className="debt-phone" style={{ marginTop: 6 }}>📞 {debt.supplier_phone}</div>
+                                            )}
+
+                                            {/* Kategoriyalar */}
+                                            {(debt.categories || []).length > 0 && (
+                                                <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                                    {debt.categories.map((cat, i) => (
+                                                        <span key={i} style={{
+                                                            background: '#e0f2fe',
+                                                            color: '#0369a1',
+                                                            padding: '2px 10px',
+                                                            borderRadius: 20,
+                                                            fontSize: 12,
+                                                            fontWeight: 500
+                                                        }}>
+                                                            {cat}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            <div style={{ marginTop: 8, fontSize: 13, color: '#64748b' }}>
+                                                Jami tannarx: {formatSum(debt.total_cost)} • To‘langan: {formatSum(debt.total_paid)}
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                className="btn btn-primary"
+                                                style={{ marginTop: 14, width: '100%', background: '#16a34a' }}
+                                                onClick={async () => {
+                                                    const maxDebt = Number(debt.debt) || 0;
+                                                    const input = prompt(
+                                                        `"${debt.supplier}" ga qancha to‘laysiz?\n\nMaksimal qarz: ${maxDebt.toLocaleString('uz-UZ')} so'm`,
+                                                        maxDebt
+                                                    );
+                                                    if (input === null) return;
+
+                                                    const amount = Number(input);
+                                                    if (!amount || amount <= 0) {
+                                                        alert("To‘g‘ri summa kiriting!");
+                                                        return;
+                                                    }
+                                                    if (amount > maxDebt) {
+                                                        alert(`Eng ko‘p ${maxDebt.toLocaleString('uz-UZ')} so'm to‘lash mumkin!`);
+                                                        return;
+                                                    }
+
+                                                    try {
+                                                        setLoadingDebts(true);
+                                                        await api.post('/api/debts/pay', {
+                                                            supplier: debt.supplier,
+                                                            supplier_phone: debt.supplier_phone || '',
+                                                            amount
+                                                        });
+                                                        alert("To‘lov muvaffaqiyatli qabul qilindi!");
+                                                        const res = await api.get('/api/debts');
+                                                        setDebts(res.data?.debts || []);
+                                                        await fetchData(false);
+                                                    } catch (err) {
+                                                        alert(err.response?.data?.message || "Xatolik yuz berdi!");
+                                                    } finally {
+                                                        setLoadingDebts(false);
+                                                    }
+                                                }}
+                                            >
+                                                💰 Pul berdim
+                                            </button>
+                                        </div>
+                                    ))}
                             </div>
                         )}
+
                         <div className="modal-actions">
-                            <button type="button" onClick={() => setDebtsModal(false)} className="btn btn-danger">Yopish</button>
+                            <button type="button" onClick={() => setDebtsModal(false)} className="btn btn-danger">
+                                Yopish
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1390,25 +1469,68 @@ const DashboardPage = () => {
             {/* ===================== TOVAR BERGANLAR MODALI ===================== */}
             {suppliersModal && (
                 <div className="modal-overlay" onClick={() => setSuppliersModal(false)}>
-                    <div className="modal-box" style={{ maxWidth: 700 }} onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-box" style={{ maxWidth: 720 }} onClick={(e) => e.stopPropagation()}>
                         <h3>👥 Tovar berganlar</h3>
-                        <input type="text" placeholder="Qidirish..." value={suppliersSearch} onChange={(e) => setSuppliersSearch(e.target.value)} className="form-input" style={{ marginBottom: 12 }} />
-                        {loadingSuppliers ? <p>Yuklanmoqda...</p> : (
+                        <input
+                            type="text"
+                            placeholder="Qidirish..."
+                            value={suppliersSearch}
+                            onChange={(e) => setSuppliersSearch(e.target.value)}
+                            className="form-input"
+                            style={{ marginBottom: 12 }}
+                        />
+                        {loadingSuppliers ? (
+                            <p style={{ textAlign: 'center', padding: 20 }}>Yuklanmoqda...</p>
+                        ) : (suppliersList || []).length === 0 ? (
+                            <div className="info-banner">Hali hech kimdan tovar olinmagan</div>
+                        ) : (
                             <div className="debts-list">
-                                {(suppliersList || []).filter(s => {
-                                    const q = suppliersSearch.toLowerCase();
-                                    if (!q) return true;
-                                    return (s.supplier || s.name || '').toLowerCase().includes(q);
-                                }).map((s, i) => (
-                                    <div key={i} className="debt-card">
-                                        <strong>{s.supplier || s.name}</strong>
-                                        {s.supplier_phone && <div>📞 {s.supplier_phone}</div>}
-                                    </div>
-                                ))}
+                                {(suppliersList || [])
+                                    .filter((s) => {
+                                        const q = suppliersSearch.toLowerCase().trim();
+                                        if (!q) return true;
+                                        const name = (s.supplier || s.name || '').toLowerCase();
+                                        const phone = (s.supplier_phone || '').toLowerCase();
+                                        const cats = (s.categories || []).join(' ').toLowerCase();
+                                        return name.includes(q) || phone.includes(q) || cats.includes(q);
+                                    })
+                                    .map((s, i) => (
+                                        <div key={i} className="debt-card">
+                                            <strong style={{ fontSize: 16 }}>{s.supplier || s.name}</strong>
+                                            {s.supplier_phone && (
+                                                <div style={{ marginTop: 4 }}>📞 {s.supplier_phone}</div>
+                                            )}
+                                            {/* Kategoriyalar */}
+                                            {(s.categories || []).length > 0 && (
+                                                <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                                    {(s.categories || []).map((cat, idx) => (
+                                                        <span
+                                                            key={idx}
+                                                            style={{
+                                                                background: '#e0f2fe',
+                                                                color: '#0369a1',
+                                                                padding: '3px 10px',
+                                                                borderRadius: 20,
+                                                                fontSize: 13,
+                                                                fontWeight: 500
+                                                            }}
+                                                        >
+                                                            {cat}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            <div style={{ marginTop: 8, fontSize: 13, color: '#64748b' }}>
+                                                {s.product_count || 0} xil tovar • {s.total_quantity || 0} dona
+                                            </div>
+                                        </div>
+                                    ))}
                             </div>
                         )}
                         <div className="modal-actions">
-                            <button type="button" onClick={() => setSuppliersModal(false)} className="btn btn-danger">Yopish</button>
+                            <button type="button" onClick={() => setSuppliersModal(false)} className="btn btn-danger">
+                                Yopish
+                            </button>
                         </div>
                     </div>
                 </div>
