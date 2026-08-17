@@ -52,18 +52,27 @@ const ProductQR = ({ product }) => {
         const gap = 22;
         const lineHeight = 26;
 
-        // Matn qatorlari — faqat kiritilgan maydonlar chiqadi
+        // Matn qatorlari — label'siz
         const lines = [];
-        lines.push(`Tovar: ${product.name || product.title || "Noma'lum"}`);
+
+        // Faqat tovar nomi (Tovar: yo'q)
+        lines.push(product.name || product.title || "Noma'lum");
+
+        // Faqat rang (Rangi: yo'q)
         if (product.color && String(product.color).trim()) {
-            lines.push(`Rangi: ${product.color.trim()}`);
+            lines.push(product.color.trim());
         }
-        lines.push(`ID: #${product.local_id || product.id}`);
+
+        // ID umuman qo'shilmaydi
+
+        // Faqat razmer (Razmer: yo'q)
         if (product.size && String(product.size).trim()) {
-            lines.push(`Razmer: ${product.size}`);
+            lines.push(product.size);
         }
+
+        // Sotilish narxi (agar bor bo'lsa)
         if (product.selling_price != null && product.selling_price !== '' && Number(product.selling_price) >= 0) {
-            lines.push(`Sotilish narxi: ${formatSum(product.selling_price)} so'm`);
+            lines.push(`${formatSum(product.selling_price)} so'm`);
         }
 
         // Taxminiy matn balandligi
@@ -91,7 +100,7 @@ const ProductQR = ({ product }) => {
         ctx.textAlign = 'center';
         ctx.fillStyle = '#111827';
 
-        // Tovar nomi
+        // Tovar nomi (qalin)
         ctx.font = 'bold 20px Arial, sans-serif';
         textY = wrapText(
             ctx,
@@ -107,8 +116,8 @@ const ProductQR = ({ product }) => {
         // Qolgan qatorlar
         ctx.font = '16px Arial, sans-serif';
         for (let i = 1; i < lines.length; i++) {
-            // Sotilish narxi qalinroq
-            if (lines[i].startsWith('Sotilish narxi')) {
+            // Sotilish narxi qalinroq va yashil
+            if (lines[i].includes("so'm")) {
                 ctx.font = 'bold 17px Arial, sans-serif';
                 ctx.fillStyle = '#0f766e';
             } else {
