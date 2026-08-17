@@ -95,6 +95,7 @@ const DashboardPage = () => {
         image_url: '',
     });
     const [imagePreview, setImagePreview] = useState('');
+    const [imageFileName, setImageFileName] = useState('');
 
     const [debtsModal, setDebtsModal] = useState(false);
     const [debts, setDebts] = useState([]);
@@ -237,17 +238,20 @@ const DashboardPage = () => {
         if (!file) {
             setNewProduct((prev) => ({ ...prev, image_url: '' }));
             setImagePreview('');
+            setImageFileName('');
             return;
         }
         try {
             const dataUrl = await compressImage(file);
             setNewProduct((prev) => ({ ...prev, image_url: dataUrl }));
             setImagePreview(dataUrl);
+            setImageFileName(file.name || 'Rasm tanlandi');
         } catch (err) {
             alert(err.message || "Rasm yuklashda xatolik!");
             e.target.value = '';
             setNewProduct((prev) => ({ ...prev, image_url: '' }));
             setImagePreview('');
+            setImageFileName('');
         }
     };
 
@@ -444,6 +448,7 @@ const DashboardPage = () => {
             const res = await api.post('/api/products', body);
             setAddProductModal(false);
             setImagePreview('');
+            setImageFileName('');
             setNewProduct({ category: '', name: '', color: '', cost_price: '', sizes: '', quantity: '', payment_type: 'cash', supplier: '', paid_amount: '', supplier_phone: '', selling_price: '', image_url: '' });
             await fetchData(false);
             const displayId = res.data?.local_id || res.data?.product?.local_id || '';
@@ -1217,39 +1222,46 @@ const DashboardPage = () => {
                                 <label>Sotish narxi (ixtiyoriy) :</label>
                                 <input type="number" value={newProduct.selling_price} onChange={(e) => setNewProduct({ ...newProduct, selling_price: e.target.value })} className="form-input" />
                             </div>
-                            <div className="form-group">
-                                <label>Tovar rasmi (ixtiyoriy) :</label>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    capture="environment"
-                                    onChange={handleProductImageChange}
-                                    className="form-input"
-                                />
-                                <small style={{ color: '#64748b', display: 'block', marginTop: 4 }}>
-                                    Rasm Telegram guruhiga yuboriladi. Katta rasmlar avtomatik siqiladi.
-                                </small>
-                                {imagePreview && (
-                                    <div style={{ marginTop: 10, position: 'relative', display: 'inline-block' }}>
-                                        <img
-                                            src={imagePreview}
-                                            alt="Preview"
-                                            style={{ maxWidth: 180, maxHeight: 180, borderRadius: 12, objectFit: 'cover', border: '1px solid #e2e8f0' }}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => { setImagePreview(''); setNewProduct((p) => ({ ...p, image_url: '' })); }}
-                                            style={{
-                                                position: 'absolute', top: -8, right: -8,
-                                                background: '#ef4444', color: '#fff', border: 'none',
-                                                borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', fontWeight: 700
-                                            }}
-                                            title="Rasmni olib tashlash"
-                                        >
-                                            ×
-                                        </button>
-                                    </div>
-                                )}
+                            <div className="form-group form-group-image">
+                                <label>Tovar rasmi (ixtiyoriy)</label>
+                                <div className={`image-upload-box${imagePreview ? ' has-preview' : ''}`}>
+                                    <input
+                                        id="product-image-input"
+                                        type="file"
+                                        accept="image/*"
+                                        capture="environment"
+                                        onChange={handleProductImageChange}
+                                        className="image-upload-input"
+                                    />
+                                    <label htmlFor="product-image-input" className="image-upload-btn">
+                                        📷 Rasm tanlash
+                                    </label>
+                                    <p className="image-upload-hint">
+                                        Telegram guruhiga yuboriladi. Katta rasmlar avtomatik siqiladi.
+                                    </p>
+                                    {imageFileName && (
+                                        <p className="image-upload-filename">{imageFileName}</p>
+                                    )}
+                                    {imagePreview && (
+                                        <div className="image-preview-wrap">
+                                            <img src={imagePreview} alt="Preview" />
+                                            <button
+                                                type="button"
+                                                className="image-preview-remove"
+                                                title="Rasmni olib tashlash"
+                                                onClick={() => {
+                                                    setImagePreview('');
+                                                    setImageFileName('');
+                                                    setNewProduct((p) => ({ ...p, image_url: '' }));
+                                                    const el = document.getElementById('product-image-input');
+                                                    if (el) el.value = '';
+                                                }}
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                             <div className="form-group">
                                 <label>Razmerlar (vergul bilan) :</label>

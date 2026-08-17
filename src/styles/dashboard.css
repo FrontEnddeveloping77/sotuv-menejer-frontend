@@ -1722,3 +1722,142 @@ body {
         justify-content: center;
     }
 }
+
+/* ===== Tovar rasmi yuklash (add product modal) ===== */
+
+.form-group-image {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group-image>label {
+    font-weight: 600;
+    color: #334155;
+    margin: 0;
+}
+
+.image-upload-box {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 14px;
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 12px;
+    background: #f8fafc;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.image-upload-box:hover {
+    border-color: #94a3b8;
+    background: #f1f5f9;
+}
+
+.image-upload-box.has-preview {
+    border-style: solid;
+    border-color: #93c5fd;
+    background: #eff6ff;
+}
+
+/* Yashirin native input */
+.image-upload-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    overflow: hidden;
+    z-index: -1;
+}
+
+/* Tugma alohida qator */
+.image-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    transition: filter 0.15s ease, transform 0.15s ease;
+}
+
+.image-upload-btn:hover {
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+}
+
+.image-upload-btn:active {
+    transform: translateY(0);
+}
+
+.image-upload-hint {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #64748b;
+    text-align: center;
+}
+
+.image-upload-filename {
+    margin: 0;
+    font-size: 13px;
+    color: #475569;
+    text-align: center;
+    word-break: break-all;
+    padding: 6px 10px;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.image-preview-wrap {
+    position: relative;
+    align-self: center;
+    margin-top: 4px;
+}
+
+.image-preview-wrap img {
+    display: block;
+    width: 140px;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+}
+
+.image-preview-remove {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: #ef4444;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+}
+
+.image-preview-remove:hover {
+    background: #dc2626;
+}
+
+@media (max-width: 480px) {
+    .image-preview-wrap img {
+        width: 120px;
+        height: 120px;
+    }
+}
