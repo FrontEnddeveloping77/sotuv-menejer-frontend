@@ -172,19 +172,18 @@ const ProductQR = ({ product }) => {
                         </p>
 
                         <p className="qr-meta">
-                            ID: #{product.local_id || product.id}
                             {product.color && String(product.color).trim() ? (
-                                <> {' • '} Rangi: {product.color.trim()}</>
+                                <> {' • '} {product.color.trim()}</>
                             ) : null}
                             {product.size && String(product.size).trim() ? (
-                                <> {' • '} Razmer: {product.size}</>
+                                <> {' • '} {product.size}</>
                             ) : null}
                             {' • '}
                             {product.quantity} dona
                             {product.selling_price != null && Number(product.selling_price) >= 0 && (
                                 <>
                                     {' • '}
-                                    Sotilish: {formatSum(product.selling_price)} so'm
+                                    {formatSum(product.selling_price)} so'm
                                 </>
                             )}
                         </p>
