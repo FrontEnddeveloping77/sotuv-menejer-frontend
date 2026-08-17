@@ -147,7 +147,6 @@ export default function QRActionPage() {
     // -----------------------------------------
     // NASIYAGA SOTISH
     // -----------------------------------------
-
     const handleCreditSell = async (event) => {
         event.preventDefault();
 
@@ -169,8 +168,6 @@ export default function QRActionPage() {
         setError('');
 
         try {
-            // Avval oddiy sotish qilamiz, keyin nasiya sifatida belgilaymiz
-            // Yoki alohida endpoint bo'lsa undan foydalanamiz
             const res = await api.post(`/api/qr/${token}/sell-credit`, {
                 selling_price: amount,
                 customer_name: customerName.trim(),
@@ -183,32 +180,14 @@ export default function QRActionPage() {
                 data: res.data
             });
         } catch (err) {
-            // Agar maxsus endpoint yo'q bo'lsa, oddiy sell + xabar
-            try {
-                const res = await api.post(`/api/qr/${token}/sell`, {
-                    selling_price: amount
-                });
-                setResult({
-                    type: 'credit-sell',
-                    data: {
-                        ...res.data,
-                        customer_name: customerName.trim(),
-                        customer_phone: customerPhone.trim(),
-                        paid_now: Number(paidNow) || 0
-                    }
-                });
-            } catch (err2) {
-                setError(
-                    err.response?.data?.message ||
-                    err2.response?.data?.message ||
-                    'Nasiyaga sotishda xatolik!'
-                );
-            }
+            setError(
+                err.response?.data?.message ||
+                'Nasiyaga sotishda xatolik!'
+            );
         } finally {
             setSubmitting(false);
         }
     };
-
     // -----------------------------------------
     // YUKLANMOQDA
     // -----------------------------------------
