@@ -416,20 +416,6 @@ export default function QRActionPage() {
                             <span>Nasiyaga sotish</span>
                             <small>Mijozga qarzga berish</small>
                         </button>
-
-                        <button
-                            className="qr-action"
-                            style={{ background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', color: '#fff' }}
-                            onClick={() => {
-                                setMode('edit');
-                                setError('');
-                            }}
-                        >
-                            ✏️
-                            <span>Tovarni tahrirlash</span>
-                            <small>Nom, rang, narx o‘zgartirish</small>
-                        </button>
-
                     </div>
                 )}
 
@@ -595,64 +581,6 @@ export default function QRActionPage() {
                         </div>
                     </form>
                 )}
-
-                {/* ===================== TOVARNI TAHRIRLASH ===================== */}
-                {mode === 'edit' && (
-                    <form className="qr-sell-form" onSubmit={handleEdit}>
-                        <h3>✏️ Tovarni tahrirlash</h3>
-
-                        <label>Tovar nomi *</label>
-                        <input
-                            type="text"
-                            value={editName}
-                            onChange={(e) => setEditName(e.target.value)}
-                            required
-                            disabled={submitting}
-                        />
-
-                        <label>Rang</label>
-                        <input
-                            type="text"
-                            value={editColor}
-                            onChange={(e) => setEditColor(e.target.value)}
-                            disabled={submitting}
-                        />
-
-                        <label>Razmer</label>
-                        <input
-                            type="text"
-                            value={editSize}
-                            onChange={(e) => setEditSize(e.target.value)}
-                            disabled={submitting}
-                        />
-
-                        <label>Kelgan narxi (tannarx)</label>
-                        <input
-                            type="number"
-                            value={editCost}
-                            onChange={(e) => setEditCost(e.target.value)}
-                            disabled={submitting}
-                        />
-
-                        <div className="confirm-actions">
-                            <button
-                                type="button"
-                                className="qr-secondary"
-                                onClick={() => {
-                                    setMode('choice');
-                                    setError('');
-                                }}
-                                disabled={submitting}
-                            >
-                                Ortga
-                            </button>
-                            <button type="submit" className="qr-primary" disabled={submitting}>
-                                {submitting ? 'Saqlanmoqda...' : '✅ Saqlash'}
-                            </button>
-                        </div>
-                    </form>
-                )}
-
             </div>
         </main>
     );
