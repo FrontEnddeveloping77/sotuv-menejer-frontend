@@ -1547,7 +1547,7 @@ const DashboardPage = () => {
                         <h3>👥 Tovar berganlar</h3>
                         <input
                             type="text"
-                            placeholder="Qidirish..."
+                            placeholder="Ism, telefon yoki kategoriya bo'yicha qidirish..."
                             value={suppliersSearch}
                             onChange={(e) => setSuppliersSearch(e.target.value)}
                             className="form-input"
@@ -1566,39 +1566,69 @@ const DashboardPage = () => {
                                         const name = (s.supplier || s.name || '').toLowerCase();
                                         const phone = (s.supplier_phone || '').toLowerCase();
                                         const cats = (s.categories || []).join(' ').toLowerCase();
-                                        return name.includes(q) || phone.includes(q) || cats.includes(q);
+                                        const productNames = (s.products || []).map(p => (p.name || '').toLowerCase()).join(' ');
+                                        return name.includes(q) || phone.includes(q) || cats.includes(q) || productNames.includes(q);
                                     })
-                                    .map((s, i) => (
-                                        <div key={i} className="debt-card">
-                                            <strong style={{ fontSize: 16 }}>{s.supplier || s.name}</strong>
-                                            {s.supplier_phone && (
-                                                <div style={{ marginTop: 4 }}>📞 {s.supplier_phone}</div>
-                                            )}
-                                            {/* Kategoriyalar */}
-                                            {(s.categories || []).length > 0 && (
-                                                <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                                                    {(s.categories || []).map((cat, idx) => (
-                                                        <span
-                                                            key={idx}
-                                                            style={{
-                                                                background: '#e0f2fe',
-                                                                color: '#0369a1',
-                                                                padding: '3px 10px',
-                                                                borderRadius: 20,
-                                                                fontSize: 13,
-                                                                fontWeight: 500
-                                                            }}
-                                                        >
-                                                            {cat}
-                                                        </span>
-                                                    ))}
+                                    .map((s, i) => {
+                                        const xil = Number(s.products_count ?? s.product_count) || 0;
+                                        const qty = Number(s.total_quantity) || 0;
+                                        const cost = Number(s.total_cost) || 0;
+                                        const categories = s.categories || [];
+                                        const uniqueProducts = [];
+                                        const seenLocal = new Set();
+                                        (s.products || []).forEach((p) => {
+                                            const key = String(p.local_id ?? p.name);
+                                            if (seenLocal.has(key)) return;
+                                            seenLocal.add(key);
+                                            uniqueProducts.push(p);
+                                        });
+                                        return (
+                                            <div key={i} className="debt-card">
+                                                <strong style={{ fontSize: 16 }}>{s.supplier || s.name}</strong>
+                                                {s.supplier_phone && (
+                                                    <div style={{ marginTop: 4 }}>📞 {s.supplier_phone}</div>
+                                                )}
+                                                {categories.length > 0 && (
+                                                    <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                                        {categories.map((cat, idx) => (
+                                                            <span
+                                                                key={idx}
+                                                                style={{
+                                                                    background: '#e0f2fe',
+                                                                    color: '#0369a1',
+                                                                    padding: '3px 10px',
+                                                                    borderRadius: 20,
+                                                                    fontSize: 13,
+                                                                    fontWeight: 500
+                                                                }}
+                                                            >
+                                                                {cat}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                                <div style={{ marginTop: 8, fontSize: 13, color: '#475569' }}>
+                                                    <b>{xil}</b> xil tovar • <b>{qty}</b> dona • tannarx: <b>{formatSum(cost)}</b> so'm
                                                 </div>
-                                            )}
-                                            <div style={{ marginTop: 8, fontSize: 13, color: '#64748b' }}>
-                                                {s.product_count || 0} xil tovar • {s.total_quantity || 0} dona
+                                                {uniqueProducts.length > 0 && (
+                                                    <div style={{ marginTop: 10, fontSize: 13, color: '#334155' }}>
+                                                        <div style={{ fontWeight: 600, marginBottom: 4 }}>📦 Tovarlar:</div>
+                                                        <ul style={{ margin: 0, paddingLeft: 18 }}>
+                                                            {uniqueProducts.map((p, pi) => (
+                                                                <li key={pi}>
+                                                                    #{p.local_id} {p.name}
+                                                                    {p.category ? ` (${p.category})` : ''}
+                                                                    {p.color ? ` — ${p.color}` : ''}
+                                                                    {p.size ? `, ${p.size}` : ''}
+                                                                    {': '}{Number(p.quantity) || 0} dona
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                             </div>
                         )}
                         <div className="modal-actions">
