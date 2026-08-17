@@ -92,7 +92,9 @@ const DashboardPage = () => {
     const [newProduct, setNewProduct] = useState({
         category: '', name: '', cost_price: '', color: '', sizes: '', quantity: '',
         payment_type: 'cash', supplier: '', paid_amount: '', supplier_phone: '', selling_price: '',
+        image_url: '',
     });
+    const [imagePreview, setImagePreview] = useState('');
 
     const [debtsModal, setDebtsModal] = useState(false);
     const [debts, setDebts] = useState([]);
@@ -192,6 +194,62 @@ const DashboardPage = () => {
     useEffect(() => { fetchData(true); }, []);
 
     const formatSum = (val) => Number(val || 0).toLocaleString('uz-UZ');
+
+    // Rasmni siqish (Telegram uchun — max ~800px, JPEG)
+    const compressImage = (file, maxWidth = 800, quality = 0.7) => {
+        return new Promise((resolve, reject) => {
+            if (!file || !file.type.startsWith('image/')) {
+                reject(new Error("Faqat rasm fayli tanlang!"));
+                return;
+            }
+            if (file.size > 8 * 1024 * 1024) {
+                reject(new Error("Rasm 8 MB dan katta bo'lmasligi kerak!"));
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = () => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let w = img.width;
+                    let h = img.height;
+                    if (w > maxWidth) {
+                        h = Math.round((h * maxWidth) / w);
+                        w = maxWidth;
+                    }
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    resolve(dataUrl);
+                };
+                img.onerror = () => reject(new Error("Rasmni o'qib bo'lmadi!"));
+                img.src = reader.result;
+            };
+            reader.onerror = () => reject(new Error("Faylni o'qib bo'lmadi!"));
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const handleProductImageChange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) {
+            setNewProduct((prev) => ({ ...prev, image_url: '' }));
+            setImagePreview('');
+            return;
+        }
+        try {
+            const dataUrl = await compressImage(file);
+            setNewProduct((prev) => ({ ...prev, image_url: dataUrl }));
+            setImagePreview(dataUrl);
+        } catch (err) {
+            alert(err.message || "Rasm yuklashda xatolik!");
+            e.target.value = '';
+            setNewProduct((prev) => ({ ...prev, image_url: '' }));
+            setImagePreview('');
+        }
+    };
 
     const groupProductsByLocalId = (list) => {
         const map = new Map();
@@ -380,11 +438,13 @@ const DashboardPage = () => {
                 supplier_phone: newProduct.supplier_phone.trim(),
                 paid_amount: newProduct.payment_type === 'credit' ? Number(newProduct.paid_amount) || 0 : 0,
                 selling_price: newProduct.selling_price !== '' && newProduct.selling_price != null ? Number(newProduct.selling_price) : null,
+                image_url: newProduct.image_url || null,
             };
 
             const res = await api.post('/api/products', body);
             setAddProductModal(false);
-            setNewProduct({ category: '', name: '', color: '', cost_price: '', sizes: '', quantity: '', payment_type: 'cash', supplier: '', paid_amount: '', supplier_phone: '', selling_price: '' });
+            setImagePreview('');
+            setNewProduct({ category: '', name: '', color: '', cost_price: '', sizes: '', quantity: '', payment_type: 'cash', supplier: '', paid_amount: '', supplier_phone: '', selling_price: '', image_url: '' });
             await fetchData(false);
             const displayId = res.data?.local_id || res.data?.product?.local_id || '';
             alert(res.data?.message || `Tovar saqlandi! Biriktirilgan ID: #${displayId}`);
@@ -1156,6 +1216,40 @@ const DashboardPage = () => {
                             <div className="form-group">
                                 <label>Sotish narxi (ixtiyoriy) :</label>
                                 <input type="number" value={newProduct.selling_price} onChange={(e) => setNewProduct({ ...newProduct, selling_price: e.target.value })} className="form-input" />
+                            </div>
+                            <div className="form-group">
+                                <label>Tovar rasmi (ixtiyoriy) :</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    capture="environment"
+                                    onChange={handleProductImageChange}
+                                    className="form-input"
+                                />
+                                <small style={{ color: '#64748b', display: 'block', marginTop: 4 }}>
+                                    Rasm Telegram guruhiga yuboriladi. Katta rasmlar avtomatik siqiladi.
+                                </small>
+                                {imagePreview && (
+                                    <div style={{ marginTop: 10, position: 'relative', display: 'inline-block' }}>
+                                        <img
+                                            src={imagePreview}
+                                            alt="Preview"
+                                            style={{ maxWidth: 180, maxHeight: 180, borderRadius: 12, objectFit: 'cover', border: '1px solid #e2e8f0' }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => { setImagePreview(''); setNewProduct((p) => ({ ...p, image_url: '' })); }}
+                                            style={{
+                                                position: 'absolute', top: -8, right: -8,
+                                                background: '#ef4444', color: '#fff', border: 'none',
+                                                borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', fontWeight: 700
+                                            }}
+                                            title="Rasmni olib tashlash"
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                             <div className="form-group">
                                 <label>Razmerlar (vergul bilan) :</label>
