@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/dashboard.css';
+import '../styles/product-image-upload.css';
 import '../styles/qr-modal.css';
 import ProductQR from '../components/ProductQR';
 
