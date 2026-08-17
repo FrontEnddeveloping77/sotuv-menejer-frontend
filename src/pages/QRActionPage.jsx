@@ -210,51 +210,6 @@ export default function QRActionPage() {
     };
 
     // -----------------------------------------
-    // TOVARNI TAHRIRLASH
-    // -----------------------------------------
-
-    const handleEdit = async (event) => {
-        event.preventDefault();
-
-        if (!editName.trim()) {
-            setError('Tovar nomini kiriting!');
-            return;
-        }
-
-        setSubmitting(true);
-        setError('');
-
-        try {
-            const res = await api.post(`/api/qr/${token}/edit`, {
-                name: editName.trim(),
-                color: editColor.trim(),
-                cost_price: Number(editCost) || product.cost_price,
-                size: editSize.trim()
-            });
-
-            setProduct(res.data.product || {
-                ...product,
-                name: editName.trim(),
-                color: editColor.trim(),
-                cost_price: Number(editCost) || product.cost_price,
-                size: editSize.trim()
-            });
-
-            setResult({
-                type: 'edit',
-                message: res.data.message || 'Tovar muvaffaqiyatli tahrirlandi!'
-            });
-        } catch (err) {
-            setError(
-                err.response?.data?.message ||
-                'Tahrirlashda xatolik yuz berdi!'
-            );
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    // -----------------------------------------
     // YUKLANMOQDA
     // -----------------------------------------
 
