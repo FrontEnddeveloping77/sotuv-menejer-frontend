@@ -428,8 +428,7 @@ const DashboardPage = () => {
             if (!newProduct.name?.trim()) { alert("Tovar nomi kiritilishi shart!"); return; }
             if (!newProduct.cost_price && newProduct.cost_price !== 0) { alert("Kelgan narx kiritilishi shart!"); return; }
             if (!newProduct.quantity || Number(newProduct.quantity) <= 0) { alert("Umumiy soni 0 dan katta bo‘lishi kerak!"); return; }
-            if (!newProduct.supplier?.trim()) { alert("Kimdan olinganini kiritish shart!"); return; }
-            if (!newProduct.supplier_phone?.trim()) { alert("Telefon raqamini kiritish shart!"); return; }
+            // Kimdan / telefon — ixtiyoriy (naqd va nasiya uchun)
 
             const body = {
                 category: newProduct.category.trim(),
@@ -1280,12 +1279,12 @@ const DashboardPage = () => {
                                 </select>
                             </div>
                             <div className="form-group">
-                                <label>Kimdan olingan * :</label>
-                                <input type="text" value={newProduct.supplier} onChange={(e) => setNewProduct({ ...newProduct, supplier: e.target.value })} required className="form-input" />
+                                <label>Kimdan olingan (ixtiyoriy) :</label>
+                                <input type="text" value={newProduct.supplier} onChange={(e) => setNewProduct({ ...newProduct, supplier: e.target.value })} className="form-input" placeholder="Masalan: Ali aka..." />
                             </div>
                             <div className="form-group">
-                                <label>Telefon * :</label>
-                                <input type="text" value={newProduct.supplier_phone} onChange={(e) => setNewProduct({ ...newProduct, supplier_phone: e.target.value })} required className="form-input" />
+                                <label>Telefon (ixtiyoriy) :</label>
+                                <input type="text" value={newProduct.supplier_phone} onChange={(e) => setNewProduct({ ...newProduct, supplier_phone: e.target.value })} className="form-input" placeholder="+998..." />
                             </div>
                             {newProduct.payment_type === 'credit' && (
                                 <div className="form-group">
