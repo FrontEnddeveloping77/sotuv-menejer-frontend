@@ -108,6 +108,12 @@ const DashboardPage = () => {
         image_url: '',
     });
 
+    // Taqsimot oynasi (Add va Edit uchun umumiy)
+    const [sizeDistModal, setSizeDistModal] = useState(false);
+    const [sizeDistRows, setSizeDistRows] = useState([]); // [{ size, quantity }]
+    const [sizeDistMode, setSizeDistMode] = useState('add'); // 'add' | 'edit'
+    const [pendingProductData, setPendingProductData] = useState(null);
+
     // Tovar qo‘shishda razmer + son (dinamik qatorlar)
     const emptySizeRow = () => ({ size: '', quantity: 1 });
     const [sizeRows, setSizeRows] = useState([emptySizeRow()]);
@@ -445,72 +451,134 @@ const DashboardPage = () => {
     const handleEditProduct = async (e) => {
         e.preventDefault();
 
-        if (!editProduct.local_id) {
-            alert("Tovar ID topilmadi!");
-            return;
-        }
+        if (!editProduct.local_id) { alert("Tovar ID topilmadi!"); return; }
+        if (!editProduct.name.trim()) { alert("Tovar nomini kiriting!"); return; }
+        if (editProduct.cost_price === '' || Number(editProduct.cost_price) < 0) { alert("Tannarxni to'g'ri kiriting!"); return; }
+        if (editProduct.quantity === '' || Number(editProduct.quantity) < 0) { alert("Tovar sonini to'g'ri kiriting!"); return; }
 
-        if (!editProduct.name.trim()) {
-            alert("Tovar nomini kiriting!");
-            return;
-        }
+        const totalQty = Number(editProduct.quantity);
 
-        if (editProduct.cost_price === '' || Number(editProduct.cost_price) < 0) {
-            alert("Tannarxni to'g'ri kiriting!");
-            return;
-        }
-
-        if (editProduct.quantity === '' || Number(editProduct.quantity) < 0) {
-            alert("Tovar sonini to'g'ri kiriting!");
-            return;
-        }
-
-        setIsSubmitting(true);
-
-        try {
-            const body = {
+        openSizeDistribution(
+            editProduct.sizes,
+            totalQty,
+            'edit',
+            {
+                local_id: editProduct.local_id,
                 category: editProduct.category || 'Umumiy',
                 name: editProduct.name.trim(),
                 color: editProduct.color.trim(),
                 cost_price: Number(editProduct.cost_price),
-                quantity: Number(editProduct.quantity),
-                sizes: editProduct.sizes,
-                image_url: editProduct.image_url || null
+                selling_price: editProduct.selling_price !== '' && editProduct.selling_price != null
+                    ? Number(editProduct.selling_price) : null,
+                image_url: editProduct.image_url || null,
+            }
+        );
+    };
+
+    const submitEditProduct = async (extra = {}) => {
+        setIsSubmitting(true);
+        try {
+            const body = {
+                category: pendingProductData?.category || editProduct.category || 'Umumiy',
+                name: pendingProductData?.name || editProduct.name.trim(),
+                color: pendingProductData?.color || editProduct.color.trim(),
+                cost_price: pendingProductData?.cost_price ?? Number(editProduct.cost_price),
+                quantity: pendingProductData?.totalQty || Number(editProduct.quantity),
+                sizes: pendingProductData?.sizesStr || editProduct.sizes,
+                image_url: pendingProductData?.image_url ?? editProduct.image_url || null,
+                ...extra
             };
 
-            if (editProduct.selling_price !== '' && editProduct.selling_price != null) {
+            if (extra.size_quantities) {
+                body.size_quantities = extra.size_quantities;
+                body.quantity = extra.size_quantities.reduce((s, r) => s + Number(r.quantity || 0), 0);
+                body.sizes = extra.size_quantities.map(r => r.size).filter(Boolean).join(', ');
+            }
+
+            if (pendingProductData?.selling_price != null) {
+                body.selling_price = pendingProductData.selling_price;
+            } else if (editProduct.selling_price !== '' && editProduct.selling_price != null) {
                 body.selling_price = Number(editProduct.selling_price);
-            } else {
-                body.selling_price = null;
             }
 
             const res = await api.put(`/api/products/${editProduct.local_id}`, body);
 
             setEditModal(false);
-            setEditProduct({
-                local_id: '',
-                category: '',
-                name: '',
-                cost_price: '',
-                selling_price: '',
-                color: '',
-                sizes: '',
-                quantity: '',
-                image_url: ''
-            });
+            setSizeDistModal(false);
             setEditImagePreview('');
             setEditImageFileName('');
+            setEditProduct({
+                local_id: '', category: '', name: '', cost_price: '', selling_price: '',
+                color: '', sizes: '', quantity: '', image_url: ''
+            });
+            setSizeDistRows([]);
+            setPendingProductData(null);
 
             await fetchData(false);
             alert(res.data?.message || "Tovar muvaffaqiyatli tahrirlandi!");
         } catch (err) {
-            alert(
-                err.response?.data?.message ||
-                "Tovarni tahrirlashda xatolik yuz berdi!"
-            );
+            alert(err.response?.data?.message || "Tovarni tahrirlashda xatolik!");
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    const openSizeDistribution = (sizesStr, totalQty, mode = 'add', extraData = {}) => {
+        let sizeList = [];
+        if (sizesStr && typeof sizesStr === 'string') {
+            const seen = new Set();
+            sizesStr.split(',').forEach(item => {
+                const clean = item.trim();
+                if (clean && !seen.has(clean.toLowerCase())) {
+                    seen.add(clean.toLowerCase());
+                    sizeList.push(clean);
+                }
+            });
+        }
+
+        if (sizeList.length <= 1) {
+            // Bitta yoki yo‘q → darhol yuborish
+            if (mode === 'add') {
+                submitAddProduct({
+                    size_quantities: sizeList.length === 1
+                        ? [{ size: sizeList[0], quantity: totalQty }]
+                        : [{ size: '', quantity: totalQty }]
+                });
+            } else {
+                submitEditProduct({
+                    size_quantities: sizeList.length === 1
+                        ? [{ size: sizeList[0], quantity: totalQty }]
+                        : [{ size: '', quantity: totalQty }]
+                });
+            }
+            return;
+        }
+
+        if (totalQty % sizeList.length === 0) {
+            // Teng taqsimlash mumkin
+            const per = totalQty / sizeList.length;
+            const size_quantities = sizeList.map(s => ({ size: s, quantity: per }));
+            if (mode === 'add') {
+                submitAddProduct({ size_quantities });
+            } else {
+                submitEditProduct({ size_quantities });
+            }
+            return;
+        }
+
+        // Bo‘linmaydi → oyna ochamiz (prefill)
+        const base = Math.floor(totalQty / sizeList.length);
+        const remainder = totalQty % sizeList.length;
+
+        const prefilled = sizeList.map((s, i) => ({
+            size: s,
+            quantity: base + (i < remainder ? 1 : 0)
+        }));
+
+        setSizeDistRows(prefilled);
+        setSizeDistMode(mode);
+        setPendingProductData({ ...extraData, totalQty, sizesStr });
+        setSizeDistModal(true);
     };
 
     const handleAddProduct = async (e) => {
@@ -521,67 +589,67 @@ const DashboardPage = () => {
         if (!newProduct.cost_price && newProduct.cost_price !== 0) { alert("Kelgan narx kiritilishi shart!"); return; }
         if (!newProduct.quantity || Number(newProduct.quantity) <= 0) { alert("Umumiy soni 0 dan katta bo‘lishi kerak!"); return; }
 
-        const totalQty = Number(newProduct.quantity) || 0;
+        const totalQty = Number(newProduct.quantity);
 
-        // Razmerlarni ajratish
-        let sizeList = [];
-        if (newProduct.sizes && typeof newProduct.sizes === 'string') {
-            const seen = new Set();
-            newProduct.sizes.split(',').forEach((item) => {
-                const clean = item.trim();
-                if (clean && !seen.has(clean.toLowerCase())) {
-                    seen.add(clean.toLowerCase());
-                    sizeList.push(clean);
-                }
+        openSizeDistribution(
+            newProduct.sizes,
+            totalQty,
+            'add',
+            {
+                category: newProduct.category.trim(),
+                name: newProduct.name.trim(),
+                color: newProduct.color.trim(),
+                cost_price: Number(newProduct.cost_price) || 0,
+                payment_type: newProduct.payment_type || 'cash',
+                supplier: newProduct.supplier.trim(),
+                supplier_phone: newProduct.supplier_phone.trim(),
+                paid_amount: newProduct.payment_type === 'credit' ? Number(newProduct.paid_amount) || 0 : 0,
+                selling_price: newProduct.selling_price !== '' && newProduct.selling_price != null
+                    ? Number(newProduct.selling_price) : null,
+                image_url: newProduct.image_url || null,
+            }
+        );
+    };
+
+    const submitAddProduct = async (extra = {}) => {
+        setIsSubmitting(true);
+        try {
+            const body = {
+                ...pendingProductData,
+                quantity: pendingProductData?.totalQty || Number(newProduct.quantity),
+                sizes: pendingProductData?.sizesStr || newProduct.sizes?.trim() || '',
+                ...extra
+            };
+
+            // size_quantities bo‘lsa uni ustun qilamiz
+            if (extra.size_quantities) {
+                body.size_quantities = extra.size_quantities;
+                body.quantity = extra.size_quantities.reduce((s, r) => s + Number(r.quantity || 0), 0);
+                body.sizes = extra.size_quantities.map(r => r.size).filter(Boolean).join(', ');
+            }
+
+            const res = await api.post('/api/products', body);
+
+            setAddProductModal(false);
+            setSizeDistModal(false);
+            setImagePreview('');
+            setImageFileName('');
+            setNewProduct({
+                category: '', name: '', color: '', cost_price: '', sizes: '', quantity: '',
+                payment_type: 'cash', supplier: '', paid_amount: '', supplier_phone: '',
+                selling_price: '', image_url: ''
             });
+            setSizeDistRows([]);
+            setPendingProductData(null);
+
+            await fetchData(false);
+            const displayId = res.data?.local_id || res.data?.product?.local_id || '';
+            alert(res.data?.message || `Tovar saqlandi! ID: #${displayId}`);
+        } catch (err) {
+            alert(err.response?.data?.message || "Tovar qo‘shishda xatolik!");
+        } finally {
+            setIsSubmitting(false);
         }
-
-        // Agar razmer yo‘q yoki bitta bo‘lsa — oddiy yuborish
-        if (sizeList.length <= 1) {
-            await submitProduct({
-                size_quantities: sizeList.length === 1
-                    ? [{ size: sizeList[0], quantity: totalQty }]
-                    : [{ size: '', quantity: totalQty }]
-            });
-            return;
-        }
-
-        // Ko‘p razmer
-        if (totalQty % sizeList.length === 0) {
-            // Teng taqsimlash mumkin → avtomatik
-            const perSize = totalQty / sizeList.length;
-            const size_quantities = sizeList.map(s => ({ size: s, quantity: perSize }));
-            await submitProduct({ size_quantities });
-            return;
-        }
-
-        // Teng emas → foydalanuvchidan so‘rash
-        // Avval teng + qoldiqni birinchi razmerlarga qo‘yib prefill qilamiz
-        const base = Math.floor(totalQty / sizeList.length);
-        const remainder = totalQty % sizeList.length;
-
-        const prefilled = sizeList.map((s, i) => ({
-            size: s,
-            quantity: base + (i < remainder ? 1 : 0)
-        }));
-
-        setSizeDistRows(prefilled);
-        setPendingProductBody({
-            category: newProduct.category.trim(),
-            name: newProduct.name.trim(),
-            color: newProduct.color.trim(),
-            cost_price: Number(newProduct.cost_price) || 0,
-            quantity: totalQty,
-            sizes: sizeList.join(', '),
-            payment_type: newProduct.payment_type || 'cash',
-            supplier: newProduct.supplier.trim(),
-            supplier_phone: newProduct.supplier_phone.trim(),
-            paid_amount: newProduct.payment_type === 'credit' ? Number(newProduct.paid_amount) || 0 : 0,
-            selling_price: newProduct.selling_price !== '' && newProduct.selling_price != null
-                ? Number(newProduct.selling_price) : null,
-            image_url: newProduct.image_url || null,
-        });
-        setSizeDistModal(true);
     };
 
     // Yordamchi: haqiqiy yuborish
@@ -1614,6 +1682,104 @@ const DashboardPage = () => {
                 </div>
             )}
 
+            {/* ===== RAZMER SONLARINI BELGILASH MODALI (Add + Edit) ===== */}
+            {sizeDistModal && (
+                <div className="modal-overlay">
+                    <div className="modal-box" style={{ maxWidth: 480 }}>
+                        <div className="modal-header">
+                            <h3>📏 Har bir razmer uchun sonni belgilang</h3>
+                        </div>
+                        <p style={{ fontSize: 14, color: '#64748b', marginBottom: 16 }}>
+                            Umumiy son: <b>{pendingProductData?.totalQty || 0}</b> dona.<br />
+                            Har bir razmerga qancha qo‘yishni o‘zingiz yozing. Jami teng bo‘lishi shart.
+                        </p>
+
+                        {sizeDistRows.map((row, index) => (
+                            <div key={index} className="form-group" style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 10 }}>
+                                <label style={{ minWidth: 80, fontWeight: 600, fontSize: 15 }}>
+                                    {row.size || 'Standart'}
+                                </label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={row.quantity}
+                                    onChange={(e) => {
+                                        const next = [...sizeDistRows];
+                                        next[index] = { ...next[index], quantity: e.target.value };
+                                        setSizeDistRows(next);
+                                    }}
+                                    className="form-input"
+                                    style={{ maxWidth: 120 }}
+                                />
+                                <span style={{ color: '#64748b' }}>dona</span>
+                            </div>
+                        ))}
+
+                        <div style={{
+                            marginTop: 14,
+                            padding: '10px 14px',
+                            background: '#f1f5f9',
+                            borderRadius: 8,
+                            fontWeight: 600,
+                            display: 'flex',
+                            justifyContent: 'space-between'
+                        }}>
+                            <span>Jami:</span>
+                            <span>
+                                {sizeDistRows.reduce((s, r) => s + (Number(r.quantity) || 0), 0)}
+                                {' / '}
+                                {pendingProductData?.totalQty || 0} dona
+                            </span>
+                        </div>
+
+                        <div className="modal-actions" style={{ marginTop: 18 }}>
+                            <button
+                                type="button"
+                                className="btn btn-primary"
+                                disabled={isSubmitting}
+                                onClick={async () => {
+                                    const total = sizeDistRows.reduce((s, r) => s + (Number(r.quantity) || 0), 0);
+                                    const expected = Number(pendingProductData?.totalQty || 0);
+
+                                    if (total !== expected) {
+                                        alert(`Jami son ${expected} ga teng bo‘lishi kerak! Hozir ${total} ta.`);
+                                        return;
+                                    }
+                                    if (total <= 0) {
+                                        alert("Kamida 1 ta tovar bo‘lishi kerak!");
+                                        return;
+                                    }
+
+                                    const size_quantities = sizeDistRows.map(r => ({
+                                        size: r.size,
+                                        quantity: Number(r.quantity) || 0
+                                    }));
+
+                                    if (sizeDistMode === 'add') {
+                                        await submitAddProduct({ size_quantities });
+                                    } else {
+                                        await submitEditProduct({ size_quantities });
+                                    }
+                                }}
+                            >
+                                {isSubmitting ? "Saqlanmoqda..." : "Saqlash"}
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-danger"
+                                onClick={() => {
+                                    setSizeDistModal(false);
+                                    setSizeDistRows([]);
+                                    setPendingProductData(null);
+                                }}
+                            >
+                                Bekor qilish
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* ===================== ODDIY SOTISH MODALI ===================== */}
             {sellModal && (
                 <div className="modal-overlay">
@@ -2260,13 +2426,10 @@ const DashboardPage = () => {
                                 <label>Razmerlar (vergul bilan) :</label>
                                 <input
                                     type="text"
-                                    value={editProduct.sizes}
-                                    onChange={(e) => setEditProduct({
-                                        ...editProduct,
-                                        sizes: e.target.value
-                                    })}
+                                    value={newProduct.sizes}
+                                    onChange={(e) => setNewProduct({ ...newProduct, sizes: e.target.value })}
                                     className="form-input"
-                                    placeholder="39, 40, 41 yoki S, M, L"
+                                    placeholder="39, 40, 41, 42 yoki L, M, XL"
                                 />
                                 <small style={{ color: '#64748b' }}>
                                     Bir nechta razmer bo'lsa, umumiy son razmerlarga taqsimlanadi.
@@ -2277,14 +2440,11 @@ const DashboardPage = () => {
                                 <label>Jami soni * :</label>
                                 <input
                                     type="number"
-                                    min="0"
-                                    value={editProduct.quantity}
-                                    onChange={(e) => setEditProduct({
-                                        ...editProduct,
-                                        quantity: e.target.value
-                                    })}
+                                    value={newProduct.quantity}
+                                    onChange={(e) => setNewProduct({ ...newProduct, quantity: e.target.value })}
                                     required
                                     className="form-input"
+                                    min="1"
                                 />
                             </div>
 
