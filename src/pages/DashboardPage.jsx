@@ -1221,11 +1221,19 @@ const DashboardPage = () => {
                                             <td className="col-hide-narrow">{formatSum(g.cost_price)} so'm</td>
                                             <td className="col-hide-mobile">
                                                 <div className="size-badge-list">
-                                                    {g.variants.map((v) => (
-                                                        <span key={v.id} className={`size-badge ${v.quantity < 3 ? "size-badge-low" : ""}`}>
-                                                            {v.size ? v.size : "Standart"}: {v.quantity} ta
-                                                        </span>
-                                                    ))}
+                                                    {(() => {
+                                                        // Bir xil razmerlarni birlashtirish (QR alohida qoladi)
+                                                        const sizeMap = {};
+                                                        g.variants.forEach((v) => {
+                                                            const key = v.size || 'Standart';
+                                                            sizeMap[key] = (sizeMap[key] || 0) + (Number(v.quantity) || 0);
+                                                        });
+                                                        return Object.entries(sizeMap).map(([size, qty]) => (
+                                                            <span key={size} className={`size-badge ${qty < 3 ? "size-badge-low" : ""}`}>
+                                                                {size}: {qty} ta
+                                                            </span>
+                                                        ));
+                                                    })()}
                                                 </div>
                                             </td>
                                             <td className="col-hide-mobile">
