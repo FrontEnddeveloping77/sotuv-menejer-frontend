@@ -114,15 +114,6 @@ const DashboardPage = () => {
     const [sizeDistMode, setSizeDistMode] = useState('add'); // 'add' | 'edit'
     const [pendingProductData, setPendingProductData] = useState(null);
 
-    // Tovar qo‘shishda razmer + son (dinamik qatorlar)
-    const emptySizeRow = () => ({ size: '', quantity: 1 });
-    const [sizeRows, setSizeRows] = useState([emptySizeRow()]);
-
-    // Tovar qo‘shishda razmer taqsimoti (agar teng bo‘lmasa)
-    const [sizeDistModal, setSizeDistModal] = useState(false);
-    const [sizeDistRows, setSizeDistRows] = useState([]); // [{ size, quantity }]
-    const [pendingProductBody, setPendingProductBody] = useState(null);
-
     const [imagePreview, setImagePreview] = useState('');
     const [imageFileName, setImageFileName] = useState('');
 
@@ -534,6 +525,12 @@ const DashboardPage = () => {
                     sizeList.push(clean);
                 }
             });
+        }
+
+        // Razmerlar soni tovar sonidan ko‘p bo‘lsa
+        if (sizeList.length > totalQty) {
+            alert(`Siz kiritgan razmerlarning soni (${sizeList.length}) tovar sonidan (${totalQty}) ko‘p!`);
+            return;
         }
 
         if (sizeList.length <= 1) {
@@ -1507,70 +1504,96 @@ const DashboardPage = () => {
                                     )}
                                 </div>
                             </div>
-                            {/* ===== RAZMER + SON (dinamik) ===== */}
+                            {/* ===== RAZMERLAR + JAMI SONI ===== */}
                             <div className="form-group">
-                                <label>Razmerlar va soni * :</label>
-                                <p style={{ fontSize: 13, color: '#64748b', marginBottom: 8 }}>
-                                    Har bir razmer uchun nechta dona ekanini o‘zingiz yozing. Avtomatik taqsimlanmaydi.
-                                </p>
-
-                                {sizeRows.map((row, index) => (
-                                    <div key={index} className="cart-row" style={{ marginBottom: 10, display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                                        <div className="form-group" style={{ flex: 1, minWidth: 120 }}>
-                                            <label style={{ fontSize: 13 }}>Razmer {index + 1}</label>
-                                            <input
-                                                type="text"
-                                                value={row.size}
-                                                onChange={(e) => {
-                                                    const next = [...sizeRows];
-                                                    next[index] = { ...next[index], size: e.target.value };
-                                                    setSizeRows(next);
-                                                }}
-                                                className="form-input"
-                                                placeholder="39 yoki L / M (bo‘sh = Standart)"
-                                            />
-                                        </div>
-                                        <div className="form-group" style={{ width: 110 }}>
-                                            <label style={{ fontSize: 13 }}>Soni *</label>
-                                            <input
-                                                type="number"
-                                                min="1"
-                                                value={row.quantity}
-                                                onChange={(e) => {
-                                                    const next = [...sizeRows];
-                                                    next[index] = { ...next[index], quantity: e.target.value };
-                                                    setSizeRows(next);
-                                                }}
-                                                className="form-input"
-                                                required
-                                            />
-                                        </div>
-                                        {sizeRows.length > 1 && (
-                                            <button
-                                                type="button"
-                                                className="btn btn-remove-row"
-                                                style={{ marginBottom: 2 }}
-                                                onClick={() => setSizeRows(sizeRows.filter((_, i) => i !== index))}
-                                            >
-                                                ✕
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
-
-                                <button
-                                    type="button"
-                                    className="btn btn-add-row"
-                                    style={{ marginTop: 4 }}
-                                    onClick={() => setSizeRows([...sizeRows, emptySizeRow()])}
-                                >
-                                    + Yana razmer qo‘shish
-                                </button>
-
-                                <div style={{ marginTop: 10, fontWeight: 600, color: '#0f172a' }}>
-                                    Jami: {sizeRows.reduce((s, r) => s + (Number(r.quantity) || 0), 0)} dona
-                                </div>
+                                <label>Razmerlar (vergul bilan) :</label>
+                                <input
+                                    type="text"
+                                    value={newProduct.sizes}
+                                    onChange={(e) => setNewProduct({ ...newProduct, sizes: e.target.value })}
+                                    className="form-input"
+                                    placeholder="39, 40, 41, 42 yoki L, M, XL"
+                                />
+                                <small style={{ color: '#64748b' }}>
+                                    Bir nechta razmer bo‘lsa, umumiy son razmerlarga taqsimlanadi.
+                                </small>
                             </div>
+
+                            <div className="form-group">
+                                <label>Jami soni * :</label>
+                                <input
+                                    type="number"
+                                    value={newProduct.quantity}
+                                    onChange={(e) => setNewProduct({ ...newProduct, quantity: e.target.value })}
+                                    required
+                                    className="form-input"
+                                    min="1"
+                                />
+                            </div>
+
+                            {/* ===== TENG TAQSIMOT PREVIEW / OGOHLANTIRISH ===== */}
+                            {(() => {
+                                const sizesStr = newProduct.sizes || '';
+                                const totalQty = Number(newProduct.quantity) || 0;
+                                if (!sizesStr || totalQty <= 0) return null;
+
+                                const sizeList = [];
+                                const seen = new Set();
+                                sizesStr.split(',').forEach(item => {
+                                    const clean = item.trim();
+                                    if (clean && !seen.has(clean.toLowerCase())) {
+                                        seen.add(clean.toLowerCase());
+                                        sizeList.push(clean);
+                                    }
+                                });
+
+                                if (sizeList.length === 0) return null;
+
+                                if (sizeList.length > totalQty) {
+                                    return (
+                                        <div style={{
+                                            marginTop: 8, marginBottom: 12, padding: '10px 14px',
+                                            background: '#fef2f2', border: '1px solid #fecaca',
+                                            borderRadius: 10, fontSize: 14, color: '#b91c1c'
+                                        }}>
+                                            ⚠️ Razmerlar soni ({sizeList.length}) tovar sonidan ({totalQty}) ko‘p!
+                                        </div>
+                                    );
+                                }
+
+                                if (totalQty % sizeList.length !== 0) {
+                                    return (
+                                        <div style={{
+                                            marginTop: 8, marginBottom: 12, padding: '10px 14px',
+                                            background: '#fffbeb', border: '1px solid #fde68a',
+                                            borderRadius: 10, fontSize: 14, color: '#92400e'
+                                        }}>
+                                            ℹ️ Son razmerlarga teng bo‘linmaydi. Saqlashda har bir razmer uchun sonni belgilaysiz.
+                                        </div>
+                                    );
+                                }
+
+                                const per = totalQty / sizeList.length;
+                                return (
+                                    <div style={{
+                                        marginTop: 8, marginBottom: 12, padding: '12px 14px',
+                                        background: '#f0fdf4', border: '1px solid #bbf7d0',
+                                        borderRadius: 10, fontSize: 14
+                                    }}>
+                                        <div style={{ fontWeight: 600, marginBottom: 6, color: '#166534' }}>
+                                            Teng taqsimot:
+                                        </div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px' }}>
+                                            {sizeList.map((s, i) => (
+                                                <span key={i} style={{ color: '#15803d' }}>
+                                                    <b>{s}</b>: {per} ta
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
                             <div className="form-group">
                                 <label>To'lov turi * :</label>
                                 <select value={newProduct.payment_type} onChange={(e) => setNewProduct({ ...newProduct, payment_type: e.target.value })} className="form-input">
@@ -1597,87 +1620,6 @@ const DashboardPage = () => {
                                 <button type="button" onClick={() => setAddProductModal(false)} className="btn btn-danger">Bekor qilish</button>
                             </div>
                         </form>
-                    </div>
-                </div>
-            )}
-
-            {/* ===== RAZMER SONLARINI BELGILASH MODALI ===== */}
-            {sizeDistModal && (
-                <div className="modal-overlay">
-                    <div className="modal-box">
-                        <div className="modal-header">
-                            <h3>📏 Har bir razmer uchun sonni belgilang</h3>
-                        </div>
-                        <p style={{ fontSize: 14, color: '#64748b', marginBottom: 12 }}>
-                            Umumiy son: <b>{pendingProductBody?.quantity || 0}</b> dona.
-                            Har bir razmerga qancha qo‘yishni o‘zingiz yozing. Jami teng bo‘lishi shart.
-                        </p>
-
-                        {sizeDistRows.map((row, index) => (
-                            <div key={index} className="form-group" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                                <label style={{ minWidth: 70, fontWeight: 600 }}>{row.size || 'Standart'}</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    value={row.quantity}
-                                    onChange={(e) => {
-                                        const next = [...sizeDistRows];
-                                        next[index] = { ...next[index], quantity: e.target.value };
-                                        setSizeDistRows(next);
-                                    }}
-                                    className="form-input"
-                                    style={{ maxWidth: 120 }}
-                                />
-                                <span>dona</span>
-                            </div>
-                        ))}
-
-                        <div style={{ marginTop: 12, fontWeight: 600 }}>
-                            Jami: {sizeDistRows.reduce((s, r) => s + (Number(r.quantity) || 0), 0)} / {pendingProductBody?.quantity || 0} dona
-                        </div>
-
-                        <div className="modal-actions" style={{ marginTop: 16 }}>
-                            <button
-                                type="button"
-                                className="btn btn-primary"
-                                disabled={isSubmitting}
-                                onClick={async () => {
-                                    const total = sizeDistRows.reduce((s, r) => s + (Number(r.quantity) || 0), 0);
-                                    const expected = Number(pendingProductBody?.quantity || 0);
-
-                                    if (total !== expected) {
-                                        alert(`Jami son ${expected} ga teng bo‘lishi kerak! Hozir ${total} ta.`);
-                                        return;
-                                    }
-
-                                    if (total <= 0) {
-                                        alert("Kamida 1 ta tovar bo‘lishi kerak!");
-                                        return;
-                                    }
-
-                                    await submitProduct({
-                                        ...pendingProductBody,
-                                        size_quantities: sizeDistRows.map(r => ({
-                                            size: r.size,
-                                            quantity: Number(r.quantity) || 0
-                                        }))
-                                    });
-                                }}
-                            >
-                                {isSubmitting ? "Saqlanmoqda..." : "Saqlash"}
-                            </button>
-                            <button
-                                type="button"
-                                className="btn btn-danger"
-                                onClick={() => {
-                                    setSizeDistModal(false);
-                                    setSizeDistRows([]);
-                                    setPendingProductBody(null);
-                                }}
-                            >
-                                Bekor qilish
-                            </button>
-                        </div>
                     </div>
                 </div>
             )}
@@ -2426,8 +2368,8 @@ const DashboardPage = () => {
                                 <label>Razmerlar (vergul bilan) :</label>
                                 <input
                                     type="text"
-                                    value={newProduct.sizes}
-                                    onChange={(e) => setNewProduct({ ...newProduct, sizes: e.target.value })}
+                                    value={editProduct.sizes}
+                                    onChange={(e) => setEditProduct({ ...editProduct, sizes: e.target.value })}
                                     className="form-input"
                                     placeholder="39, 40, 41, 42 yoki L, M, XL"
                                 />
@@ -2440,13 +2382,66 @@ const DashboardPage = () => {
                                 <label>Jami soni * :</label>
                                 <input
                                     type="number"
-                                    value={newProduct.quantity}
-                                    onChange={(e) => setNewProduct({ ...newProduct, quantity: e.target.value })}
+                                    value={editProduct.quantity}
+                                    onChange={(e) => setEditProduct({ ...editProduct, quantity: e.target.value })}
                                     required
                                     className="form-input"
-                                    min="1"
+                                    min="0"
                                 />
                             </div>
+
+                            {/* ===== TENG TAQSIMOT PREVIEW (Edit) ===== */}
+                            {(() => {
+                                const sizesStr = editProduct.sizes || '';
+                                const totalQty = Number(editProduct.quantity) || 0;
+                                if (!sizesStr || totalQty <= 0) return null;
+
+                                const sizeList = [];
+                                const seen = new Set();
+                                sizesStr.split(',').forEach(item => {
+                                    const clean = item.trim();
+                                    if (clean && !seen.has(clean.toLowerCase())) {
+                                        seen.add(clean.toLowerCase());
+                                        sizeList.push(clean);
+                                    }
+                                });
+
+                                if (sizeList.length === 0) return null;
+
+                                if (sizeList.length > totalQty) {
+                                    return (
+                                        <div style={{
+                                            marginTop: 8, marginBottom: 12, padding: '10px 14px',
+                                            background: '#fef2f2', border: '1px solid #fecaca',
+                                            borderRadius: 10, fontSize: 14, color: '#b91c1c'
+                                        }}>
+                                            ⚠️ Razmerlar soni ({sizeList.length}) tovar sonidan ({totalQty}) ko‘p!
+                                        </div>
+                                    );
+                                }
+
+                                if (totalQty % sizeList.length !== 0) return null;
+
+                                const per = totalQty / sizeList.length;
+                                return (
+                                    <div style={{
+                                        marginTop: 8, marginBottom: 12, padding: '12px 14px',
+                                        background: '#f0fdf4', border: '1px solid #bbf7d0',
+                                        borderRadius: 10, fontSize: 14
+                                    }}>
+                                        <div style={{ fontWeight: 600, marginBottom: 6, color: '#166534' }}>
+                                            Teng taqsimot:
+                                        </div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px' }}>
+                                            {sizeList.map((s, i) => (
+                                                <span key={i} style={{ color: '#15803d' }}>
+                                                    <b>{s}</b>: {per} ta
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
 
                             <div className="form-group form-group-image">
                                 <label>Tovar rasmi :</label>
