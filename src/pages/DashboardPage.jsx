@@ -87,14 +87,36 @@ const DashboardPage = () => {
     });
 
     const [editProduct, setEditProduct] = useState({
-        local_id: '', category: '', name: '', cost_price: '', color: '', sizes: '', quantity: ''
+        local_id: '',
+        category: '',
+        name: '',
+        cost_price: '',
+        selling_price: '',
+        color: '',
+        sizes: '',
+        quantity: '',
+        image_url: '',
+        remove_image: false
     });
+
+    const [editImagePreview, setEditImagePreview] = useState('');
+    const [editImageFileName, setEditImageFileName] = useState('');
 
     const [newProduct, setNewProduct] = useState({
         category: '', name: '', cost_price: '', color: '', sizes: '', quantity: '',
         payment_type: 'cash', supplier: '', paid_amount: '', supplier_phone: '', selling_price: '',
         image_url: '',
     });
+
+    // Tovar qo‘shishda razmer + son (dinamik qatorlar)
+    const emptySizeRow = () => ({ size: '', quantity: 1 });
+    const [sizeRows, setSizeRows] = useState([emptySizeRow()]);
+
+    // Tovar qo‘shishda razmer taqsimoti (agar teng bo‘lmasa)
+    const [sizeDistModal, setSizeDistModal] = useState(false);
+    const [sizeDistRows, setSizeDistRows] = useState([]); // [{ size, quantity }]
+    const [pendingProductBody, setPendingProductBody] = useState(null);
+
     const [imagePreview, setImagePreview] = useState('');
     const [imageFileName, setImageFileName] = useState('');
 
@@ -268,6 +290,7 @@ const DashboardPage = () => {
                     color: p.color,
                     cost_price: p.cost_price,
                     selling_price: p.selling_price ?? null,
+                    image_url: p.image_url || null,
                     createdAt: p.created_at || null,
                     variants: []
                 });
@@ -380,41 +403,111 @@ const DashboardPage = () => {
             alert(`Bu tovar qo'shilganiga ${PRODUCT_EDIT_WINDOW_DAYS} kundan ko'p vaqt o'tgan, tahrirlab bo'lmaydi!`);
             return;
         }
+
+        const imageUrl = group.image_url || '';
+
         setEditProduct({
             local_id: group.local_id,
             category: group.category || '',
             name: group.name || '',
             cost_price: group.cost_price || '',
+            selling_price: group.selling_price != null ? group.selling_price : '',
             color: group.color || '',
             sizes: group.variants.map((v) => v.size).filter(Boolean).join(', '),
-            quantity: group.variants.reduce((sum, v) => sum + Number(v.quantity || 0), 0)
+            quantity: group.variants.reduce((sum, v) => sum + Number(v.quantity || 0), 0),
+            image_url: imageUrl
         });
+
+        setEditImagePreview(imageUrl);
+        setEditImageFileName(imageUrl ? 'Mavjud rasm' : '');
         setEditModal(true);
+    };
+
+    const handleEditProductImageChange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            const dataUrl = await compressImage(file);
+
+            setEditProduct((prev) => ({
+                ...prev,
+                image_url: dataUrl
+            }));
+            setEditImagePreview(dataUrl);
+            setEditImageFileName(file.name || 'Rasm tanlandi');
+        } catch (err) {
+            alert(err.message || "Rasm yuklashda xatolik!");
+            e.target.value = '';
+        }
     };
 
     const handleEditProduct = async (e) => {
         e.preventDefault();
-        if (!editProduct.local_id) { alert("Tovar ID topilmadi!"); return; }
-        if (!editProduct.name.trim()) { alert("Tovar nomini kiriting!"); return; }
-        if (!editProduct.cost_price || Number(editProduct.cost_price) < 0) { alert("Tannarxni to'g'ri kiriting!"); return; }
-        if (!editProduct.quantity || Number(editProduct.quantity) < 0) { alert("Tovar sonini to'g'ri kiriting!"); return; }
+
+        if (!editProduct.local_id) {
+            alert("Tovar ID topilmadi!");
+            return;
+        }
+
+        if (!editProduct.name.trim()) {
+            alert("Tovar nomini kiriting!");
+            return;
+        }
+
+        if (editProduct.cost_price === '' || Number(editProduct.cost_price) < 0) {
+            alert("Tannarxni to'g'ri kiriting!");
+            return;
+        }
+
+        if (editProduct.quantity === '' || Number(editProduct.quantity) < 0) {
+            alert("Tovar sonini to'g'ri kiriting!");
+            return;
+        }
 
         setIsSubmitting(true);
+
         try {
-            const res = await api.put(`/api/products/${editProduct.local_id}`, {
+            const body = {
                 category: editProduct.category || 'Umumiy',
                 name: editProduct.name.trim(),
                 color: editProduct.color.trim(),
                 cost_price: Number(editProduct.cost_price),
                 quantity: Number(editProduct.quantity),
-                sizes: editProduct.sizes
-            });
+                sizes: editProduct.sizes,
+                image_url: editProduct.image_url || null
+            };
+
+            if (editProduct.selling_price !== '' && editProduct.selling_price != null) {
+                body.selling_price = Number(editProduct.selling_price);
+            } else {
+                body.selling_price = null;
+            }
+
+            const res = await api.put(`/api/products/${editProduct.local_id}`, body);
+
             setEditModal(false);
-            setEditProduct({ local_id: '', category: '', name: '', cost_price: '', color: '', sizes: '', quantity: '' });
+            setEditProduct({
+                local_id: '',
+                category: '',
+                name: '',
+                cost_price: '',
+                selling_price: '',
+                color: '',
+                sizes: '',
+                quantity: '',
+                image_url: ''
+            });
+            setEditImagePreview('');
+            setEditImageFileName('');
+
             await fetchData(false);
             alert(res.data?.message || "Tovar muvaffaqiyatli tahrirlandi!");
         } catch (err) {
-            alert(err.response?.data?.message || "Tovarni tahrirlashda xatolik yuz berdi!");
+            alert(
+                err.response?.data?.message ||
+                "Tovarni tahrirlashda xatolik yuz berdi!"
+            );
         } finally {
             setIsSubmitting(false);
         }
@@ -422,14 +515,79 @@ const DashboardPage = () => {
 
     const handleAddProduct = async (e) => {
         e.preventDefault();
+
+        if (!newProduct.category?.trim()) { alert("Kategoriya kiritilishi shart!"); return; }
+        if (!newProduct.name?.trim()) { alert("Tovar nomi kiritilishi shart!"); return; }
+        if (!newProduct.cost_price && newProduct.cost_price !== 0) { alert("Kelgan narx kiritilishi shart!"); return; }
+        if (!newProduct.quantity || Number(newProduct.quantity) <= 0) { alert("Umumiy soni 0 dan katta bo‘lishi kerak!"); return; }
+
+        const totalQty = Number(newProduct.quantity) || 0;
+
+        // Razmerlarni ajratish
+        let sizeList = [];
+        if (newProduct.sizes && typeof newProduct.sizes === 'string') {
+            const seen = new Set();
+            newProduct.sizes.split(',').forEach((item) => {
+                const clean = item.trim();
+                if (clean && !seen.has(clean.toLowerCase())) {
+                    seen.add(clean.toLowerCase());
+                    sizeList.push(clean);
+                }
+            });
+        }
+
+        // Agar razmer yo‘q yoki bitta bo‘lsa — oddiy yuborish
+        if (sizeList.length <= 1) {
+            await submitProduct({
+                size_quantities: sizeList.length === 1
+                    ? [{ size: sizeList[0], quantity: totalQty }]
+                    : [{ size: '', quantity: totalQty }]
+            });
+            return;
+        }
+
+        // Ko‘p razmer
+        if (totalQty % sizeList.length === 0) {
+            // Teng taqsimlash mumkin → avtomatik
+            const perSize = totalQty / sizeList.length;
+            const size_quantities = sizeList.map(s => ({ size: s, quantity: perSize }));
+            await submitProduct({ size_quantities });
+            return;
+        }
+
+        // Teng emas → foydalanuvchidan so‘rash
+        // Avval teng + qoldiqni birinchi razmerlarga qo‘yib prefill qilamiz
+        const base = Math.floor(totalQty / sizeList.length);
+        const remainder = totalQty % sizeList.length;
+
+        const prefilled = sizeList.map((s, i) => ({
+            size: s,
+            quantity: base + (i < remainder ? 1 : 0)
+        }));
+
+        setSizeDistRows(prefilled);
+        setPendingProductBody({
+            category: newProduct.category.trim(),
+            name: newProduct.name.trim(),
+            color: newProduct.color.trim(),
+            cost_price: Number(newProduct.cost_price) || 0,
+            quantity: totalQty,
+            sizes: sizeList.join(', '),
+            payment_type: newProduct.payment_type || 'cash',
+            supplier: newProduct.supplier.trim(),
+            supplier_phone: newProduct.supplier_phone.trim(),
+            paid_amount: newProduct.payment_type === 'credit' ? Number(newProduct.paid_amount) || 0 : 0,
+            selling_price: newProduct.selling_price !== '' && newProduct.selling_price != null
+                ? Number(newProduct.selling_price) : null,
+            image_url: newProduct.image_url || null,
+        });
+        setSizeDistModal(true);
+    };
+
+    // Yordamchi: haqiqiy yuborish
+    const submitProduct = async (extra = {}) => {
         setIsSubmitting(true);
         try {
-            if (!newProduct.category?.trim()) { alert("Kategoriya kiritilishi shart!"); return; }
-            if (!newProduct.name?.trim()) { alert("Tovar nomi kiritilishi shart!"); return; }
-            if (!newProduct.cost_price && newProduct.cost_price !== 0) { alert("Kelgan narx kiritilishi shart!"); return; }
-            if (!newProduct.quantity || Number(newProduct.quantity) <= 0) { alert("Umumiy soni 0 dan katta bo‘lishi kerak!"); return; }
-            // Kimdan / telefon — ixtiyoriy (naqd va nasiya uchun)
-
             const body = {
                 category: newProduct.category.trim(),
                 name: newProduct.name.trim(),
@@ -441,15 +599,33 @@ const DashboardPage = () => {
                 supplier: newProduct.supplier.trim(),
                 supplier_phone: newProduct.supplier_phone.trim(),
                 paid_amount: newProduct.payment_type === 'credit' ? Number(newProduct.paid_amount) || 0 : 0,
-                selling_price: newProduct.selling_price !== '' && newProduct.selling_price != null ? Number(newProduct.selling_price) : null,
+                selling_price: newProduct.selling_price !== '' && newProduct.selling_price != null
+                    ? Number(newProduct.selling_price) : null,
                 image_url: newProduct.image_url || null,
+                ...extra
             };
 
+            // Agar size_quantities berilgan bo‘lsa — uni ustun qilamiz
+            if (extra.size_quantities) {
+                body.size_quantities = extra.size_quantities;
+                body.quantity = extra.size_quantities.reduce((s, r) => s + Number(r.quantity || 0), 0);
+                body.sizes = extra.size_quantities.map(r => r.size).filter(Boolean).join(', ');
+            }
+
             const res = await api.post('/api/products', body);
+
             setAddProductModal(false);
+            setSizeDistModal(false);
             setImagePreview('');
             setImageFileName('');
-            setNewProduct({ category: '', name: '', color: '', cost_price: '', sizes: '', quantity: '', payment_type: 'cash', supplier: '', paid_amount: '', supplier_phone: '', selling_price: '', image_url: '' });
+            setNewProduct({
+                category: '', name: '', color: '', cost_price: '', sizes: '', quantity: '',
+                payment_type: 'cash', supplier: '', paid_amount: '', supplier_phone: '',
+                selling_price: '', image_url: ''
+            });
+            setSizeDistRows([]);
+            setPendingProductBody(null);
+
             await fetchData(false);
             const displayId = res.data?.local_id || res.data?.product?.local_id || '';
             alert(res.data?.message || `Tovar saqlandi! Biriktirilgan ID: #${displayId}`);
@@ -928,8 +1104,8 @@ const DashboardPage = () => {
                 <div className="stat-card">
                     <h4>Umumiy Hisobot (Butun Davr)</h4>
                     <p><b>Jami sotilgan:</b> {stats.totalSold || 0} dona</p>
-                    <p><b>Jami tushum:</b> {formatSum(stats.totalRevenue)} so'm</p>
-                    <p><b>Jami sof foyda:</b> <span className={(stats.totalProfit || 0) >= 0 ? "profit-plus" : "profit-minus"}>{formatSum(stats.totalProfit)} so'm</span></p>
+                    <p><b>Tushum:</b> {formatSum(stats.totalRevenue)} so'm</p>
+                    <p><b>Sof Foyda:</b> <span className={(stats.totalProfit || 0) >= 0 ? "profit-plus" : "profit-minus"}>{formatSum(stats.totalProfit)} so'm</span></p>
                 </div>
                 <div className="stat-card">
                     <h4>💳 Jami Qarzimiz</h4>
@@ -1263,13 +1439,69 @@ const DashboardPage = () => {
                                     )}
                                 </div>
                             </div>
+                            {/* ===== RAZMER + SON (dinamik) ===== */}
                             <div className="form-group">
-                                <label>Razmerlar (vergul bilan) :</label>
-                                <input type="text" value={newProduct.sizes} onChange={(e) => setNewProduct({ ...newProduct, sizes: e.target.value })} className="form-input" placeholder="39, 40, 41, 42 yoki L, M, XL" />
-                            </div>
-                            <div className="form-group">
-                                <label>Umumiy soni * :</label>
-                                <input type="number" value={newProduct.quantity} onChange={(e) => setNewProduct({ ...newProduct, quantity: e.target.value })} required className="form-input" min="1" />
+                                <label>Razmerlar va soni * :</label>
+                                <p style={{ fontSize: 13, color: '#64748b', marginBottom: 8 }}>
+                                    Har bir razmer uchun nechta dona ekanini o‘zingiz yozing. Avtomatik taqsimlanmaydi.
+                                </p>
+
+                                {sizeRows.map((row, index) => (
+                                    <div key={index} className="cart-row" style={{ marginBottom: 10, display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                                        <div className="form-group" style={{ flex: 1, minWidth: 120 }}>
+                                            <label style={{ fontSize: 13 }}>Razmer {index + 1}</label>
+                                            <input
+                                                type="text"
+                                                value={row.size}
+                                                onChange={(e) => {
+                                                    const next = [...sizeRows];
+                                                    next[index] = { ...next[index], size: e.target.value };
+                                                    setSizeRows(next);
+                                                }}
+                                                className="form-input"
+                                                placeholder="39 yoki L / M (bo‘sh = Standart)"
+                                            />
+                                        </div>
+                                        <div className="form-group" style={{ width: 110 }}>
+                                            <label style={{ fontSize: 13 }}>Soni *</label>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                value={row.quantity}
+                                                onChange={(e) => {
+                                                    const next = [...sizeRows];
+                                                    next[index] = { ...next[index], quantity: e.target.value };
+                                                    setSizeRows(next);
+                                                }}
+                                                className="form-input"
+                                                required
+                                            />
+                                        </div>
+                                        {sizeRows.length > 1 && (
+                                            <button
+                                                type="button"
+                                                className="btn btn-remove-row"
+                                                style={{ marginBottom: 2 }}
+                                                onClick={() => setSizeRows(sizeRows.filter((_, i) => i !== index))}
+                                            >
+                                                ✕
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+
+                                <button
+                                    type="button"
+                                    className="btn btn-add-row"
+                                    style={{ marginTop: 4 }}
+                                    onClick={() => setSizeRows([...sizeRows, emptySizeRow()])}
+                                >
+                                    + Yana razmer qo‘shish
+                                </button>
+
+                                <div style={{ marginTop: 10, fontWeight: 600, color: '#0f172a' }}>
+                                    Jami: {sizeRows.reduce((s, r) => s + (Number(r.quantity) || 0), 0)} dona
+                                </div>
                             </div>
                             <div className="form-group">
                                 <label>To'lov turi * :</label>
@@ -1297,6 +1529,87 @@ const DashboardPage = () => {
                                 <button type="button" onClick={() => setAddProductModal(false)} className="btn btn-danger">Bekor qilish</button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ===== RAZMER SONLARINI BELGILASH MODALI ===== */}
+            {sizeDistModal && (
+                <div className="modal-overlay">
+                    <div className="modal-box">
+                        <div className="modal-header">
+                            <h3>📏 Har bir razmer uchun sonni belgilang</h3>
+                        </div>
+                        <p style={{ fontSize: 14, color: '#64748b', marginBottom: 12 }}>
+                            Umumiy son: <b>{pendingProductBody?.quantity || 0}</b> dona.
+                            Har bir razmerga qancha qo‘yishni o‘zingiz yozing. Jami teng bo‘lishi shart.
+                        </p>
+
+                        {sizeDistRows.map((row, index) => (
+                            <div key={index} className="form-group" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                                <label style={{ minWidth: 70, fontWeight: 600 }}>{row.size || 'Standart'}</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={row.quantity}
+                                    onChange={(e) => {
+                                        const next = [...sizeDistRows];
+                                        next[index] = { ...next[index], quantity: e.target.value };
+                                        setSizeDistRows(next);
+                                    }}
+                                    className="form-input"
+                                    style={{ maxWidth: 120 }}
+                                />
+                                <span>dona</span>
+                            </div>
+                        ))}
+
+                        <div style={{ marginTop: 12, fontWeight: 600 }}>
+                            Jami: {sizeDistRows.reduce((s, r) => s + (Number(r.quantity) || 0), 0)} / {pendingProductBody?.quantity || 0} dona
+                        </div>
+
+                        <div className="modal-actions" style={{ marginTop: 16 }}>
+                            <button
+                                type="button"
+                                className="btn btn-primary"
+                                disabled={isSubmitting}
+                                onClick={async () => {
+                                    const total = sizeDistRows.reduce((s, r) => s + (Number(r.quantity) || 0), 0);
+                                    const expected = Number(pendingProductBody?.quantity || 0);
+
+                                    if (total !== expected) {
+                                        alert(`Jami son ${expected} ga teng bo‘lishi kerak! Hozir ${total} ta.`);
+                                        return;
+                                    }
+
+                                    if (total <= 0) {
+                                        alert("Kamida 1 ta tovar bo‘lishi kerak!");
+                                        return;
+                                    }
+
+                                    await submitProduct({
+                                        ...pendingProductBody,
+                                        size_quantities: sizeDistRows.map(r => ({
+                                            size: r.size,
+                                            quantity: Number(r.quantity) || 0
+                                        }))
+                                    });
+                                }}
+                            >
+                                {isSubmitting ? "Saqlanmoqda..." : "Saqlash"}
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-danger"
+                                onClick={() => {
+                                    setSizeDistModal(false);
+                                    setSizeDistRows([]);
+                                    setPendingProductBody(null);
+                                }}
+                            >
+                                Bekor qilish
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -1504,6 +1817,19 @@ const DashboardPage = () => {
                                     <div className="info-banner">Vozvrat qilinadigan sotuv yo'q</div>
                                 ) : salesList.filter(s => !s.returned).map((sale) => (
                                     <div key={sale.id} className="debt-card">
+                                        {sale.image_url && (
+                                            <img
+                                                src={sale.image_url}
+                                                alt={sale.title}
+                                                style={{
+                                                    width: '100%',
+                                                    maxHeight: 180,
+                                                    objectFit: 'contain',
+                                                    borderRadius: 10,
+                                                    marginBottom: 10
+                                                }}
+                                            />
+                                        )}
                                         <strong>{sale.title}</strong>
                                         <div>{sale.size || 'Standart'} — {sale.quantity} dona — {formatSum(sale.selling_price)} so'm</div>
                                         <div style={{ fontSize: 13, color: '#64748b' }}>{new Date(sale.sold_at).toLocaleString('uz-UZ')}</div>
@@ -1568,7 +1894,6 @@ const DashboardPage = () => {
                                                 <div className="debt-phone" style={{ marginTop: 6 }}>📞 {debt.supplier_phone}</div>
                                             )}
 
-                                            {/* Kategoriyalar */}
                                             {(debt.categories || []).length > 0 && (
                                                 <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                                                     {debt.categories.map((cat, i) => (
@@ -1854,36 +2179,194 @@ const DashboardPage = () => {
             {/* ===================== TOVARNI TAHRIRLASH MODALI ===================== */}
             {editModal && (
                 <div className="modal-overlay">
-                    <div className="modal-box">
-                        <div className="modal-header"><h3>✏️ Tovarni tahrirlash</h3></div>
+                    <div className="modal-box modal-box-wide">
+                        <div className="modal-header">
+                            <h3>✏️ Tovarni tahrirlash</h3>
+                        </div>
+
                         <form onSubmit={handleEditProduct} className="product-form">
                             <div className="form-group">
-                                <label>Kategoriya :</label>
-                                <input type="text" value={editProduct.category} onChange={(e) => setEditProduct({ ...editProduct, category: e.target.value })} className="form-input" />
+                                <label>Kategoriya * :</label>
+                                <input
+                                    type="text"
+                                    value={editProduct.category}
+                                    onChange={(e) => setEditProduct({
+                                        ...editProduct,
+                                        category: e.target.value
+                                    })}
+                                    className="form-input"
+                                    required
+                                />
                             </div>
+
                             <div className="form-group">
                                 <label>Nomi * :</label>
-                                <input type="text" value={editProduct.name} onChange={(e) => setEditProduct({ ...editProduct, name: e.target.value })} required className="form-input" />
+                                <input
+                                    type="text"
+                                    value={editProduct.name}
+                                    onChange={(e) => setEditProduct({
+                                        ...editProduct,
+                                        name: e.target.value
+                                    })}
+                                    required
+                                    className="form-input"
+                                />
                             </div>
+
                             <div className="form-group">
                                 <label>Rang :</label>
-                                <input type="text" value={editProduct.color} onChange={(e) => setEditProduct({ ...editProduct, color: e.target.value })} className="form-input" />
+                                <input
+                                    type="text"
+                                    value={editProduct.color}
+                                    onChange={(e) => setEditProduct({
+                                        ...editProduct,
+                                        color: e.target.value
+                                    })}
+                                    className="form-input"
+                                />
                             </div>
+
                             <div className="form-group">
                                 <label>Tannarx * :</label>
-                                <input type="number" value={editProduct.cost_price} onChange={(e) => setEditProduct({ ...editProduct, cost_price: e.target.value })} required className="form-input" />
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={editProduct.cost_price}
+                                    onChange={(e) => setEditProduct({
+                                        ...editProduct,
+                                        cost_price: e.target.value
+                                    })}
+                                    required
+                                    className="form-input"
+                                />
                             </div>
+
                             <div className="form-group">
-                                <label>Razmerlar :</label>
-                                <input type="text" value={editProduct.sizes} onChange={(e) => setEditProduct({ ...editProduct, sizes: e.target.value })} className="form-input" />
+                                <label>Sotish narxi (ixtiyoriy) :</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={editProduct.selling_price}
+                                    onChange={(e) => setEditProduct({
+                                        ...editProduct,
+                                        selling_price: e.target.value
+                                    })}
+                                    className="form-input"
+                                    placeholder="Bo'sh qoldirilsa o'zgarmaydi"
+                                />
                             </div>
+
                             <div className="form-group">
-                                <label>Soni * :</label>
-                                <input type="number" value={editProduct.quantity} onChange={(e) => setEditProduct({ ...editProduct, quantity: e.target.value })} required className="form-input" />
+                                <label>Razmerlar (vergul bilan) :</label>
+                                <input
+                                    type="text"
+                                    value={editProduct.sizes}
+                                    onChange={(e) => setEditProduct({
+                                        ...editProduct,
+                                        sizes: e.target.value
+                                    })}
+                                    className="form-input"
+                                    placeholder="39, 40, 41 yoki S, M, L"
+                                />
+                                <small style={{ color: '#64748b' }}>
+                                    Bir nechta razmer bo'lsa, umumiy son razmerlarga taqsimlanadi.
+                                </small>
                             </div>
+
+                            <div className="form-group">
+                                <label>Jami soni * :</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={editProduct.quantity}
+                                    onChange={(e) => setEditProduct({
+                                        ...editProduct,
+                                        quantity: e.target.value
+                                    })}
+                                    required
+                                    className="form-input"
+                                />
+                            </div>
+
+                            <div className="form-group form-group-image">
+                                <label>Tovar rasmi :</label>
+
+                                <div className={`image-upload-box${editImagePreview ? ' has-preview' : ''}`}>
+                                    <input
+                                        id="edit-product-image-input"
+                                        type="file"
+                                        accept="image/*"
+                                        capture="environment"
+                                        onChange={handleEditProductImageChange}
+                                        className="image-upload-input"
+                                    />
+
+                                    <label
+                                        htmlFor="edit-product-image-input"
+                                        className="image-upload-btn"
+                                    >
+                                        📷 Rasmni almashtirish
+                                    </label>
+
+                                    <p className="image-upload-hint">
+                                        Tahrirlash xabari Telegramga rasm bilan yuboriladi.
+                                    </p>
+
+                                    {editImageFileName && (
+                                        <p className="image-upload-filename">
+                                            {editImageFileName}
+                                        </p>
+                                    )}
+
+                                    {editImagePreview && (
+                                        <div className="image-preview-wrap">
+                                            <img src={editImagePreview} alt="Tovar rasmi" />
+
+                                            <button
+                                                type="button"
+                                                className="image-preview-remove"
+                                                title="Rasmni olib tashlash"
+                                                onClick={() => {
+                                                    setEditImagePreview('');
+                                                    setEditImageFileName('');
+                                                    setEditProduct((p) => ({
+                                                        ...p,
+                                                        image_url: ''
+                                                    }));
+
+                                                    const el = document.getElementById(
+                                                        'edit-product-image-input'
+                                                    );
+                                                    if (el) el.value = '';
+                                                }}
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
                             <div className="modal-actions">
-                                <button type="submit" disabled={isSubmitting} className="btn btn-primary">{isSubmitting ? "Saqlanmoqda..." : "Saqlash"}</button>
-                                <button type="button" onClick={() => setEditModal(false)} className="btn btn-danger">Bekor qilish</button>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="btn btn-primary"
+                                >
+                                    {isSubmitting ? "Saqlanmoqda..." : "Saqlash"}
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setEditModal(false);
+                                        setEditImagePreview('');
+                                        setEditImageFileName('');
+                                    }}
+                                    className="btn btn-danger"
+                                >
+                                    Bekor qilish
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -2004,6 +2487,25 @@ const DashboardPage = () => {
                                 <li key={v.id}>{v.size || 'Standart'}: {v.quantity} ta</li>
                             ))}
                         </ul>
+                        {detailsGroup.variants?.length > 0 && (
+                            <div style={{ marginTop: 16 }}>
+                                <p><b>QR kodlar:</b></p>
+                                <div className="qr-list" style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
+                                    {detailsGroup.variants.map((v) => (
+                                        <ProductQR
+                                            key={v.id}
+                                            product={{
+                                                ...v,
+                                                name: detailsGroup.name,
+                                                color: detailsGroup.color,
+                                                local_id: detailsGroup.local_id,
+                                                selling_price: v.selling_price ?? detailsGroup.selling_price
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                         <div className="modal-actions">
                             <button type="button" onClick={() => setDetailsGroup(null)} className="btn btn-danger">Yopish</button>
                         </div>
