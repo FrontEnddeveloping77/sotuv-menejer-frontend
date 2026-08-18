@@ -476,7 +476,7 @@ const DashboardPage = () => {
                 cost_price: pendingProductData?.cost_price ?? Number(editProduct.cost_price),
                 quantity: pendingProductData?.totalQty || Number(editProduct.quantity),
                 sizes: pendingProductData?.sizesStr || editProduct.sizes,
-                image_url: pendingProductData?.image_url ?? editProduct.image_url || null,
+                image_url: (pendingProductData?.image_url ?? editProduct.image_url) || null,
                 ...extra
             };
 
