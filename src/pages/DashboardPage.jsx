@@ -165,6 +165,8 @@ const DashboardPage = () => {
 
     const [expenseData, setExpenseData] = useState({ title: '', amount: '', expense_type: 'daily' });
 
+    const [menuOpen, setMenuOpen] = useState(false);
+
     const emptyDeleteRow = () => ({ size: '', remove_all: false, quantity_to_remove: 1 });
     const [deleteSearch, setDeleteSearch] = useState('');
     const [deleteData, setDeleteData] = useState({ product_id: '', rows: [emptyDeleteRow()] });
@@ -1122,24 +1124,52 @@ const DashboardPage = () => {
     return (
         <div className="dashboard-container">
             <header className="dashboard-header">
-                <h2>🏬 {stats.storeName || "Mening Do'konim"} Boshqaruv Paneli</h2>
-                <div className="header-buttons">
-                    <button onClick={() => setAddProductModal(true)} className="btn btn-add">➕ Tovar Qo'shish</button>
-                    {/* Tahrirlash olib tashlandi */}
-                    <button onClick={() => setSellModal(true)} className="btn btn-sell">🛒 Tovar Sotish</button>
-                    <button onClick={() => setCreditSellModal(true)} className="btn btn-credit-sell">🛒 Nasiyaga sotish</button>
-                    <button onClick={openUndoDebtModal} className="btn btn-undo-debt">↩️ Qarz to‘lovini bekor qilish</button>
-                    <button onClick={() => setExpenseModal(true)} className="btn btn-expense">💸 Rasxod Yozish</button>
-                    <button onClick={() => setDeleteModal(true)} className="btn btn-delete">🗑️ Tovarni O'chirish</button>
-                    <button onClick={openRestoreModal} className="btn btn-restore-deleted">↩️ O'chirilganlarni qaytarish</button>
-                    <button onClick={openDebtsModal} className="btn btn-debts">💳 Qarzlar</button>
-                    <button onClick={openCustomerDebtsModal} className="btn btn-customer-debts">👥 Qarzga tovar berganlarimiz</button>
-                    <button onClick={openSuppliersModal} className="btn btn-suppliers">👥 Tovar berganlar</button>
-                    <button onClick={openReturnModal} className="btn btn-return">↩️ Vozvrat</button>
-                    <button onClick={openExpenseListModal} className="btn btn-edit-expense">📋 Rasxodlarni taxrirlash</button>
-                    <button onClick={handleLogout} className="btn btn-logout">🚪 Chiqish</button>
+                <div className="header-left">
+                    <h2>🏬 {stats.storeName || "Mening Do'konim"} Boshqaruv Paneli</h2>
+                    <button
+                        type="button"
+                        className="btn-menu-toggle"
+                        onClick={() => setMenuOpen(true)}
+                        aria-label="Menyu"
+                    >
+                        ☰ Menyu
+                    </button>
                 </div>
             </header>
+
+            {/* O'ngdan ochiladigan amallar menyusi */}
+            <div
+                className={`side-menu-overlay ${menuOpen ? 'open' : ''}`}
+                onClick={() => setMenuOpen(false)}
+            />
+            <aside className={`side-menu ${menuOpen ? 'open' : ''}`}>
+                <div className="side-menu-header">
+                    <h3>⚙️ Amallar</h3>
+                    <button
+                        type="button"
+                        className="side-menu-close"
+                        onClick={() => setMenuOpen(false)}
+                        aria-label="Yopish"
+                    >
+                        ✕
+                    </button>
+                </div>
+                <div className="side-menu-buttons">
+                    <button type="button" onClick={() => { setAddProductModal(true); setMenuOpen(false); }} className="btn btn-add">➕ Tovar Qo'shish</button>
+                    <button type="button" onClick={() => { setSellModal(true); setMenuOpen(false); }} className="btn btn-sell">🛒 Tovar Sotish</button>
+                    <button type="button" onClick={() => { setCreditSellModal(true); setMenuOpen(false); }} className="btn btn-credit-sell">🛒 Nasiyaga sotish</button>
+                    <button type="button" onClick={() => { openUndoDebtModal(); setMenuOpen(false); }} className="btn btn-undo-debt">↩️ Qarz to‘lovini bekor qilish</button>
+                    <button type="button" onClick={() => { setExpenseModal(true); setMenuOpen(false); }} className="btn btn-expense">💸 Rasxod Yozish</button>
+                    <button type="button" onClick={() => { setDeleteModal(true); setMenuOpen(false); }} className="btn btn-delete">🗑️ Tovarni O'chirish</button>
+                    <button type="button" onClick={() => { openRestoreModal(); setMenuOpen(false); }} className="btn btn-restore-deleted">↩️ O'chirilganlarni qaytarish</button>
+                    <button type="button" onClick={() => { openDebtsModal(); setMenuOpen(false); }} className="btn btn-debts">💳 Qarzlar</button>
+                    <button type="button" onClick={() => { openCustomerDebtsModal(); setMenuOpen(false); }} className="btn btn-customer-debts">👥 Qarzga tovar berganlarimiz</button>
+                    <button type="button" onClick={() => { openSuppliersModal(); setMenuOpen(false); }} className="btn btn-suppliers">👥 Tovar berganlar</button>
+                    <button type="button" onClick={() => { openReturnModal(); setMenuOpen(false); }} className="btn btn-return">↩️ Vozvrat</button>
+                    <button type="button" onClick={() => { openExpenseListModal(); setMenuOpen(false); }} className="btn btn-edit-expense">📋 Rasxodlarni taxrirlash</button>
+                    <button type="button" onClick={() => { setMenuOpen(false); handleLogout(); }} className="btn btn-logout">🚪 Chiqish</button>
+                </div>
+            </aside>
 
             <section className="stats-grid">
                 <div className="stat-card">
