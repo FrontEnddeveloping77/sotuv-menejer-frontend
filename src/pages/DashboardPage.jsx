@@ -77,6 +77,7 @@ const DashboardPage = () => {
     const [returnModal, setReturnModal] = useState(false);
     const [salesList, setSalesList] = useState([]);
     const [salesLoading, setSalesLoading] = useState(false);
+    const [returnSearch, setReturnSearch] = useState('');
 
     const [expenseListModal, setExpenseListModal] = useState(false);
     const [expensesList, setExpensesList] = useState([]);
@@ -742,7 +743,7 @@ const DashboardPage = () => {
                 selling_price: '', image_url: ''
             });
             setSizeDistRows([]);
-            setPendingProductBody(null);
+            setPendingProductData(null);
 
             await fetchData(false);
             const displayId = res.data?.local_id || res.data?.product?.local_id || '';
@@ -1042,6 +1043,7 @@ const DashboardPage = () => {
     };
 
     const openReturnModal = async () => {
+        setReturnSearch('');
         setReturnModal(true);
         setSalesLoading(true);
         try {
@@ -1057,6 +1059,15 @@ const DashboardPage = () => {
     const isSaleReturnable = (sale) => {
         if (sale.returned) return false;
         return daysSince(sale.sold_at) <= SALE_RETURN_WINDOW_DAYS;
+    };
+
+    const matchesReturnSale = (sale, query) => {
+        const q = String(query || '').toLowerCase().trim();
+        if (!q) return true;
+        const name = String(sale.title || sale.name || '').toLowerCase();
+        const size = String(sale.size || '').toLowerCase();
+        const color = String(sale.color || '').toLowerCase();
+        return name.includes(q) || size.includes(q) || color.includes(q);
     };
 
     const handleReturnSale = async (saleId) => {
@@ -2016,41 +2027,89 @@ const DashboardPage = () => {
                 <div className="modal-overlay">
                     <div className="modal-box modal-box-wide">
                         <div className="modal-header"><h3>↩️ Vozvrat</h3></div>
+
+                        <div className="form-group" style={{ marginBottom: 12 }}>
+                            <input
+                                type="text"
+                                placeholder="Nom, rang yoki razmer bo‘yicha qidirish..."
+                                value={returnSearch}
+                                onChange={(e) => setReturnSearch(e.target.value)}
+                                className="form-input"
+                                autoFocus
+                            />
+                        </div>
+
                         {salesLoading ? <p>Yuklanmoqda...</p> : (
                             <div className="debts-list">
-                                {salesList.filter(s => !s.returned).length === 0 ? (
-                                    <div className="info-banner">Vozvrat qilinadigan sotuv yo'q</div>
-                                ) : salesList.filter(s => !s.returned).map((sale) => (
-                                    <div key={sale.id} className="debt-card">
-                                        {sale.image_url && (
-                                            <img
-                                                src={sale.image_url}
-                                                alt={sale.title}
-                                                style={{
-                                                    width: '100%',
-                                                    maxHeight: 180,
-                                                    objectFit: 'contain',
-                                                    borderRadius: 10,
-                                                    marginBottom: 10
-                                                }}
-                                            />
-                                        )}
-                                        <strong>{sale.title}</strong>
-                                        <div>{sale.size || 'Standart'} — {sale.quantity} dona — {formatSum(sale.selling_price)} so'm</div>
-                                        <div style={{ fontSize: 13, color: '#64748b' }}>{new Date(sale.sold_at).toLocaleString('uz-UZ')}</div>
-                                        {isSaleReturnable(sale) ? (
-                                            <button type="button" className="btn btn-primary" style={{ marginTop: 10 }} onClick={() => handleReturnSale(sale.id)} disabled={isSubmitting}>
-                                                Vozvrat qilish
-                                            </button>
-                                        ) : (
-                                            <span style={{ color: '#ef4444', fontSize: 13 }}>Muddat o'tgan</span>
-                                        )}
-                                    </div>
-                                ))}
+                                {(() => {
+                                    const list = (salesList || [])
+                                        .filter((s) => !s.returned)
+                                        .filter((s) => matchesReturnSale(s, returnSearch));
+
+                                    if (list.length === 0) {
+                                        return (
+                                            <div className="info-banner">
+                                                {returnSearch.trim()
+                                                    ? 'Qidiruv bo‘yicha sotuv topilmadi'
+                                                    : "Vozvrat qilinadigan sotuv yo'q"}
+                                            </div>
+                                        );
+                                    }
+
+                                    return list.map((sale) => (
+                                        <div key={sale.id} className="debt-card">
+                                            {sale.image_url && (
+                                                <img
+                                                    src={sale.image_url}
+                                                    alt={sale.title}
+                                                    style={{
+                                                        width: '100%',
+                                                        maxHeight: 180,
+                                                        objectFit: 'contain',
+                                                        borderRadius: 10,
+                                                        marginBottom: 10
+                                                    }}
+                                                />
+                                            )}
+                                            <strong>{sale.title}</strong>
+                                            <div>
+                                                {sale.size || 'Standart'}
+                                                {sale.color ? ` · ${sale.color}` : ''}
+                                                {' — '}
+                                                {sale.quantity} dona — {formatSum(sale.selling_price)} so'm
+                                            </div>
+                                            <div style={{ fontSize: 13, color: '#64748b' }}>
+                                                {new Date(sale.sold_at).toLocaleString('uz-UZ')}
+                                            </div>
+                                            {isSaleReturnable(sale) ? (
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-primary"
+                                                    style={{ marginTop: 10 }}
+                                                    onClick={() => handleReturnSale(sale.id)}
+                                                    disabled={isSubmitting}
+                                                >
+                                                    Vozvrat qilish
+                                                </button>
+                                            ) : (
+                                                <span style={{ color: '#ef4444', fontSize: 13 }}>Muddat o'tgan</span>
+                                            )}
+                                        </div>
+                                    ));
+                                })()}
                             </div>
                         )}
                         <div className="modal-actions">
-                            <button type="button" onClick={() => setReturnModal(false)} className="btn btn-danger">Yopish</button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setReturnModal(false);
+                                    setReturnSearch('');
+                                }}
+                                className="btn btn-danger"
+                            >
+                                Yopish
+                            </button>
                         </div>
                     </div>
                 </div>

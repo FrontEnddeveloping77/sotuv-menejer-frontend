@@ -20,15 +20,12 @@ export default function QRActionPage() {
     const [product, setProduct] = useState(null);
     const [mode, setMode] = useState('choice');
 
-    // Seller kiritadigan SOTILGAN SUMMA
     const [soldAmount, setSoldAmount] = useState('');
 
-    // Nasiyaga sotish uchun
     const [customerName, setCustomerName] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
     const [paidNow, setPaidNow] = useState('');
 
-    // Tahrirlash uchun
     const [editName, setEditName] = useState('');
     const [editColor, setEditColor] = useState('');
     const [editCost, setEditCost] = useState('');
@@ -39,16 +36,11 @@ export default function QRActionPage() {
     const [error, setError] = useState('');
     const [result, setResult] = useState(null);
 
-    // -----------------------------------------
-    // QR orqali mahsulotni olish
-    // -----------------------------------------
-
     useEffect(() => {
         api.get(`/api/qr/${token}`)
             .then((res) => {
                 const p = res.data.product;
                 setProduct(p);
-                // Tahrirlash formasi uchun boshlang'ich qiymatlar
                 setEditName(p.name || '');
                 setEditColor(p.color || '');
                 setEditCost(p.cost_price || '');
@@ -64,10 +56,6 @@ export default function QRActionPage() {
                 setLoading(false);
             });
     }, [token]);
-
-    // -----------------------------------------
-    // O'CHIRISH
-    // -----------------------------------------
 
     const handleDelete = async () => {
         const confirmed = window.confirm(
@@ -97,10 +85,6 @@ export default function QRActionPage() {
             setSubmitting(false);
         }
     };
-
-    // -----------------------------------------
-    // SOTISH
-    // -----------------------------------------
 
     const handleSell = async (event) => {
         event.preventDefault();
@@ -171,10 +155,6 @@ export default function QRActionPage() {
         }
     };
 
-    // -----------------------------------------
-    // Rasm komponenti (agar image_url bo'lsa)
-    // -----------------------------------------
-
     const ProductImage = ({ src, alt, style }) => {
         if (!src) return null;
         return (
@@ -207,10 +187,6 @@ export default function QRActionPage() {
         );
     };
 
-    // -----------------------------------------
-    // YUKLANMOQDA
-    // -----------------------------------------
-
     if (loading) {
         return (
             <main className="qr-page">
@@ -221,10 +197,6 @@ export default function QRActionPage() {
             </main>
         );
     }
-
-    // -----------------------------------------
-    // QR TOPILMADI
-    // -----------------------------------------
 
     if (error && !product) {
         return (
@@ -237,10 +209,6 @@ export default function QRActionPage() {
             </main>
         );
     }
-
-    // -----------------------------------------
-    // NATIJA
-    // -----------------------------------------
 
     if (result) {
         if (result.type === 'sell' || result.type === 'credit-sell') {
@@ -345,18 +313,10 @@ export default function QRActionPage() {
         );
     }
 
-    // -----------------------------------------
-    // FOYDA PREVIEW
-    // -----------------------------------------
-
     const profitPreview =
         soldAmount === ''
             ? null
             : Number(soldAmount) - Number(product.cost_price || 0);
-
-    // -----------------------------------------
-    // ASOSIY QR OYNASI
-    // -----------------------------------------
 
     return (
         <main className="qr-page">
@@ -365,7 +325,6 @@ export default function QRActionPage() {
                 <div className="qr-icon">📦</div>
                 <div className="qr-label">OMBORDAGI TOVAR</div>
 
-                {/* Tovar rasmi (agar mavjud bo'lsa) */}
                 <ProductImage src={product.image_url} alt={product.name} />
 
                 <h1>{product.name}</h1>
@@ -386,7 +345,6 @@ export default function QRActionPage() {
                     <div className="qr-error">⚠️ {error}</div>
                 )}
 
-                {/* ===================== TANLOV ===================== */}
                 {mode === 'choice' && (
                     <div className="qr-actions">
 
@@ -431,7 +389,6 @@ export default function QRActionPage() {
                     </div>
                 )}
 
-                {/* ===================== O'CHIRISH ===================== */}
                 {mode === 'delete' && (
                     <div className="qr-confirm">
                         <h3>🗑️ O‘chirishni tasdiqlang</h3>
@@ -464,7 +421,6 @@ export default function QRActionPage() {
                     </div>
                 )}
 
-                {/* ===================== SOTISH ===================== */}
                 {mode === 'sell' && (
                     <form className="qr-sell-form" onSubmit={handleSell}>
                         <h3>💰 Tovarni sotish</h3>
@@ -521,7 +477,6 @@ export default function QRActionPage() {
                     </form>
                 )}
 
-                {/* ===================== NASIYAGA SOTISH ===================== */}
                 {mode === 'credit-sell' && (
                     <form className="qr-sell-form" onSubmit={handleCreditSell}>
                         <h3>🛒 Nasiyaga sotish</h3>

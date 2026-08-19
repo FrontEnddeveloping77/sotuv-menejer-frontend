@@ -10,19 +10,15 @@ function App() {
     return (
         <Router>
             <Routes>
-                {/* Odatiy asosiy yo'l */}
                 <Route
                     path="/"
                     element={token ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />}
                 />
 
-                {/* Login sahifasi */}
                 <Route path="/login" element={<LoginPage />} />
 
-                {/* QR orqali ochiladigan ombor amallari */}
                 <Route path="/qr/:token" element={<QRActionPage />} />
 
-                {/* Dashboard sahifasi */}
                 <Route
                     path="/dashboard"
                     element={
@@ -34,7 +30,6 @@ function App() {
                     }
                 />
 
-                {/* Boshqa barcha xato yo'llarni loginga yo'naltirish */}
                 <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
         </Router>
