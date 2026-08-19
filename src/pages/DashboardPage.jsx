@@ -138,7 +138,7 @@ const DashboardPage = () => {
     const [creditSellSearch, setCreditSellSearch] = useState('');
     const [creditSellData, setCreditSellData] = useState({
         product_id: '',
-        rows: [{ size: '', sell_quantity: 1, selling_price: '' }],
+        rows: [{ size: '', sell_quantity: 1, selling_price: '', color: '' }],
         customer_name: '',
         customer_phone: '',
         paid_now: ''
@@ -159,7 +159,7 @@ const DashboardPage = () => {
     const [loadingCustomerDebts, setLoadingCustomerDebts] = useState(false);
     const [customerDebtsSearch, setCustomerDebtsSearch] = useState('');
 
-    const emptySellRow = () => ({ size: '', sell_quantity: 1, selling_price: '' });
+    const emptySellRow = () => ({ size: '', sell_quantity: 1, selling_price: '', color: '' });
     const [sellSearch, setSellSearch] = useState('');
     const [sellData, setSellData] = useState({ product_id: '', rows: [emptySellRow()] });
 
@@ -352,7 +352,12 @@ const DashboardPage = () => {
         const group = productGroups.find((g) => String(g.local_id) === String(localId));
         setSellData({
             product_id: localId,
-            rows: [{ size: group && group.variants.length === 1 ? (group.variants[0].size || '') : '', sell_quantity: 1, selling_price: '' }]
+            rows: [{
+                size: group && group.variants.length === 1 ? (group.variants[0].size || '') : '',
+                sell_quantity: 1,
+                selling_price: '',
+                color: group?.color || ''
+            }]
         });
     };
 
@@ -369,7 +374,12 @@ const DashboardPage = () => {
         setCreditSellData(prev => ({
             ...prev,
             product_id: localId,
-            rows: [{ size: group && group.variants.length === 1 ? (group.variants[0].size || '') : '', sell_quantity: 1, selling_price: '' }]
+            rows: [{
+                size: group && group.variants.length === 1 ? (group.variants[0].size || '') : '',
+                sell_quantity: 1,
+                selling_price: '',
+                color: group?.color || ''
+            }]
         }));
     };
 
@@ -613,9 +623,27 @@ const DashboardPage = () => {
     const submitAddProduct = async (extra = {}) => {
         setIsSubmitting(true);
         try {
+            // Form maydonlari HAR DOIM yuboriladi (teng taqsimotda pendingProductData null bo'lishi mumkin)
             const body = {
-                ...pendingProductData,
-                quantity: pendingProductData?.totalQty || Number(newProduct.quantity),
+                category: (pendingProductData?.category ?? newProduct.category)?.toString().trim() || '',
+                name: (pendingProductData?.name ?? newProduct.name)?.toString().trim() || '',
+                color: (pendingProductData?.color ?? newProduct.color)?.toString().trim() || '',
+                cost_price: pendingProductData?.cost_price ?? (Number(newProduct.cost_price) || 0),
+                payment_type: pendingProductData?.payment_type || newProduct.payment_type || 'cash',
+                supplier: (pendingProductData?.supplier ?? newProduct.supplier)?.toString().trim() || '',
+                supplier_phone: (pendingProductData?.supplier_phone ?? newProduct.supplier_phone)?.toString().trim() || '',
+                paid_amount: pendingProductData?.paid_amount ?? (
+                    (pendingProductData?.payment_type || newProduct.payment_type) === 'credit'
+                        ? Number(newProduct.paid_amount) || 0
+                        : 0
+                ),
+                selling_price: pendingProductData?.selling_price !== undefined
+                    ? pendingProductData.selling_price
+                    : (newProduct.selling_price !== '' && newProduct.selling_price != null
+                        ? Number(newProduct.selling_price)
+                        : null),
+                image_url: (pendingProductData?.image_url ?? newProduct.image_url) || null,
+                quantity: pendingProductData?.totalQty || Number(newProduct.quantity) || 0,
                 sizes: pendingProductData?.sizesStr || newProduct.sizes?.trim() || '',
                 ...extra
             };
@@ -625,6 +653,17 @@ const DashboardPage = () => {
                 body.size_quantities = extra.size_quantities;
                 body.quantity = extra.size_quantities.reduce((s, r) => s + Number(r.quantity || 0), 0);
                 body.sizes = extra.size_quantities.map(r => r.size).filter(Boolean).join(', ');
+            }
+
+            if (!body.name) {
+                alert("Tovar nomi kiritilishi shart!");
+                setIsSubmitting(false);
+                return;
+            }
+            if (body.cost_price === undefined || body.cost_price === null || body.cost_price === '') {
+                alert("Kelgan narx kiritilishi shart!");
+                setIsSubmitting(false);
+                return;
             }
 
             const res = await api.post('/api/products', body);
@@ -724,7 +763,7 @@ const DashboardPage = () => {
             if (qty > variant.quantity) { alert(`${i + 1}-qatorda: omborda faqat ${variant.quantity} ta bor!`); return; }
             if (isNaN(price) || price < 0 || row.selling_price === '') { alert(`${i + 1}-qatorda sotish narxini to'g'ri kiriting!`); return; }
 
-            items.push({ product_id: Number(variant.id), sell_quantity: qty, selling_price: price });
+            items.push({ product_id: Number(variant.id), sell_quantity: qty, selling_price: price, color: (row.color || '').trim() || undefined });
         }
 
         if (items.length === 0) { alert("Kamida bitta razmer va son kiritilishi shart!"); return; }
@@ -767,7 +806,7 @@ const DashboardPage = () => {
             if (qty > variant.quantity) { alert(`${i + 1}-qatorda: omborda faqat ${variant.quantity} ta bor!`); return; }
             if (isNaN(price) || price < 0 || row.selling_price === '') { alert(`${i + 1}-qatorda sotish narxini to'g'ri kiriting!`); return; }
 
-            items.push({ product_id: Number(variant.id), sell_quantity: qty, selling_price: price });
+            items.push({ product_id: Number(variant.id), sell_quantity: qty, selling_price: price, color: (row.color || '').trim() || undefined });
         }
 
         if (items.length === 0) { alert("Kamida bitta razmer va son kiritilishi shart!"); return; }
@@ -1355,6 +1394,10 @@ const DashboardPage = () => {
                                                             <label>Sotish narxi (1 dona) * :</label>
                                                             <input type="number" value={row.selling_price} onChange={(e) => updateCreditSellRow(index, { selling_price: e.target.value })} placeholder="350000" required className="form-input" />
                                                         </div>
+                                                        <div className="form-group">
+                                                            <label>Rang (ixtiyoriy) :</label>
+                                                            <input type="text" value={row.color || ''} onChange={(e) => updateCreditSellRow(index, { color: e.target.value })} className="form-input" placeholder="Masalan: Qora" />
+                                                        </div>
                                                     </div>
                                                 )}
                                                 {creditSellData.rows.length > 1 && (
@@ -1810,6 +1853,10 @@ const DashboardPage = () => {
                                                             <label>Sotish narxi * :</label>
                                                             <input type="number" value={row.selling_price} onChange={(e) => updateSellRow(index, { selling_price: e.target.value })} required className="form-input" />
                                                         </div>
+                                                        <div className="form-group">
+                                                            <label>Rang (ixtiyoriy) :</label>
+                                                            <input type="text" value={row.color || ''} onChange={(e) => updateSellRow(index, { color: e.target.value })} className="form-input" placeholder="Masalan: Qora" />
+                                                        </div>
                                                     </div>
                                                 )}
                                                 {sellData.rows.length > 1 && (
@@ -2143,22 +2190,10 @@ const DashboardPage = () => {
                                         const name = (s.supplier || s.name || '').toLowerCase();
                                         const phone = (s.supplier_phone || '').toLowerCase();
                                         const cats = (s.categories || []).join(' ').toLowerCase();
-                                        const productNames = (s.products || []).map(p => (p.name || '').toLowerCase()).join(' ');
-                                        return name.includes(q) || phone.includes(q) || cats.includes(q) || productNames.includes(q);
+                                        return name.includes(q) || phone.includes(q) || cats.includes(q);
                                     })
                                     .map((s, i) => {
-                                        const xil = Number(s.products_count ?? s.product_count) || 0;
-                                        const qty = Number(s.total_quantity) || 0;
-                                        const cost = Number(s.total_cost) || 0;
                                         const categories = s.categories || [];
-                                        const uniqueProducts = [];
-                                        const seenLocal = new Set();
-                                        (s.products || []).forEach((p) => {
-                                            const key = String(p.local_id ?? p.name);
-                                            if (seenLocal.has(key)) return;
-                                            seenLocal.add(key);
-                                            uniqueProducts.push(p);
-                                        });
                                         return (
                                             <div key={i} className="debt-card">
                                                 <strong style={{ fontSize: 16 }}>{s.supplier || s.name}</strong>
@@ -2182,25 +2217,6 @@ const DashboardPage = () => {
                                                                 {cat}
                                                             </span>
                                                         ))}
-                                                    </div>
-                                                )}
-                                                <div style={{ marginTop: 8, fontSize: 13, color: '#475569' }}>
-                                                    <b>{xil}</b> xil tovar • <b>{qty}</b> dona • tannarx: <b>{formatSum(cost)}</b> so'm
-                                                </div>
-                                                {uniqueProducts.length > 0 && (
-                                                    <div style={{ marginTop: 10, fontSize: 13, color: '#334155' }}>
-                                                        <div style={{ fontWeight: 600, marginBottom: 4 }}>📦 Tovarlar:</div>
-                                                        <ul style={{ margin: 0, paddingLeft: 18 }}>
-                                                            {uniqueProducts.map((p, pi) => (
-                                                                <li key={pi}>
-                                                                    #{p.local_id} {p.name}
-                                                                    {p.category ? ` (${p.category})` : ''}
-                                                                    {p.color ? ` — ${p.color}` : ''}
-                                                                    {p.size ? `, ${p.size}` : ''}
-                                                                    {': '}{Number(p.quantity) || 0} dona
-                                                                </li>
-                                                            ))}
-                                                        </ul>
                                                     </div>
                                                 )}
                                             </div>
