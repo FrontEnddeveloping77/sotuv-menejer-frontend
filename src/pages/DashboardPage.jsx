@@ -1421,12 +1421,6 @@ const DashboardPage = () => {
                                                             <label>Sotish narxi (1 dona) * :</label>
                                                             <input type="number" value={row.selling_price} onChange={(e) => updateCreditSellRow(index, { selling_price: e.target.value })} placeholder="350000" required className="form-input" />
                                                         </div>
-                                                        {creditSellGroup?.color ? (
-                                                            <div className="form-group">
-                                                                <label>Rang :</label>
-                                                                <input type="text" value={creditSellGroup.color} className="form-input" disabled readOnly />
-                                                            </div>
-                                                        ) : null}
                                                     </div>
                                                 )}
                                                 {creditSellData.rows.length > 1 && (
@@ -1882,12 +1876,6 @@ const DashboardPage = () => {
                                                             <label>Sotish narxi * :</label>
                                                             <input type="number" value={row.selling_price} onChange={(e) => updateSellRow(index, { selling_price: e.target.value })} required className="form-input" />
                                                         </div>
-                                                        {sellGroup?.color ? (
-                                                            <div className="form-group">
-                                                                <label>Rang :</label>
-                                                                <input type="text" value={sellGroup.color} className="form-input" disabled readOnly />
-                                                            </div>
-                                                        ) : null}
                                                     </div>
                                                 )}
                                                 {sellData.rows.length > 1 && (
