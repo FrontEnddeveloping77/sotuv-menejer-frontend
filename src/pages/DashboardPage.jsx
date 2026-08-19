@@ -776,7 +776,9 @@ const DashboardPage = () => {
             if (qty > variant.quantity) { alert(`${i + 1}-qatorda: omborda faqat ${variant.quantity} ta bor!`); return; }
             if (isNaN(price) || price < 0 || row.selling_price === '') { alert(`${i + 1}-qatorda sotish narxini to'g'ri kiriting!`); return; }
 
-            items.push({ product_id: Number(variant.id), sell_quantity: qty, selling_price: price, color: (row.color || '').trim() || undefined });
+            // Rang tovardan olinadi — qo'lda yozilmaydi
+            const productColor = (sellGroup.color || '').trim() || undefined;
+            items.push({ product_id: Number(variant.id), sell_quantity: qty, selling_price: price, color: productColor });
         }
 
         if (items.length === 0) { alert("Kamida bitta razmer va son kiritilishi shart!"); return; }
@@ -819,7 +821,9 @@ const DashboardPage = () => {
             if (qty > variant.quantity) { alert(`${i + 1}-qatorda: omborda faqat ${variant.quantity} ta bor!`); return; }
             if (isNaN(price) || price < 0 || row.selling_price === '') { alert(`${i + 1}-qatorda sotish narxini to'g'ri kiriting!`); return; }
 
-            items.push({ product_id: Number(variant.id), sell_quantity: qty, selling_price: price, color: (row.color || '').trim() || undefined });
+            // Rang tovardan olinadi — qo'lda yozilmaydi
+            const productColor = (creditSellGroup.color || '').trim() || undefined;
+            items.push({ product_id: Number(variant.id), sell_quantity: qty, selling_price: price, color: productColor });
         }
 
         if (items.length === 0) { alert("Kamida bitta razmer va son kiritilishi shart!"); return; }
@@ -1417,10 +1421,12 @@ const DashboardPage = () => {
                                                             <label>Sotish narxi (1 dona) * :</label>
                                                             <input type="number" value={row.selling_price} onChange={(e) => updateCreditSellRow(index, { selling_price: e.target.value })} placeholder="350000" required className="form-input" />
                                                         </div>
-                                                        <div className="form-group">
-                                                            <label>Rang (ixtiyoriy) :</label>
-                                                            <input type="text" value={row.color || ''} onChange={(e) => updateCreditSellRow(index, { color: e.target.value })} className="form-input" placeholder="Masalan: Qora" />
-                                                        </div>
+                                                        {creditSellGroup?.color ? (
+                                                            <div className="form-group">
+                                                                <label>Rang :</label>
+                                                                <input type="text" value={creditSellGroup.color} className="form-input" disabled readOnly />
+                                                            </div>
+                                                        ) : null}
                                                     </div>
                                                 )}
                                                 {creditSellData.rows.length > 1 && (
@@ -1876,10 +1882,12 @@ const DashboardPage = () => {
                                                             <label>Sotish narxi * :</label>
                                                             <input type="number" value={row.selling_price} onChange={(e) => updateSellRow(index, { selling_price: e.target.value })} required className="form-input" />
                                                         </div>
-                                                        <div className="form-group">
-                                                            <label>Rang (ixtiyoriy) :</label>
-                                                            <input type="text" value={row.color || ''} onChange={(e) => updateSellRow(index, { color: e.target.value })} className="form-input" placeholder="Masalan: Qora" />
-                                                        </div>
+                                                        {sellGroup?.color ? (
+                                                            <div className="form-group">
+                                                                <label>Rang :</label>
+                                                                <input type="text" value={sellGroup.color} className="form-input" disabled readOnly />
+                                                            </div>
+                                                        ) : null}
                                                     </div>
                                                 )}
                                                 {sellData.rows.length > 1 && (
