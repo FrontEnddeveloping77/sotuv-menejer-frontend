@@ -218,6 +218,18 @@ const DashboardPage = () => {
 
     const formatSum = (val) => Number(val || 0).toLocaleString('uz-UZ');
 
+    const formatExpenseType = (type) => {
+        const map = {
+            daily: 'Kunlik',
+            monthly: 'Oylik',
+            other: 'Boshqa',
+            weekly: 'Haftalik',
+            yearly: 'Yillik',
+        };
+        const key = String(type || '').toLowerCase().trim();
+        return map[key] || type || '—';
+    };
+
     // Rasmni siqish (Telegram uchun — max ~800px, JPEG)
     const compressImage = (file, maxWidth = 800, quality = 0.7) => {
         return new Promise((resolve, reject) => {
@@ -2288,7 +2300,7 @@ const DashboardPage = () => {
                                 {expensesList.map((exp) => (
                                     <div key={exp.id} className="debt-card">
                                         <strong>{exp.title}</strong>
-                                        <div>{formatSum(exp.amount)} so'm — {exp.expense_type}</div>
+                                        <div>{formatSum(exp.amount)} so'm — {formatExpenseType(exp.expense_type)}</div>
                                         <div style={{ fontSize: 13, color: '#64748b' }}>{new Date(exp.created_at).toLocaleString('uz-UZ')}</div>
                                         {isExpenseEditable(exp) && (
                                             <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
