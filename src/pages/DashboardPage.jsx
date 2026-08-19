@@ -167,6 +167,7 @@ const DashboardPage = () => {
     const [expenseData, setExpenseData] = useState({ title: '', amount: '', expense_type: 'daily' });
 
     const [menuOpen, setMenuOpen] = useState(false);
+    const [savingAllQrs, setSavingAllQrs] = useState(false);
 
     const emptyDeleteRow = () => ({ size: '', remove_all: false, quantity_to_remove: 1 });
     const [deleteSearch, setDeleteSearch] = useState('');
@@ -1187,6 +1188,109 @@ const DashboardPage = () => {
         );
     }
 
+
+    const sanitizeFileName = (name) =>
+        String(name || 'tovar')
+            .replace(/[\\/:*?"<>|]+/g, '_')
+            .replace(/\s+/g, '_')
+            .slice(0, 80);
+
+    /** Ombordagi barcha tovarlar QR kodlarini qurilmaga PNG qilib saqlaydi */
+    const handleSaveAllQrs = async () => {
+        const items = [];
+        (productGroups || []).forEach((g) => {
+            (g.variants || []).forEach((v) => {
+                if (!v.qr_token) return;
+                items.push({
+                    token: v.qr_token,
+                    name: g.name || 'tovar',
+                    size: v.size || 'Standart',
+                    local_id: g.local_id,
+                    color: g.color || ''
+                });
+            });
+        });
+
+        if (items.length === 0) {
+            alert("Omborda QR kodi bo'lgan tovar topilmadi!");
+            return;
+        }
+
+        const ok = window.confirm(
+            `Jami ${items.length} ta QR kod qurilmaga saqlanadi.\n\nBrauzer bir nechta fayl yuklashni so'rashi mumkin — ruxsat bering.`
+        );
+        if (!ok) return;
+
+        setSavingAllQrs(true);
+        try {
+            let QRCode;
+            try {
+                QRCode = (await import('qrcode')).default;
+            } catch (e) {
+                alert(
+                    "QR generatsiya kutubxonasi topilmadi.\\n" +
+                    "Loyiha papkasida: npm install qrcode\\n" +
+                    "keyin sahifani yangilang."
+                );
+                return;
+            }
+
+            const origin = window.location.origin;
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const qrLink = `${origin}/qr/${item.token}`;
+                const dataUrl = await QRCode.toDataURL(qrLink, {
+                    width: 512,
+                    margin: 2,
+                    errorCorrectionLevel: 'M'
+                });
+
+                const img = await new Promise((resolve, reject) => {
+                    const image = new Image();
+                    image.onload = () => resolve(image);
+                    image.onerror = reject;
+                    image.src = dataUrl;
+                });
+
+                const canvas = document.createElement('canvas');
+                const pad = 24;
+                const textH = 72;
+                canvas.width = img.width + pad * 2;
+                canvas.height = img.height + pad * 2 + textH;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, pad, pad);
+                ctx.fillStyle = '#0f172a';
+                ctx.font = 'bold 18px sans-serif';
+                ctx.textAlign = 'center';
+                const title = `#${item.local_id} ${item.name}`;
+                ctx.fillText(title.slice(0, 40), canvas.width / 2, img.height + pad + 28, canvas.width - 16);
+                ctx.font = '14px sans-serif';
+                ctx.fillStyle = '#475569';
+                const sub = `📏 ${item.size}${item.color ? ' · 🎨 ' + item.color : ''}`;
+                ctx.fillText(sub.slice(0, 50), canvas.width / 2, img.height + pad + 52, canvas.width - 16);
+
+                const finalUrl = canvas.toDataURL('image/png');
+                const a = document.createElement('a');
+                a.href = finalUrl;
+                a.download = sanitizeFileName(`${item.local_id}_${item.name}_${item.size}.png`);
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+
+                await new Promise((r) => setTimeout(r, 350));
+            }
+
+            alert(`${items.length} ta QR kod saqlash yakunlandi ✅`);
+        } catch (err) {
+            console.error(err);
+            alert(err?.message || "QR kodlarni saqlashda xatolik!");
+        } finally {
+            setSavingAllQrs(false);
+        }
+    };
+
     return (
         <div className="dashboard-container">
             <header className="dashboard-header">
@@ -1199,6 +1303,18 @@ const DashboardPage = () => {
                         aria-label="Menyu"
                     >
                         ☰ Menyu
+                    </button>
+                </div>
+                <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={handleSaveAllQrs}
+                        disabled={savingAllQrs || isInitialLoading}
+                        title="Ombordagi barcha tovarlar QR kodlarini qurilmaga saqlash"
+                        style={{ whiteSpace: 'nowrap' }}
+                    >
+                        {savingAllQrs ? '⏳ Saqlanmoqda...' : '📲 Barcha QR larni saqlash'}
                     </button>
                 </div>
             </header>
