@@ -1885,6 +1885,30 @@ const DashboardPage = () => {
                                         );
                                     })}
                                     {canAddMoreSellRows && <button type="button" onClick={addSellRow} className="btn btn-add-row">+ Yana razmer</button>}
+                                    {(() => {
+                                        const validRows = sellData.rows
+                                            .map((row) => ({ row, variant: resolveVariant(sellGroup, row) }))
+                                            .filter(({ variant, row }) => variant && Number(row.selling_price) >= 0 && row.selling_price !== '' && Number(row.sell_quantity) > 0);
+                                        if (validRows.length === 0) return null;
+                                        const totalQty = validRows.reduce((s, { row }) => s + Number(row.sell_quantity), 0);
+                                        const totalRevenue = validRows.reduce((s, { row }) => s + Number(row.selling_price) * Number(row.sell_quantity), 0);
+                                        const totalProfit = validRows.reduce((s, { row, variant }) => {
+                                            const cost = Number(variant.cost_price ?? sellGroup.cost_price ?? 0);
+                                            return s + (Number(row.selling_price) - cost) * Number(row.sell_quantity);
+                                        }, 0);
+                                        return (
+                                            <div className="calculation-box">
+                                                <div className="calc-row"><span>Jami soni:</span><strong>{totalQty} dona</strong></div>
+                                                <div className="calc-row"><span>Jami tushum:</span><strong>{formatSum(totalRevenue)} so'm</strong></div>
+                                                <div className="calc-row calc-total">
+                                                    <span>Kutilayotgan foyda:</span>
+                                                    <strong className={totalProfit >= 0 ? "profit-plus" : "profit-minus"}>
+                                                        {totalProfit >= 0 ? '+' : ''}{formatSum(totalProfit)} so'm
+                                                    </strong>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
                                 </>
                             )}
                             <div className="modal-actions">
