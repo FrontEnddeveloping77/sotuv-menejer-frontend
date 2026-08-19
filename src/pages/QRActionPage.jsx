@@ -172,6 +172,42 @@ export default function QRActionPage() {
     };
 
     // -----------------------------------------
+    // Rasm komponenti (agar image_url bo'lsa)
+    // -----------------------------------------
+
+    const ProductImage = ({ src, alt, style }) => {
+        if (!src) return null;
+        return (
+            <div
+                style={{
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    marginBottom: 16,
+                    ...style
+                }}
+            >
+                <img
+                    src={src}
+                    alt={alt || 'Tovar rasmi'}
+                    style={{
+                        maxWidth: '100%',
+                        maxHeight: 220,
+                        objectFit: 'contain',
+                        borderRadius: 14,
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                    }}
+                    onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                    }}
+                />
+            </div>
+        );
+    };
+
+    // -----------------------------------------
     // YUKLANMOQDA
     // -----------------------------------------
 
@@ -209,6 +245,10 @@ export default function QRActionPage() {
     if (result) {
         if (result.type === 'sell' || result.type === 'credit-sell') {
             const data = result.data;
+            const imgSrc =
+                data.product?.image_url ||
+                product?.image_url ||
+                null;
 
             return (
                 <main className="qr-page">
@@ -219,6 +259,12 @@ export default function QRActionPage() {
                                 ? 'Nasiyaga sotildi!'
                                 : 'Sotuv muvaffaqiyatli!'}
                         </h2>
+
+                        <ProductImage
+                            src={imgSrc}
+                            alt={data.product?.name || product?.name}
+                        />
+
                         <p>
                             {data.product?.name || product.name}
                             {' — '}
@@ -292,6 +338,7 @@ export default function QRActionPage() {
                 <div className="qr-card success-card">
                     <div className="success-icon">🗑️</div>
                     <h2>Tovar o‘chirildi!</h2>
+                    <ProductImage src={product?.image_url} alt={product?.name} />
                     <p>{result.message}</p>
                 </div>
             </main>
@@ -317,6 +364,9 @@ export default function QRActionPage() {
 
                 <div className="qr-icon">📦</div>
                 <div className="qr-label">OMBORDAGI TOVAR</div>
+
+                {/* Tovar rasmi (agar mavjud bo'lsa) */}
+                <ProductImage src={product.image_url} alt={product.name} />
 
                 <h1>{product.name}</h1>
 
@@ -385,6 +435,11 @@ export default function QRActionPage() {
                 {mode === 'delete' && (
                     <div className="qr-confirm">
                         <h3>🗑️ O‘chirishni tasdiqlang</h3>
+                        <ProductImage
+                            src={product.image_url}
+                            alt={product.name}
+                            style={{ marginTop: 8, marginBottom: 12 }}
+                        />
                         <p>
                             Bu QR kodga biriktirilgan{' '}
                             <b>{product.name}</b> tovar qatori ombordan
@@ -413,6 +468,11 @@ export default function QRActionPage() {
                 {mode === 'sell' && (
                     <form className="qr-sell-form" onSubmit={handleSell}>
                         <h3>💰 Tovarni sotish</h3>
+                        <ProductImage
+                            src={product.image_url}
+                            alt={product.name}
+                            style={{ marginBottom: 12 }}
+                        />
                         <p style={{ marginBottom: '15px' }}>
                             <b>{product.name}</b> — {product.size || 'Standart'}
                         </p>
@@ -465,6 +525,11 @@ export default function QRActionPage() {
                 {mode === 'credit-sell' && (
                     <form className="qr-sell-form" onSubmit={handleCreditSell}>
                         <h3>🛒 Nasiyaga sotish</h3>
+                        <ProductImage
+                            src={product.image_url}
+                            alt={product.name}
+                            style={{ marginBottom: 12 }}
+                        />
                         <p style={{ marginBottom: '15px' }}>
                             <b>{product.name}</b> — {product.size || 'Standart'}
                         </p>
