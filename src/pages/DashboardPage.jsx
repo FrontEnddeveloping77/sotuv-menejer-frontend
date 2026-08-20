@@ -357,26 +357,74 @@ const DashboardPage = () => {
     const deleteGroup = productGroups.find((g) => String(g.local_id) === String(deleteData.product_id)) || null;
     const creditSellGroup = productGroups.find((g) => String(g.local_id) === String(creditSellData.product_id)) || null;
 
+    /** Tovarda haqiqiy razmer bormi? (bo'sh/null size — yo'q) */
+    const groupHasRealSizes = (group) => {
+        if (!group?.variants?.length) return false;
+        return group.variants.some((v) => String(v.size || '').trim() !== '');
+    };
+
+    /** Jami qoldiq (barcha variantlar) */
+    const groupTotalQty = (group) =>
+        (group?.variants || []).reduce((s, v) => s + (Number(v.quantity) || 0), 0);
+
+    /**
+     * Razmer tanlash kerakmi?
+     * - Haqiqiy turli razmerlar bo'lsa → ha
+     * - Hammasi bo'sh (Standart) yoki bitta variant → yo'q
+     */
+    const needsSizeSelect = (group) => {
+        if (!group?.variants?.length) return false;
+        if (!groupHasRealSizes(group)) return false;
+        const distinct = new Set(group.variants.map((v) => String(v.size || '').trim()));
+        return distinct.size > 1 || group.variants.length > 1;
+    };
+
     const resolveVariant = (group, row) => {
         if (!group) return null;
+        // Razmersiz yoki bitta variant — avtomatik birinchi
+        if (!needsSizeSelect(group)) {
+            return group.variants[0] || null;
+        }
         if (group.variants.length === 1) return group.variants[0];
         return group.variants.find((v) => String(v.size || '') === String(row.size || '')) || null;
+    };
+
+    /**
+     * Sotish/o'chirish uchun kerakli sonni variantlarga taqsimlash
+     * (razmersiz tovarlar: har qator odatda 1 dona)
+     */
+    const allocateAcrossVariants = (group, totalQty) => {
+        const result = [];
+        let left = Number(totalQty) || 0;
+        if (left <= 0 || !group?.variants?.length) return result;
+        for (const v of group.variants) {
+            if (left <= 0) break;
+            const avail = Number(v.quantity) || 0;
+            if (avail <= 0) continue;
+            const take = Math.min(left, avail);
+            result.push({ variant: v, qty: take });
+            left -= take;
+        }
+        return result;
     };
 
     const usedSellSizes = (excludeIndex) => sellData.rows.filter((_, i) => i !== excludeIndex).map((r) => r.size);
     const usedDeleteSizes = (excludeIndex) => deleteData.rows.filter((_, i) => i !== excludeIndex).map((r) => r.size);
     const usedCreditSellSizes = (excludeIndex) => creditSellData.rows.filter((_, i) => i !== excludeIndex).map((r) => r.size);
 
-    const canAddMoreSellRows = sellGroup && sellData.rows.length < sellGroup.variants.length;
-    const canAddMoreDeleteRows = deleteGroup && deleteData.rows.length < deleteGroup.variants.length;
-    const canAddMoreCreditSellRows = creditSellGroup && creditSellData.rows.length < creditSellGroup.variants.length;
+    const canAddMoreSellRows = sellGroup && needsSizeSelect(sellGroup) && sellData.rows.length < sellGroup.variants.length;
+    const canAddMoreDeleteRows = deleteGroup && needsSizeSelect(deleteGroup) && deleteData.rows.length < deleteGroup.variants.length;
+    const canAddMoreCreditSellRows = creditSellGroup && needsSizeSelect(creditSellGroup) && creditSellData.rows.length < creditSellGroup.variants.length;
 
     const handleSellGroupSelect = (localId) => {
         const group = productGroups.find((g) => String(g.local_id) === String(localId));
+        const autoSize = group && !needsSizeSelect(group)
+            ? (group.variants[0]?.size || 'Standart')
+            : (group && group.variants.length === 1 ? (group.variants[0].size || 'Standart') : '');
         setSellData({
             product_id: localId,
             rows: [{
-                size: group && group.variants.length === 1 ? (group.variants[0].size || '') : '',
+                size: autoSize,
                 sell_quantity: 1,
                 selling_price: '',
                 color: group?.color || ''
@@ -386,19 +434,25 @@ const DashboardPage = () => {
 
     const handleDeleteGroupSelect = (localId) => {
         const group = productGroups.find((g) => String(g.local_id) === String(localId));
+        const autoSize = group && !needsSizeSelect(group)
+            ? (group.variants[0]?.size || 'Standart')
+            : (group && group.variants.length === 1 ? (group.variants[0].size || 'Standart') : '');
         setDeleteData({
             product_id: localId,
-            rows: [{ size: group && group.variants.length === 1 ? (group.variants[0].size || '') : '', remove_all: false, quantity_to_remove: 1 }]
+            rows: [{ size: autoSize, remove_all: false, quantity_to_remove: 1 }]
         });
     };
 
     const handleCreditSellGroupSelect = (localId) => {
         const group = productGroups.find((g) => String(g.local_id) === String(localId));
+        const autoSize = group && !needsSizeSelect(group)
+            ? (group.variants[0]?.size || 'Standart')
+            : (group && group.variants.length === 1 ? (group.variants[0].size || 'Standart') : '');
         setCreditSellData(prev => ({
             ...prev,
             product_id: localId,
             rows: [{
-                size: group && group.variants.length === 1 ? (group.variants[0].size || '') : '',
+                size: autoSize,
                 sell_quantity: 1,
                 selling_price: '',
                 color: group?.color || ''
@@ -777,23 +831,54 @@ const DashboardPage = () => {
 
         const items = [];
         const seenVariantIds = new Set();
+        const productColor = (sellGroup.color || '').trim() || undefined;
+        const noSizeMode = !needsSizeSelect(sellGroup);
 
         for (let i = 0; i < sellData.rows.length; i++) {
             const row = sellData.rows[i];
+            const qty = Number(row.sell_quantity);
+            const price = Number(row.selling_price);
+            if (!qty || qty <= 0) { alert(`${i + 1}-qatorda sotilayotgan sonni to'g'ri kiriting!`); return; }
+            if (isNaN(price) || price < 0 || row.selling_price === '') { alert(`${i + 1}-qatorda sotish narxini to'g'ri kiriting!`); return; }
+
+            // Razmersiz tovar: "Standart" — sonni barcha variantlarga taqsimlaymiz
+            if (noSizeMode) {
+                const totalAvail = groupTotalQty(sellGroup);
+                if (qty > totalAvail) {
+                    alert(`Omborda faqat ${totalAvail} ta bor!`);
+                    return;
+                }
+                const allocated = allocateAcrossVariants(sellGroup, qty);
+                if (allocated.length === 0) {
+                    alert("Omborda tovar topilmadi!");
+                    return;
+                }
+                for (const { variant, qty: take } of allocated) {
+                    const pid = Number(variant.id);
+                    if (!Number.isInteger(pid) || pid <= 0) {
+                        alert("Tovar ID topilmadi. Sahifani yangilab qayta urinib ko'ring!");
+                        return;
+                    }
+                    items.push({
+                        product_id: pid,
+                        local_id: Number(sellGroup.local_id) || undefined,
+                        size: variant.size || '',
+                        sell_quantity: take,
+                        selling_price: price,
+                        color: productColor
+                    });
+                }
+                continue;
+            }
+
             if (sellGroup.variants.length > 1 && !row.size) { alert(`${i + 1}-qatorda razmerni tanlang!`); return; }
             const variant = resolveVariant(sellGroup, row);
             if (!variant) { alert(`${i + 1}-qatordagi razmer bo'yicha tovar topilmadi!`); return; }
             if (seenVariantIds.has(variant.id)) { alert("Bir xil razmerni savatchada faqat bir marta tanlang!"); return; }
             seenVariantIds.add(variant.id);
 
-            const qty = Number(row.sell_quantity);
-            const price = Number(row.selling_price);
-            if (!qty || qty <= 0) { alert(`${i + 1}-qatorda sotilayotgan sonni to'g'ri kiriting!`); return; }
             if (qty > variant.quantity) { alert(`${i + 1}-qatorda: omborda faqat ${variant.quantity} ta bor!`); return; }
-            if (isNaN(price) || price < 0 || row.selling_price === '') { alert(`${i + 1}-qatorda sotish narxini to'g'ri kiriting!`); return; }
 
-            // Rang tovardan olinadi — qo'lda yozilmaydi
-            const productColor = (sellGroup.color || '').trim() || undefined;
             const pid = Number(variant.id);
             if (!Number.isInteger(pid) || pid <= 0) {
                 alert(`${i + 1}-qatorda tovar ID topilmadi. Sahifani yangilab qayta urinib ko'ring!`);
@@ -834,23 +919,53 @@ const DashboardPage = () => {
 
         const items = [];
         const seenVariantIds = new Set();
+        const productColor = (creditSellGroup.color || '').trim() || undefined;
+        const noSizeMode = !needsSizeSelect(creditSellGroup);
 
         for (let i = 0; i < creditSellData.rows.length; i++) {
             const row = creditSellData.rows[i];
+            const qty = Number(row.sell_quantity);
+            const price = Number(row.selling_price);
+            if (!qty || qty <= 0) { alert(`${i + 1}-qatorda sotilayotgan sonni to'g'ri kiriting!`); return; }
+            if (isNaN(price) || price < 0 || row.selling_price === '') { alert(`${i + 1}-qatorda sotish narxini to'g'ri kiriting!`); return; }
+
+            if (noSizeMode) {
+                const totalAvail = groupTotalQty(creditSellGroup);
+                if (qty > totalAvail) {
+                    alert(`Omborda faqat ${totalAvail} ta bor!`);
+                    return;
+                }
+                const allocated = allocateAcrossVariants(creditSellGroup, qty);
+                if (allocated.length === 0) {
+                    alert("Omborda tovar topilmadi!");
+                    return;
+                }
+                for (const { variant, qty: take } of allocated) {
+                    const pid = Number(variant.id);
+                    if (!Number.isInteger(pid) || pid <= 0) {
+                        alert("Tovar ID topilmadi. Sahifani yangilab qayta urinib ko'ring!");
+                        return;
+                    }
+                    items.push({
+                        product_id: pid,
+                        local_id: Number(creditSellGroup.local_id) || undefined,
+                        size: variant.size || '',
+                        sell_quantity: take,
+                        selling_price: price,
+                        color: productColor
+                    });
+                }
+                continue;
+            }
+
             if (creditSellGroup.variants.length > 1 && !row.size) { alert(`${i + 1}-qatorda razmerni tanlang!`); return; }
             const variant = resolveVariant(creditSellGroup, row);
             if (!variant) { alert(`${i + 1}-qatordagi razmer bo'yicha tovar topilmadi!`); return; }
             if (seenVariantIds.has(variant.id)) { alert("Bir xil razmerni savatchada faqat bir marta tanlang!"); return; }
             seenVariantIds.add(variant.id);
 
-            const qty = Number(row.sell_quantity);
-            const price = Number(row.selling_price);
-            if (!qty || qty <= 0) { alert(`${i + 1}-qatorda sotilayotgan sonni to'g'ri kiriting!`); return; }
             if (qty > variant.quantity) { alert(`${i + 1}-qatorda: omborda faqat ${variant.quantity} ta bor!`); return; }
-            if (isNaN(price) || price < 0 || row.selling_price === '') { alert(`${i + 1}-qatorda sotish narxini to'g'ri kiriting!`); return; }
 
-            // Rang tovardan olinadi — qo'lda yozilmaydi
-            const productColor = (creditSellGroup.color || '').trim() || undefined;
             const pid = Number(variant.id);
             if (!Number.isInteger(pid) || pid <= 0) {
                 alert(`${i + 1}-qatorda tovar ID topilmadi. Sahifani yangilab qayta urinib ko'ring!`);
@@ -914,9 +1029,28 @@ const DashboardPage = () => {
 
         const items = [];
         const seenVariantIds = new Set();
+        const noSizeMode = !needsSizeSelect(deleteGroup);
 
         for (let i = 0; i < deleteData.rows.length; i++) {
             const row = deleteData.rows[i];
+
+            if (noSizeMode) {
+                const totalAvail = groupTotalQty(deleteGroup);
+                const removeQty = row.remove_all ? totalAvail : (Number(row.quantity_to_remove) || 0);
+                if (!removeQty || removeQty <= 0) { alert(`${i + 1}-qatorda olib tashlanadigan sonni to'g'ri kiriting!`); return; }
+                if (removeQty > totalAvail) { alert(`Omborda faqat ${totalAvail} ta bor!`); return; }
+                const allocated = allocateAcrossVariants(deleteGroup, removeQty);
+                if (allocated.length === 0) { alert("Omborda tovar topilmadi!"); return; }
+                for (const { variant, qty: take } of allocated) {
+                    items.push({
+                        product_id: Number(variant.id),
+                        remove_all: take >= (Number(variant.quantity) || 0),
+                        quantity_to_remove: take
+                    });
+                }
+                continue;
+            }
+
             if (deleteGroup.variants.length > 1 && !row.size) { alert(`${i + 1}-qatorda razmerni tanlang!`); return; }
             const variant = resolveVariant(deleteGroup, row);
             if (!variant) { alert(`${i + 1}-qatordagi razmer bo'yicha tovar topilmadi!`); return; }
@@ -1604,9 +1738,15 @@ const DashboardPage = () => {
                                     {creditSellData.rows.map((row, index) => {
                                         const variant = resolveVariant(creditSellGroup, row);
                                         const usedSizes = usedCreditSellSizes(index);
+                                        const noSize = !needsSizeSelect(creditSellGroup);
+                                        const maxQty = noSize ? groupTotalQty(creditSellGroup) : (variant?.quantity || 0);
                                         return (
                                             <div className="cart-row" key={index}>
-                                                {creditSellGroup.variants.length > 1 && (
+                                                {noSize ? (
+                                                    <div className="info-banner info-success" style={{ marginBottom: 8 }}>
+                                                        📏 Razmer: <b>Standart</b> (Qoldiq: {maxQty} ta)
+                                                    </div>
+                                                ) : needsSizeSelect(creditSellGroup) && (
                                                     <div className="form-group">
                                                         <label>Razmer * ({index + 1}-qator) :</label>
                                                         <select value={row.size} onChange={(e) => updateCreditSellRow(index, { size: e.target.value })} required className="form-input">
@@ -1617,11 +1757,11 @@ const DashboardPage = () => {
                                                         </select>
                                                     </div>
                                                 )}
-                                                {variant && (
+                                                {(variant || noSize) && (
                                                     <div className="cart-row-fields">
                                                         <div className="form-group">
                                                             <label>Soni (Dona) * :</label>
-                                                            <input type="number" min="1" max={variant.quantity} value={row.sell_quantity} onChange={(e) => updateCreditSellRow(index, { sell_quantity: e.target.value })} required className="form-input" />
+                                                            <input type="number" min="1" max={maxQty} value={row.sell_quantity} onChange={(e) => updateCreditSellRow(index, { sell_quantity: e.target.value })} required className="form-input" />
                                                         </div>
                                                         <div className="form-group">
                                                             <label>Sotish narxi (1 dona) * :</label>
@@ -2375,9 +2515,15 @@ const DashboardPage = () => {
                                     {sellData.rows.map((row, index) => {
                                         const variant = resolveVariant(sellGroup, row);
                                         const usedSizes = usedSellSizes(index);
+                                        const noSize = !needsSizeSelect(sellGroup);
+                                        const maxQty = noSize ? groupTotalQty(sellGroup) : (variant?.quantity || 0);
                                         return (
                                             <div className="cart-row" key={index}>
-                                                {sellGroup.variants.length > 1 && (
+                                                {noSize ? (
+                                                    <div className="info-banner info-success" style={{ marginBottom: 8 }}>
+                                                        📏 Razmer: <b>Standart</b> (Qoldiq: {maxQty} ta)
+                                                    </div>
+                                                ) : needsSizeSelect(sellGroup) && (
                                                     <div className="form-group">
                                                         <label>Razmer * :</label>
                                                         <select value={row.size} onChange={(e) => updateSellRow(index, { size: e.target.value })} required className="form-input">
@@ -2388,11 +2534,11 @@ const DashboardPage = () => {
                                                         </select>
                                                     </div>
                                                 )}
-                                                {variant && (
+                                                {(variant || noSize) && (
                                                     <div className="cart-row-fields">
                                                         <div className="form-group">
                                                             <label>Soni * :</label>
-                                                            <input type="number" min="1" max={variant.quantity} value={row.sell_quantity} onChange={(e) => updateSellRow(index, { sell_quantity: e.target.value })} required className="form-input" />
+                                                            <input type="number" min="1" max={maxQty} value={row.sell_quantity} onChange={(e) => updateSellRow(index, { sell_quantity: e.target.value })} required className="form-input" />
                                                         </div>
                                                         <div className="form-group">
                                                             <label>Sotish narxi * :</label>
@@ -2409,7 +2555,7 @@ const DashboardPage = () => {
                                     {canAddMoreSellRows && <button type="button" onClick={addSellRow} className="btn btn-add-row">+ Yana razmer</button>}
                                     {(() => {
                                         const validRows = sellData.rows
-                                            .map((row) => ({ row, variant: resolveVariant(sellGroup, row) }))
+                                            .map((row) => ({ row, variant: resolveVariant(sellGroup, row) || sellGroup.variants[0] }))
                                             .filter(({ variant, row }) => variant && Number(row.selling_price) >= 0 && row.selling_price !== '' && Number(row.sell_quantity) > 0);
                                         if (validRows.length === 0) return null;
                                         const totalQty = validRows.reduce((s, { row }) => s + Number(row.sell_quantity), 0);
@@ -2502,9 +2648,15 @@ const DashboardPage = () => {
                                     {deleteData.rows.map((row, index) => {
                                         const variant = resolveVariant(deleteGroup, row);
                                         const usedSizes = usedDeleteSizes(index);
+                                        const noSize = !needsSizeSelect(deleteGroup);
+                                        const maxQty = noSize ? groupTotalQty(deleteGroup) : (variant?.quantity || 0);
                                         return (
                                             <div className="cart-row" key={index}>
-                                                {deleteGroup.variants.length > 1 && (
+                                                {noSize ? (
+                                                    <div className="info-banner info-success" style={{ marginBottom: 8 }}>
+                                                        📏 Razmer: <b>Standart</b> (Qoldiq: {maxQty} ta)
+                                                    </div>
+                                                ) : needsSizeSelect(deleteGroup) && (
                                                     <div className="form-group">
                                                         <label>Razmer * ({index + 1}-qator) :</label>
                                                         <select value={row.size} onChange={(e) => updateDeleteRow(index, { size: e.target.value })} required className="form-input">
@@ -2515,14 +2667,14 @@ const DashboardPage = () => {
                                                         </select>
                                                     </div>
                                                 )}
-                                                {variant && (
+                                                {(variant || noSize) && (
                                                     <div className="cart-row-fields">
                                                         <div className="form-group">
                                                             <label>Olib tashlanadigan son * :</label>
                                                             <input
                                                                 type="number"
                                                                 min="1"
-                                                                max={variant.quantity}
+                                                                max={maxQty}
                                                                 value={row.quantity_to_remove}
                                                                 onChange={(e) => updateDeleteRow(index, { quantity_to_remove: e.target.value, remove_all: false })}
                                                                 disabled={row.remove_all}
@@ -2536,10 +2688,10 @@ const DashboardPage = () => {
                                                                     checked={row.remove_all}
                                                                     onChange={(e) => updateDeleteRow(index, {
                                                                         remove_all: e.target.checked,
-                                                                        quantity_to_remove: e.target.checked ? variant.quantity : row.quantity_to_remove
+                                                                        quantity_to_remove: e.target.checked ? maxQty : row.quantity_to_remove
                                                                     })}
                                                                 />
-                                                                Hammasini o'chirish ({variant.quantity} ta)
+                                                                Hammasini o'chirish ({maxQty} ta)
                                                             </label>
                                                         </div>
                                                     </div>
