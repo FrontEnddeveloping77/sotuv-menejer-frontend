@@ -30,6 +30,84 @@ const daysSince = (dateValue) => {
     return (Date.now() - then) / (1000 * 60 * 60 * 24);
 };
 
+// ============================================================
+// LOKAL CACHE (ilova kabi): birinchi ochilishda saqlaydi,
+// keyingi ochilishda darhol ko'rsatadi, fonida yangilaydi
+// ============================================================
+const CACHE_DB_NAME = 'sotuv_menejer_cache';
+const CACHE_STORE = 'kv';
+const CACHE_KEY_PREFIX = 'dashboard_v1_';
+
+const openCacheDb = () =>
+    new Promise((resolve, reject) => {
+        try {
+            const req = indexedDB.open(CACHE_DB_NAME, 1);
+            req.onupgradeneeded = () => {
+                const db = req.result;
+                if (!db.objectStoreNames.contains(CACHE_STORE)) {
+                    db.createObjectStore(CACHE_STORE);
+                }
+            };
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        } catch (e) {
+            reject(e);
+        }
+    });
+
+const getCacheKey = () => {
+    const token = localStorage.getItem('token') || '';
+    // Har bir login uchun alohida cache
+    return CACHE_KEY_PREFIX + (token.slice(-24) || 'anon');
+};
+
+const readDashboardCache = async () => {
+    try {
+        const db = await openCacheDb();
+        return await new Promise((resolve, reject) => {
+            const tx = db.transaction(CACHE_STORE, 'readonly');
+            const store = tx.objectStore(CACHE_STORE);
+            const req = store.get(getCacheKey());
+            req.onsuccess = () => resolve(req.result || null);
+            req.onerror = () => reject(req.error);
+        });
+    } catch (e) {
+        console.warn('Cache o\'qish xatosi:', e);
+        return null;
+    }
+};
+
+const writeDashboardCache = async (payload) => {
+    try {
+        const db = await openCacheDb();
+        await new Promise((resolve, reject) => {
+            const tx = db.transaction(CACHE_STORE, 'readwrite');
+            const store = tx.objectStore(CACHE_STORE);
+            const req = store.put(
+                { ...payload, savedAt: Date.now() },
+                getCacheKey()
+            );
+            req.onsuccess = () => resolve();
+            req.onerror = () => reject(req.error);
+        });
+    } catch (e) {
+        console.warn('Cache yozish xatosi (xotira to\'lgan bo\'lishi mumkin):', e);
+    }
+};
+
+const clearDashboardCache = async () => {
+    try {
+        const db = await openCacheDb();
+        await new Promise((resolve, reject) => {
+            const tx = db.transaction(CACHE_STORE, 'readwrite');
+            const store = tx.objectStore(CACHE_STORE);
+            const req = store.delete(getCacheKey());
+            req.onsuccess = () => resolve();
+            req.onerror = () => reject(req.error);
+        });
+    } catch (e) { /* ignore */ }
+};
+
 const DashboardPage = () => {
     const navigate = useNavigate();
 
@@ -183,6 +261,7 @@ const DashboardPage = () => {
 
     const handleLogout = () => {
         if (window.confirm("Tizimdan chiqishni tasdiqlaysizmi?")) {
+            clearDashboardCache();
             localStorage.removeItem('token');
             navigate('/login');
         }
@@ -192,9 +271,10 @@ const DashboardPage = () => {
         try {
             if (showMainLoader) setIsInitialLoading(true);
 
+            // light=1: rasmlarsiz (base64) — 10k+ tovar bo'lsa yuklanish ancha tez
             const [statsRes, productsRes] = await Promise.all([
                 api.get('/api/dashboard/stats'),
-                api.get('/api/products')
+                api.get('/api/products', { params: { light: 1 } })
             ]);
 
             setSubscriptionExpired(false);
@@ -205,7 +285,14 @@ const DashboardPage = () => {
             }
 
             const fetchedProducts = productsRes.data?.products || productsRes.data || [];
-            setProducts(Array.isArray(fetchedProducts) ? fetchedProducts : []);
+            const list = Array.isArray(fetchedProducts) ? fetchedProducts : [];
+            setProducts(list);
+
+            // Ilova kabi: keyingi ochilish uchun saqlab qo'yamiz
+            writeDashboardCache({
+                stats: statsRes.data || null,
+                products: list
+            });
         } catch (err) {
             console.error("Ma'lumotlarni yuklashda xatolik:", err);
             const status = err.response?.status;
@@ -215,6 +302,7 @@ const DashboardPage = () => {
                 return;
             }
             if (status === 401) {
+                clearDashboardCache();
                 localStorage.removeItem('token');
                 navigate('/login', { replace: true });
                 return;
@@ -224,7 +312,34 @@ const DashboardPage = () => {
         }
     };
 
-    useEffect(() => { fetchData(true); }, []);
+    // 1) Cache dan darhol ko'rsatish  2) Fonida yangilash (telefon ilovasi kabi)
+    useEffect(() => {
+        let cancelled = false;
+
+        const boot = async () => {
+            const cached = await readDashboardCache();
+            if (cancelled) return;
+
+            if (cached?.products || cached?.stats) {
+                if (cached.stats) {
+                    setStats((prev) => ({ ...prev, ...cached.stats }));
+                }
+                if (Array.isArray(cached.products)) {
+                    setProducts(cached.products);
+                }
+                // Cache bor — loader ko'rsatmasdan ochamiz, fonida yangilaymiz
+                setIsInitialLoading(false);
+                fetchData(false);
+            } else {
+                // Birinchi marta — serverdan kutamiz
+                fetchData(true);
+            }
+        };
+
+        boot();
+        return () => { cancelled = true; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const formatSum = (val) => Number(val || 0).toLocaleString('uz-UZ');
 
@@ -312,6 +427,7 @@ const DashboardPage = () => {
                     cost_price: p.cost_price,
                     selling_price: p.selling_price ?? null,
                     image_url: p.image_url || null,
+                    has_image: !!(p.has_image || p.image_url),
                     createdAt: p.created_at || null,
                     variants: []
                 });
@@ -323,6 +439,8 @@ const DashboardPage = () => {
             if (p.selling_price != null && group.selling_price == null) {
                 group.selling_price = p.selling_price;
             }
+            if (p.image_url && !group.image_url) group.image_url = p.image_url;
+            if (p.has_image || p.image_url) group.has_image = true;
             group.variants.push({
                 id: p.id,
                 size: p.size,
@@ -484,13 +602,24 @@ const DashboardPage = () => {
         setCreditSellData((prev) => ({ ...prev, rows: prev.rows.length > 1 ? prev.rows.filter((_, i) => i !== index) : prev.rows }));
     };
 
-    const openEditProduct = (group) => {
+    const openEditProduct = async (group) => {
         if (!isProductEditable(group)) {
             alert(`Bu tovar qo'shilganiga ${PRODUCT_EDIT_WINDOW_DAYS} kundan ko'p vaqt o'tgan, tahrirlab bo'lmaydi!`);
             return;
         }
 
-        const imageUrl = group.image_url || '';
+        let imageUrl = group.image_url || '';
+        // Ro'yxat light rejimda — rasm alohida so'rov bilan
+        if (!imageUrl && group.has_image) {
+            try {
+                const res = await api.get('/api/products', {
+                    params: { local_id: group.local_id, include_images: 1, light: 0 }
+                });
+                const rows = res.data?.products || [];
+                const withImg = rows.find((p) => p.image_url);
+                if (withImg?.image_url) imageUrl = withImg.image_url;
+            } catch (e) { /* rasmiz tahrirlash mumkin */ }
+        }
 
         setEditProduct({
             local_id: group.local_id,
