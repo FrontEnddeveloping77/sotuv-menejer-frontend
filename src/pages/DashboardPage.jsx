@@ -789,7 +789,19 @@ const DashboardPage = () => {
 
             // Rang tovardan olinadi — qo'lda yozilmaydi
             const productColor = (sellGroup.color || '').trim() || undefined;
-            items.push({ product_id: Number(variant.id), sell_quantity: qty, selling_price: price, color: productColor });
+            const pid = Number(variant.id);
+            if (!Number.isInteger(pid) || pid <= 0) {
+                alert(`${i + 1}-qatorda tovar ID topilmadi. Sahifani yangilab qayta urinib ko'ring!`);
+                return;
+            }
+            items.push({
+                product_id: pid,
+                local_id: Number(sellGroup.local_id) || undefined,
+                size: variant.size || row.size || '',
+                sell_quantity: qty,
+                selling_price: price,
+                color: productColor
+            });
         }
 
         if (items.length === 0) { alert("Kamida bitta razmer va son kiritilishi shart!"); return; }
@@ -834,7 +846,19 @@ const DashboardPage = () => {
 
             // Rang tovardan olinadi — qo'lda yozilmaydi
             const productColor = (creditSellGroup.color || '').trim() || undefined;
-            items.push({ product_id: Number(variant.id), sell_quantity: qty, selling_price: price, color: productColor });
+            const pid = Number(variant.id);
+            if (!Number.isInteger(pid) || pid <= 0) {
+                alert(`${i + 1}-qatorda tovar ID topilmadi. Sahifani yangilab qayta urinib ko'ring!`);
+                return;
+            }
+            items.push({
+                product_id: pid,
+                local_id: Number(creditSellGroup.local_id) || undefined,
+                size: variant.size || row.size || '',
+                sell_quantity: qty,
+                selling_price: price,
+                color: productColor
+            });
         }
 
         if (items.length === 0) { alert("Kamida bitta razmer va son kiritilishi shart!"); return; }
@@ -1852,36 +1876,142 @@ const DashboardPage = () => {
                             </div>
                             <div className="form-group form-group-image">
                                 <label>Tovar rasmi (ixtiyoriy)</label>
-                                <div className={`image-upload-box${editImagePreview ? ' has-preview' : ''}`}>
+                                <div
+                                    className={`image-upload-box${editImagePreview ? ' has-preview' : ''}`}
+                                    style={
+                                        editImagePreview
+                                            ? {
+                                                position: 'relative',
+                                                borderRadius: 16,
+                                                overflow: 'hidden',
+                                                border: '1px solid #e2e8f0',
+                                                background: '#f8fafc',
+                                                padding: 12,
+                                                display: 'flex',
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                minHeight: 160
+                                            }
+                                            : {
+                                                borderRadius: 16,
+                                                border: '2px dashed #cbd5e1',
+                                                background: '#f8fafc',
+                                                padding: 24,
+                                                textAlign: 'center'
+                                            }
+                                    }
+                                >
                                     {editImagePreview ? (
-                                        <div className="image-preview-wrap">
-                                            <img src={editImagePreview} alt="Preview" className="image-preview" />
+                                        <div style={{ position: 'relative', display: 'inline-block', maxWidth: '100%' }}>
+                                            <img
+                                                src={editImagePreview}
+                                                alt="Preview"
+                                                className="image-preview"
+                                                style={{
+                                                    display: 'block',
+                                                    maxWidth: '100%',
+                                                    maxHeight: 220,
+                                                    borderRadius: 12,
+                                                    objectFit: 'contain',
+                                                    boxShadow: '0 4px 14px rgba(15, 23, 42, 0.08)'
+                                                }}
+                                            />
                                             <button
                                                 type="button"
-                                                className="image-remove-btn"
+                                                title="Rasmni olib tashlash"
                                                 onClick={() => {
                                                     setEditProduct((prev) => ({ ...prev, image_url: '' }));
                                                     setEditImagePreview('');
                                                     setEditImageFileName('');
                                                 }}
+                                                style={{
+                                                    position: 'absolute',
+                                                    top: 8,
+                                                    right: 8,
+                                                    width: 36,
+                                                    height: 36,
+                                                    borderRadius: '50%',
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                    background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                                                    color: '#fff',
+                                                    fontSize: 16,
+                                                    fontWeight: 700,
+                                                    lineHeight: 1,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    boxShadow: '0 4px 12px rgba(220, 38, 38, 0.45)',
+                                                    transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.transform = 'scale(1.08)';
+                                                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(220, 38, 38, 0.55)';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.transform = 'scale(1)';
+                                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(220, 38, 38, 0.45)';
+                                                }}
                                             >
                                                 ✕
                                             </button>
+                                            <label
+                                                style={{
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: 6,
+                                                    marginTop: 12,
+                                                    padding: '8px 14px',
+                                                    borderRadius: 10,
+                                                    background: '#eff6ff',
+                                                    color: '#1d4ed8',
+                                                    fontSize: 13,
+                                                    fontWeight: 600,
+                                                    cursor: 'pointer',
+                                                    border: '1px solid #bfdbfe'
+                                                }}
+                                            >
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleEditProductImageChange}
+                                                    style={{ display: 'none' }}
+                                                />
+                                                🔄 Rasmni almashtirish
+                                            </label>
                                         </div>
                                     ) : (
-                                        <label className="image-upload-label">
+                                        <label
+                                            className="image-upload-label"
+                                            style={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                gap: 8,
+                                                cursor: 'pointer',
+                                                color: '#475569',
+                                                fontWeight: 600
+                                            }}
+                                        >
                                             <input
                                                 type="file"
                                                 accept="image/*"
                                                 onChange={handleEditProductImageChange}
                                                 className="image-upload-input"
+                                                style={{ display: 'none' }}
                                             />
-                                            <span>📷 Rasm tanlash</span>
+                                            <span style={{ fontSize: 32 }}>📷</span>
+                                            <span>Rasm tanlash</span>
+                                            <span style={{ fontSize: 12, fontWeight: 400, color: '#94a3b8' }}>
+                                                PNG, JPG — max 8 MB
+                                            </span>
                                         </label>
                                     )}
                                 </div>
                                 {editImageFileName && (
-                                    <small style={{ color: '#64748b' }}>{editImageFileName}</small>
+                                    <small style={{ color: '#64748b', display: 'block', marginTop: 8 }}>
+                                        {editImageFileName}
+                                    </small>
                                 )}
                             </div>
                             <div className="modal-actions">
