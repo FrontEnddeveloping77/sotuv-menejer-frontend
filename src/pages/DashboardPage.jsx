@@ -346,6 +346,7 @@ const DashboardPage = () => {
     const filteredSellGroups = productGroups.filter((g) => matchesQuery(g, sellSearch));
     const filteredDeleteGroups = productGroups.filter((g) => matchesQuery(g, deleteSearch));
     const filteredCreditSellGroups = productGroups.filter((g) => matchesQuery(g, creditSellSearch));
+    const filteredEditGroups = productGroups.filter((g) => matchesQuery(g, editSelectSearch));
 
     const sellGroup = productGroups.find((g) => String(g.local_id) === String(sellData.product_id)) || null;
     const deleteGroup = productGroups.find((g) => String(g.local_id) === String(deleteData.product_id)) || null;
@@ -446,7 +447,13 @@ const DashboardPage = () => {
 
         setEditImagePreview(imageUrl);
         setEditImageFileName(imageUrl ? 'Mavjud rasm' : '');
+        setEditSelectModal(false);
         setEditModal(true);
+    };
+
+    const openEditSelectModal = () => {
+        setEditSelectSearch('');
+        setEditSelectModal(true);
     };
 
     const handleEditProductImageChange = async (e) => {
@@ -1354,6 +1361,7 @@ const DashboardPage = () => {
                 </div>
                 <div className="side-menu-buttons">
                     <button type="button" onClick={() => { setAddProductModal(true); setMenuOpen(false); }} className="btn btn-add">➕ Tovar Qo'shish</button>
+                    <button type="button" onClick={() => { openEditSelectModal(); setMenuOpen(false); }} className="btn btn-edit-product">✏️ Tovarni tahrirlash</button>
                     <button type="button" onClick={() => { setSellModal(true); setMenuOpen(false); }} className="btn btn-sell">🛒 Tovar Sotish</button>
                     <button type="button" onClick={() => { setCreditSellModal(true); setMenuOpen(false); }} className="btn btn-credit-sell">🛒 Nasiyaga sotish</button>
                     <button type="button" onClick={() => { openUndoDebtModal(); setMenuOpen(false); }} className="btn btn-undo-debt">↩️ Qarz to‘lovini bekor qilish</button>
@@ -1683,6 +1691,216 @@ const DashboardPage = () => {
                         <div className="modal-actions">
                             <button type="button" onClick={() => setCustomerDebtsModal(false)} className="btn btn-danger">Yopish</button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+
+            {/* ===================== TOVAR TANLASH (TAHRIRLASH) ===================== */}
+            {editSelectModal && (
+                <div className="modal-overlay" onClick={() => setEditSelectModal(false)}>
+                    <div className="modal-box modal-box-wide" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>✏️ Tovarni tahrirlash</h3>
+                        </div>
+                        <p style={{ fontSize: 13, color: '#64748b', marginBottom: 12 }}>
+                            Faqat oxirgi <b>{PRODUCT_EDIT_WINDOW_DAYS} kun</b> ichida qo&apos;shilgan tovarlar tahrirlanadi.
+                        </p>
+                        <div className="form-group" style={{ marginBottom: 12 }}>
+                            <input
+                                type="text"
+                                placeholder="Nom, kategoriya yoki rang bo'yicha qidirish..."
+                                value={editSelectSearch}
+                                onChange={(e) => setEditSelectSearch(e.target.value)}
+                                className="form-input"
+                                autoFocus
+                            />
+                        </div>
+                        <div className="debts-list" style={{ maxHeight: 420, overflowY: 'auto' }}>
+                            {filteredEditGroups.length === 0 ? (
+                                <div className="info-banner">Tovar topilmadi</div>
+                            ) : (
+                                filteredEditGroups.map((g) => {
+                                    const editable = isProductEditable(g);
+                                    const totalQty = (g.variants || []).reduce((s, v) => s + (Number(v.quantity) || 0), 0);
+                                    return (
+                                        <div
+                                            key={g.local_id}
+                                            className="debt-card"
+                                            style={{
+                                                opacity: editable ? 1 : 0.55,
+                                                cursor: editable ? 'pointer' : 'not-allowed'
+                                            }}
+                                            onClick={() => {
+                                                if (editable) openEditProduct(g);
+                                            }}
+                                        >
+                                            <strong>#{g.local_id} — {g.name}</strong>
+                                            <div style={{ marginTop: 6, fontSize: 14, color: '#64748b' }}>
+                                                {g.category || 'Umumiy'}
+                                                {g.color ? ` · ${g.color}` : ''}
+                                                {' · '}
+                                                {totalQty} dona
+                                            </div>
+                                            {!editable && (
+                                                <div style={{ marginTop: 8, color: '#ef4444', fontSize: 13 }}>
+                                                    Muddat o&apos;tgan — tahrirlab bo&apos;lmaydi
+                                                </div>
+                                            )}
+                                            {editable && (
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-primary"
+                                                    style={{ marginTop: 10 }}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        openEditProduct(g);
+                                                    }}
+                                                >
+                                                    Tahrirlash
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+                        <div className="modal-actions">
+                            <button type="button" onClick={() => setEditSelectModal(false)} className="btn btn-danger">
+                                Yopish
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ===================== TOVARNI TAHRIRLASH FORMASI ===================== */}
+            {editModal && (
+                <div className="modal-overlay">
+                    <div className="modal-box modal-box-wide">
+                        <div className="modal-header">
+                            <h3>✏️ Tovarni tahrirlash #{editProduct.local_id}</h3>
+                        </div>
+                        <form onSubmit={handleEditProduct} className="product-form">
+                            <div className="form-group">
+                                <label>Kategoriya :</label>
+                                <input
+                                    type="text"
+                                    value={editProduct.category}
+                                    onChange={(e) => setEditProduct({ ...editProduct, category: e.target.value })}
+                                    className="form-input"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Tovar nomi * :</label>
+                                <input
+                                    type="text"
+                                    value={editProduct.name}
+                                    onChange={(e) => setEditProduct({ ...editProduct, name: e.target.value })}
+                                    required
+                                    className="form-input"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Rang :</label>
+                                <input
+                                    type="text"
+                                    value={editProduct.color}
+                                    onChange={(e) => setEditProduct({ ...editProduct, color: e.target.value })}
+                                    className="form-input"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Kelgan narxi (Tannarx) * :</label>
+                                <input
+                                    type="number"
+                                    value={editProduct.cost_price}
+                                    onChange={(e) => setEditProduct({ ...editProduct, cost_price: e.target.value })}
+                                    required
+                                    className="form-input"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Sotish narxi (ixtiyoriy) :</label>
+                                <input
+                                    type="number"
+                                    value={editProduct.selling_price}
+                                    onChange={(e) => setEditProduct({ ...editProduct, selling_price: e.target.value })}
+                                    className="form-input"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Razmerlar (vergul bilan) :</label>
+                                <input
+                                    type="text"
+                                    value={editProduct.sizes}
+                                    onChange={(e) => setEditProduct({ ...editProduct, sizes: e.target.value })}
+                                    className="form-input"
+                                    placeholder="Masalan: 40, 41, 42"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Umumiy soni * :</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={editProduct.quantity}
+                                    onChange={(e) => setEditProduct({ ...editProduct, quantity: e.target.value })}
+                                    required
+                                    className="form-input"
+                                />
+                            </div>
+                            <div className="form-group form-group-image">
+                                <label>Tovar rasmi (ixtiyoriy)</label>
+                                <div className={`image-upload-box${editImagePreview ? ' has-preview' : ''}`}>
+                                    {editImagePreview ? (
+                                        <div className="image-preview-wrap">
+                                            <img src={editImagePreview} alt="Preview" className="image-preview" />
+                                            <button
+                                                type="button"
+                                                className="image-remove-btn"
+                                                onClick={() => {
+                                                    setEditProduct((prev) => ({ ...prev, image_url: '' }));
+                                                    setEditImagePreview('');
+                                                    setEditImageFileName('');
+                                                }}
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <label className="image-upload-label">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleEditProductImageChange}
+                                                className="image-upload-input"
+                                            />
+                                            <span>📷 Rasm tanlash</span>
+                                        </label>
+                                    )}
+                                </div>
+                                {editImageFileName && (
+                                    <small style={{ color: '#64748b' }}>{editImageFileName}</small>
+                                )}
+                            </div>
+                            <div className="modal-actions">
+                                <button type="submit" disabled={isSubmitting} className="btn btn-primary">
+                                    {isSubmitting ? 'Saqlanmoqda...' : 'Saqlash'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setEditModal(false);
+                                        setEditImagePreview('');
+                                        setEditImageFileName('');
+                                    }}
+                                    className="btn btn-danger"
+                                >
+                                    Bekor qilish
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}
