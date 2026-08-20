@@ -1204,12 +1204,19 @@ const DashboardPage = () => {
         (productGroups || []).forEach((g) => {
             (g.variants || []).forEach((v) => {
                 if (!v.qr_token) return;
+                const price =
+                    v.selling_price != null && v.selling_price !== ''
+                        ? Number(v.selling_price)
+                        : g.selling_price != null && g.selling_price !== ''
+                            ? Number(g.selling_price)
+                            : null;
                 items.push({
                     token: v.qr_token,
                     name: g.name || 'tovar',
                     size: v.size || 'Standart',
                     local_id: g.local_id,
-                    color: g.color || ''
+                    color: g.color || '',
+                    selling_price: Number.isFinite(price) ? price : null
                 });
             });
         });
@@ -1243,24 +1250,50 @@ const DashboardPage = () => {
                     image.src = apiUrl;
                 });
 
+                // ProductQR bilan bir xil: nom, rang, razmer, narx
                 const canvas = document.createElement('canvas');
-                const pad = 24;
-                const textH = 72;
+                const pad = 28;
+                const textH = 110;
                 canvas.width = img.width + pad * 2;
                 canvas.height = img.height + pad * 2 + textH;
                 const ctx = canvas.getContext('2d');
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(img, pad, pad);
-                ctx.fillStyle = '#0f172a';
-                ctx.font = 'bold 18px sans-serif';
+
+                const cx = canvas.width / 2;
+                let ty = img.height + pad + 28;
+
                 ctx.textAlign = 'center';
-                const title = `#${item.local_id} ${item.name}`;
-                ctx.fillText(title.slice(0, 40), canvas.width / 2, img.height + pad + 28, canvas.width - 16);
-                ctx.font = '14px sans-serif';
-                ctx.fillStyle = '#475569';
-                const sub = `📏 ${item.size}${item.color ? ' · 🎨 ' + item.color : ''}`;
-                ctx.fillText(sub.slice(0, 50), canvas.width / 2, img.height + pad + 52, canvas.width - 16);
+                ctx.textBaseline = 'middle';
+
+                // Nom
+                ctx.fillStyle = '#0f172a';
+                ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
+                ctx.fillText(String(item.name || '').slice(0, 36), cx, ty, canvas.width - 24);
+                ty += 24;
+
+                // Rang
+                if (item.color) {
+                    ctx.fillStyle = '#64748b';
+                    ctx.font = '15px system-ui, -apple-system, sans-serif';
+                    ctx.fillText(String(item.color).slice(0, 30), cx, ty, canvas.width - 24);
+                    ty += 22;
+                }
+
+                // Razmer
+                ctx.fillStyle = '#64748b';
+                ctx.font = '15px system-ui, -apple-system, sans-serif';
+                ctx.fillText(String(item.size || 'Standart'), cx, ty, canvas.width - 24);
+                ty += 24;
+
+                // Narx (yashil)
+                if (item.selling_price != null) {
+                    ctx.fillStyle = '#0f766e';
+                    ctx.font = 'bold 16px system-ui, -apple-system, sans-serif';
+                    const priceText = `${formatSum(item.selling_price)} so'm`;
+                    ctx.fillText(priceText, cx, ty, canvas.width - 24);
+                }
 
                 const finalUrl = canvas.toDataURL('image/png');
                 const a = document.createElement('a');
@@ -1296,18 +1329,6 @@ const DashboardPage = () => {
                         ☰ Menyu
                     </button>
                 </div>
-                <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <button
-                        type="button"
-                        className="btn btn-primary"
-                        onClick={handleSaveAllQrs}
-                        disabled={savingAllQrs || isInitialLoading}
-                        title="Ombordagi barcha tovarlar QR kodlarini qurilmaga saqlash"
-                        style={{ whiteSpace: 'nowrap' }}
-                    >
-                        {savingAllQrs ? '⏳ Saqlanmoqda...' : '📲 Barcha QR larni saqlash'}
-                    </button>
-                </div>
             </header>
 
             {/* O'ngdan ochiladigan amallar menyusi */}
@@ -1340,6 +1361,14 @@ const DashboardPage = () => {
                     <button type="button" onClick={() => { openSuppliersModal(); setMenuOpen(false); }} className="btn btn-suppliers">👥 Tovar berganlar</button>
                     <button type="button" onClick={() => { openReturnModal(); setMenuOpen(false); }} className="btn btn-return">↩️ Vozvrat</button>
                     <button type="button" onClick={() => { openExpenseListModal(); setMenuOpen(false); }} className="btn btn-edit-expense">📋 Rasxodlarni taxrirlash</button>
+                    <button
+                        type="button"
+                        onClick={() => { setMenuOpen(false); handleSaveAllQrs(); }}
+                        className="btn btn-primary"
+                        disabled={savingAllQrs}
+                    >
+                        {savingAllQrs ? '⏳ QR saqlanmoqda...' : '📲 Barcha QR larni saqlash'}
+                    </button>
                     <button type="button" onClick={() => { setMenuOpen(false); handleLogout(); }} className="btn btn-logout">🚪 Chiqish</button>
                 </div>
             </aside>
