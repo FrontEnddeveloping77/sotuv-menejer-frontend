@@ -1226,33 +1226,21 @@ const DashboardPage = () => {
 
         setSavingAllQrs(true);
         try {
-            let QRCode;
-            try {
-                QRCode = (await import('qrcode')).default;
-            } catch (e) {
-                alert(
-                    "QR generatsiya kutubxonasi topilmadi.\\n" +
-                    "Loyiha papkasida: npm install qrcode\\n" +
-                    "keyin sahifani yangilang."
-                );
-                return;
-            }
-
+            // qrcode npm paketi shart emas — tashqi QR API + canvas
             const origin = window.location.origin;
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
                 const qrLink = `${origin}/qr/${item.token}`;
-                const dataUrl = await QRCode.toDataURL(qrLink, {
-                    width: 512,
-                    margin: 2,
-                    errorCorrectionLevel: 'M'
-                });
+                const apiUrl =
+                    'https://api.qrserver.com/v1/create-qr-code/?size=512x512&margin=10&data=' +
+                    encodeURIComponent(qrLink);
 
                 const img = await new Promise((resolve, reject) => {
                     const image = new Image();
+                    image.crossOrigin = 'anonymous';
                     image.onload = () => resolve(image);
-                    image.onerror = reject;
-                    image.src = dataUrl;
+                    image.onerror = () => reject(new Error('QR rasm yuklanmadi'));
+                    image.src = apiUrl;
                 });
 
                 const canvas = document.createElement('canvas');
