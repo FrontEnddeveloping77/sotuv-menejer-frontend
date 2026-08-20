@@ -137,6 +137,11 @@ const DashboardPage = () => {
     const [loadingDeleted, setLoadingDeleted] = useState(false);
     const [restoreSearch, setRestoreSearch] = useState('');
 
+    const [enteredListModal, setEnteredListModal] = useState(false);
+    const [enteredList, setEnteredList] = useState([]);
+    const [enteredListLoading, setEnteredListLoading] = useState(false);
+    const [enteredListSearch, setEnteredListSearch] = useState('');
+
     // Nasiyaga sotish
     const [creditSellModal, setCreditSellModal] = useState(false);
     const [creditSellSearch, setCreditSellSearch] = useState('');
@@ -1350,6 +1355,29 @@ const DashboardPage = () => {
         }
     };
 
+
+    const openEnteredListModal = async () => {
+        setEnteredListSearch('');
+        setEnteredListModal(true);
+        setEnteredListLoading(true);
+        try {
+            const res = await api.get('/api/products/entered');
+            setEnteredList(res.data?.products || []);
+            if (res.data?.summary) {
+                setStats((prev) => ({
+                    ...prev,
+                    enteredTypes: res.data.summary.enteredTypes ?? prev.enteredTypes,
+                    enteredQty: res.data.summary.enteredQty ?? prev.enteredQty,
+                    enteredSum: res.data.summary.enteredSum ?? prev.enteredSum
+                }));
+            }
+        } catch (err) {
+            alert(err.response?.data?.message || "Kirgan tovarlarni yuklashda xatolik!");
+        } finally {
+            setEnteredListLoading(false);
+        }
+    };
+
     return (
         <div className="dashboard-container">
             <header className="dashboard-header">
@@ -1416,11 +1444,17 @@ const DashboardPage = () => {
                     <p><b>Jami qoldiq:</b> {stats.totalStock || 0} dona</p>
                     <p><b>Ombordagi tovarlar summasi:</b> {formatSum(stats.totalStockValue)} so'm</p>
                 </div>
-                <div className="stat-card">
+                <div
+                    className="stat-card"
+                    onClick={openEnteredListModal}
+                    style={{ cursor: 'pointer' }}
+                    title="Batafsil ro'yxatni ochish"
+                >
                     <h4>📥 Do'konga kirgan tovarlar</h4>
                     <p><b>Kirgan turi:</b> {stats.enteredTypes || 0} xil</p>
                     <p><b>Kirgan soni:</b> {stats.enteredQty || 0} dona</p>
                     <p><b>Kirgan summasi:</b> {formatSum(stats.enteredSum)} so'm</p>
+                    <p style={{ marginTop: 8, fontSize: 12, color: '#3b82f6' }}>Batafsil → (tugaganlar ham)</p>
                 </div>
                 <div className="stat-card">
                     <h4>Bugungi Hisobot</h4>
@@ -2997,6 +3031,87 @@ const DashboardPage = () => {
             )}
 
             {/* ===================== BATAFSIL MODALI ===================== */}
+
+            {/* ===================== DO'KONGA KIRGAN TOVARLAR RO'YXATI ===================== */}
+            {enteredListModal && (
+                <div className="modal-overlay" onClick={() => setEnteredListModal(false)}>
+                    <div className="modal-box modal-box-wide" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>📥 Do&apos;konga kirgan barcha tovarlar</h3>
+                        </div>
+                        <p style={{ fontSize: 13, color: '#64748b', marginBottom: 12 }}>
+                            Ombor + to&apos;liq sotilgan + o&apos;chirilganlar. Oldingi tovarlar ham shu yerda.
+                        </p>
+                        <input
+                            type="text"
+                            placeholder="Nom, kategoriya, rang yoki ID..."
+                            value={enteredListSearch}
+                            onChange={(e) => setEnteredListSearch(e.target.value)}
+                            className="form-input"
+                            style={{ marginBottom: 12 }}
+                        />
+                        {enteredListLoading ? (
+                            <p style={{ textAlign: 'center', padding: 24 }}>Yuklanmoqda...</p>
+                        ) : (
+                            <div className="debts-list" style={{ maxHeight: 480, overflowY: 'auto' }}>
+                                {(() => {
+                                    const q = enteredListSearch.toLowerCase().trim();
+                                    const list = (enteredList || []).filter((p) => {
+                                        if (!q) return true;
+                                        return (
+                                            String(p.name || '').toLowerCase().includes(q) ||
+                                            String(p.category || '').toLowerCase().includes(q) ||
+                                            String(p.color || '').toLowerCase().includes(q) ||
+                                            String(p.local_id || '').includes(q) ||
+                                            (p.sizes || []).join(' ').toLowerCase().includes(q)
+                                        );
+                                    });
+                                    if (list.length === 0) {
+                                        return <div className="info-banner">Ma&apos;lumot topilmadi</div>;
+                                    }
+                                    return list.map((p) => (
+                                        <div key={p.local_id} className="debt-card">
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
+                                                <strong>#{p.local_id} — {p.name}</strong>
+                                                <span
+                                                    style={{
+                                                        fontSize: 12,
+                                                        fontWeight: 700,
+                                                        padding: '4px 10px',
+                                                        borderRadius: 20,
+                                                        background: p.status === 'omborda' ? '#dcfce7' : '#fee2e2',
+                                                        color: p.status === 'omborda' ? '#166534' : '#991b1b',
+                                                        whiteSpace: 'nowrap'
+                                                    }}
+                                                >
+                                                    {p.status === 'omborda' ? 'Omborda' : "To'liq sotilgan / tugagan"}
+                                                </span>
+                                            </div>
+                                            <div style={{ marginTop: 8, fontSize: 14, color: '#64748b' }}>
+                                                {p.category || '—'}
+                                                {p.color && p.color !== '—' ? ` · ${p.color}` : ''}
+                                                {(p.sizes || []).length > 0 ? ` · ${p.sizes.join(', ')}` : ''}
+                                            </div>
+                                            <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, fontSize: 14 }}>
+                                                <div><b>Kirgan:</b> {p.entered_qty} dona</div>
+                                                <div><b>Qoldiq:</b> {p.remaining_qty} dona</div>
+                                                <div><b>Sotilgan:</b> {p.sold_qty} dona</div>
+                                                <div><b>Summa:</b> {formatSum(p.entered_sum)} so&apos;m</div>
+                                            </div>
+                                        </div>
+                                    ));
+                                })()}
+                            </div>
+                        )}
+                        <div className="modal-actions">
+                            <button type="button" onClick={() => setEnteredListModal(false)} className="btn btn-danger">
+                                Yopish
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {detailsGroup && (
                 <div className="modal-overlay" onClick={() => setDetailsGroup(null)}>
                     <div className="modal-box" onClick={(e) => e.stopPropagation()}>
