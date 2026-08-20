@@ -56,6 +56,9 @@ const DashboardPage = () => {
         yearlyExpense: 0,
         totalDebt: 0,
         totalCustomerDebt: 0,
+        enteredQty: 0,
+        enteredTypes: 0,
+        enteredSum: 0,
     });
 
     const [products, setProducts] = useState([]);
@@ -1359,6 +1362,12 @@ const DashboardPage = () => {
                     <p><b>Jami tovar turi:</b> {stats.totalProducts || 0} xil</p>
                     <p><b>Jami qoldiq:</b> {stats.totalStock || 0} dona</p>
                     <p><b>Ombordagi tovarlar summasi:</b> {formatSum(stats.totalStockValue)} so'm</p>
+                </div>
+                <div className="stat-card">
+                    <h4>📥 Do'konga kirgan tovarlar</h4>
+                    <p><b>Kirgan turi:</b> {stats.enteredTypes || 0} xil</p>
+                    <p><b>Kirgan soni:</b> {stats.enteredQty || 0} dona</p>
+                    <p><b>Kirgan summasi:</b> {formatSum(stats.enteredSum)} so'm</p>
                 </div>
                 <div className="stat-card">
                     <h4>Bugungi Hisobot</h4>
