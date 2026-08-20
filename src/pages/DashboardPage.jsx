@@ -1239,7 +1239,7 @@ const DashboardPage = () => {
                 const item = items[i];
                 const qrLink = `${origin}/qr/${item.token}`;
                 const apiUrl =
-                    'https://api.qrserver.com/v1/create-qr-code/?size=512x512&margin=10&data=' +
+                    'https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=8&data=' +
                     encodeURIComponent(qrLink);
 
                 const img = await new Promise((resolve, reject) => {
@@ -1250,47 +1250,51 @@ const DashboardPage = () => {
                     image.src = apiUrl;
                 });
 
-                // ProductQR bilan bir xil: nom, rang, razmer, narx
+                // Kichikroq QR + kattaroq yozuvlar (ProductQR uslubi)
                 const canvas = document.createElement('canvas');
-                const pad = 28;
-                const textH = 110;
-                canvas.width = img.width + pad * 2;
-                canvas.height = img.height + pad * 2 + textH;
+                const padX = 40;
+                const padTop = 20;
+                const textH = 160;
+                const qrDrawSize = 220; // QR ni kichikroq chizamiz
+                canvas.width = Math.max(qrDrawSize + padX * 2, 320);
+                canvas.height = padTop + qrDrawSize + textH;
                 const ctx = canvas.getContext('2d');
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, pad, pad);
+
+                const qrX = (canvas.width - qrDrawSize) / 2;
+                ctx.drawImage(img, qrX, padTop, qrDrawSize, qrDrawSize);
 
                 const cx = canvas.width / 2;
-                let ty = img.height + pad + 28;
+                let ty = padTop + qrDrawSize + 32;
 
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
 
-                // Nom
+                // Nom — katta
                 ctx.fillStyle = '#0f172a';
-                ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
-                ctx.fillText(String(item.name || '').slice(0, 36), cx, ty, canvas.width - 24);
-                ty += 24;
+                ctx.font = 'bold 28px system-ui, -apple-system, sans-serif';
+                ctx.fillText(String(item.name || '').slice(0, 28), cx, ty, canvas.width - 24);
+                ty += 34;
 
                 // Rang
                 if (item.color) {
                     ctx.fillStyle = '#64748b';
-                    ctx.font = '15px system-ui, -apple-system, sans-serif';
-                    ctx.fillText(String(item.color).slice(0, 30), cx, ty, canvas.width - 24);
-                    ty += 22;
+                    ctx.font = '22px system-ui, -apple-system, sans-serif';
+                    ctx.fillText(String(item.color).slice(0, 28), cx, ty, canvas.width - 24);
+                    ty += 30;
                 }
 
                 // Razmer
                 ctx.fillStyle = '#64748b';
-                ctx.font = '15px system-ui, -apple-system, sans-serif';
+                ctx.font = '22px system-ui, -apple-system, sans-serif';
                 ctx.fillText(String(item.size || 'Standart'), cx, ty, canvas.width - 24);
-                ty += 24;
+                ty += 32;
 
-                // Narx (yashil)
+                // Narx (yashil) — katta
                 if (item.selling_price != null) {
                     ctx.fillStyle = '#0f766e';
-                    ctx.font = 'bold 16px system-ui, -apple-system, sans-serif';
+                    ctx.font = 'bold 24px system-ui, -apple-system, sans-serif';
                     const priceText = `${formatSum(item.selling_price)} so'm`;
                     ctx.fillText(priceText, cx, ty, canvas.width - 24);
                 }
