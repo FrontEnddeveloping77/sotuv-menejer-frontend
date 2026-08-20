@@ -1444,17 +1444,11 @@ const DashboardPage = () => {
                     <p><b>Jami qoldiq:</b> {stats.totalStock || 0} dona</p>
                     <p><b>Ombordagi tovarlar summasi:</b> {formatSum(stats.totalStockValue)} so'm</p>
                 </div>
-                <div
-                    className="stat-card"
-                    onClick={openEnteredListModal}
-                    style={{ cursor: 'pointer' }}
-                    title="Batafsil ro'yxatni ochish"
-                >
+                <div className="stat-card">
                     <h4>📥 Do'konga kirgan tovarlar</h4>
                     <p><b>Kirgan turi:</b> {stats.enteredTypes || 0} xil</p>
                     <p><b>Kirgan soni:</b> {stats.enteredQty || 0} dona</p>
                     <p><b>Kirgan summasi:</b> {formatSum(stats.enteredSum)} so'm</p>
-                    <p style={{ marginTop: 8, fontSize: 12, color: '#3b82f6' }}>Batafsil → (tugaganlar ham)</p>
                 </div>
                 <div className="stat-card">
                     <h4>Bugungi Hisobot</h4>
