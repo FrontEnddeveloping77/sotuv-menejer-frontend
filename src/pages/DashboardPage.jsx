@@ -225,7 +225,7 @@ const DashboardPage = () => {
     const [creditSellSearch, setCreditSellSearch] = useState('');
     const [creditSellData, setCreditSellData] = useState({
         product_id: '',
-        rows: [{ size: '', sell_quantity: 1, selling_price: '', color: '' }],
+        rows: [{ variant_id: '', size: '', sell_quantity: 1, selling_price: '', color: '' }],
         customer_name: '',
         customer_phone: '',
         paid_now: ''
@@ -246,7 +246,7 @@ const DashboardPage = () => {
     const [loadingCustomerDebts, setLoadingCustomerDebts] = useState(false);
     const [customerDebtsSearch, setCustomerDebtsSearch] = useState('');
 
-    const emptySellRow = () => ({ size: '', sell_quantity: 1, selling_price: '', color: '' });
+    const emptySellRow = () => ({ variant_id: '', size: '', sell_quantity: 1, selling_price: '', color: '' });
     const [sellSearch, setSellSearch] = useState('');
     const [sellData, setSellData] = useState({ product_id: '', rows: [emptySellRow()] });
 
@@ -255,7 +255,7 @@ const DashboardPage = () => {
     const [menuOpen, setMenuOpen] = useState(false);
     const [savingAllQrs, setSavingAllQrs] = useState(false);
 
-    const emptyDeleteRow = () => ({ size: '', remove_all: false, quantity_to_remove: 1 });
+    const emptyDeleteRow = () => ({ variant_id: '', size: '', remove_all: false, quantity_to_remove: 1 });
     const [deleteSearch, setDeleteSearch] = useState('');
     const [deleteData, setDeleteData] = useState({ product_id: '', rows: [emptyDeleteRow()] });
 
@@ -499,6 +499,11 @@ const DashboardPage = () => {
 
     const resolveVariant = (group, row) => {
         if (!group) return null;
+        // Avvalo aniq variant id bo'yicha (bir xil razmerdan bir nechta bo'lsa)
+        if (row?.variant_id) {
+            const byId = group.variants.find((v) => String(v.id) === String(row.variant_id));
+            if (byId) return byId;
+        }
         // Razmersiz yoki bitta variant — avtomatik birinchi
         if (!needsSizeSelect(group)) {
             return group.variants[0] || null;
@@ -526,9 +531,12 @@ const DashboardPage = () => {
         return result;
     };
 
-    const usedSellSizes = (excludeIndex) => sellData.rows.filter((_, i) => i !== excludeIndex).map((r) => r.size);
-    const usedDeleteSizes = (excludeIndex) => deleteData.rows.filter((_, i) => i !== excludeIndex).map((r) => r.size);
-    const usedCreditSellSizes = (excludeIndex) => creditSellData.rows.filter((_, i) => i !== excludeIndex).map((r) => r.size);
+    const usedSellVariantIds = (excludeIndex) =>
+        sellData.rows.filter((_, i) => i !== excludeIndex).map((r) => String(r.variant_id || '')).filter(Boolean);
+    const usedDeleteVariantIds = (excludeIndex) =>
+        deleteData.rows.filter((_, i) => i !== excludeIndex).map((r) => String(r.variant_id || '')).filter(Boolean);
+    const usedCreditSellVariantIds = (excludeIndex) =>
+        creditSellData.rows.filter((_, i) => i !== excludeIndex).map((r) => String(r.variant_id || '')).filter(Boolean);
 
     const canAddMoreSellRows = sellGroup && needsSizeSelect(sellGroup) && sellData.rows.length < sellGroup.variants.length;
     const canAddMoreDeleteRows = deleteGroup && needsSizeSelect(deleteGroup) && deleteData.rows.length < deleteGroup.variants.length;
@@ -536,13 +544,15 @@ const DashboardPage = () => {
 
     const handleSellGroupSelect = (localId) => {
         const group = productGroups.find((g) => String(g.local_id) === String(localId));
-        const autoSize = group && !needsSizeSelect(group)
-            ? (group.variants[0]?.size || 'Standart')
-            : (group && group.variants.length === 1 ? (group.variants[0].size || 'Standart') : '');
+        const autoVariant =
+            group && !needsSizeSelect(group)
+                ? group.variants[0]
+                : (group && group.variants.length === 1 ? group.variants[0] : null);
         setSellData({
             product_id: localId,
             rows: [{
-                size: autoSize,
+                variant_id: autoVariant ? String(autoVariant.id) : '',
+                size: autoVariant ? (autoVariant.size || 'Standart') : '',
                 sell_quantity: 1,
                 selling_price: '',
                 color: group?.color || ''
@@ -552,25 +562,33 @@ const DashboardPage = () => {
 
     const handleDeleteGroupSelect = (localId) => {
         const group = productGroups.find((g) => String(g.local_id) === String(localId));
-        const autoSize = group && !needsSizeSelect(group)
-            ? (group.variants[0]?.size || 'Standart')
-            : (group && group.variants.length === 1 ? (group.variants[0].size || 'Standart') : '');
+        const autoVariant =
+            group && !needsSizeSelect(group)
+                ? group.variants[0]
+                : (group && group.variants.length === 1 ? group.variants[0] : null);
         setDeleteData({
             product_id: localId,
-            rows: [{ size: autoSize, remove_all: false, quantity_to_remove: 1 }]
+            rows: [{
+                variant_id: autoVariant ? String(autoVariant.id) : '',
+                size: autoVariant ? (autoVariant.size || 'Standart') : '',
+                remove_all: false,
+                quantity_to_remove: 1
+            }]
         });
     };
 
     const handleCreditSellGroupSelect = (localId) => {
         const group = productGroups.find((g) => String(g.local_id) === String(localId));
-        const autoSize = group && !needsSizeSelect(group)
-            ? (group.variants[0]?.size || 'Standart')
-            : (group && group.variants.length === 1 ? (group.variants[0].size || 'Standart') : '');
+        const autoVariant =
+            group && !needsSizeSelect(group)
+                ? group.variants[0]
+                : (group && group.variants.length === 1 ? group.variants[0] : null);
         setCreditSellData(prev => ({
             ...prev,
             product_id: localId,
             rows: [{
-                size: autoSize,
+                variant_id: autoVariant ? String(autoVariant.id) : '',
+                size: autoVariant ? (autoVariant.size || 'Standart') : '',
                 sell_quantity: 1,
                 selling_price: '',
                 color: group?.color || ''
@@ -1866,7 +1884,7 @@ const DashboardPage = () => {
                                     </div>
                                     {creditSellData.rows.map((row, index) => {
                                         const variant = resolveVariant(creditSellGroup, row);
-                                        const usedSizes = usedCreditSellSizes(index);
+                                        const usedIds = usedCreditSellVariantIds(index);
                                         const noSize = !needsSizeSelect(creditSellGroup);
                                         const maxQty = noSize ? groupTotalQty(creditSellGroup) : (variant?.quantity || 0);
                                         return (
@@ -1878,11 +1896,27 @@ const DashboardPage = () => {
                                                 ) : needsSizeSelect(creditSellGroup) && (
                                                     <div className="form-group">
                                                         <label>Razmer * ({index + 1}-qator) :</label>
-                                                        <select value={row.size} onChange={(e) => updateCreditSellRow(index, { size: e.target.value })} required className="form-input">
+                                                        <select
+                                                            value={row.variant_id || ''}
+                                                            onChange={(e) => {
+                                                                const vid = e.target.value;
+                                                                const v = creditSellGroup.variants.find((x) => String(x.id) === String(vid));
+                                                                updateCreditSellRow(index, {
+                                                                    variant_id: vid,
+                                                                    size: v ? (v.size || 'Standart') : ''
+                                                                });
+                                                            }}
+                                                            required
+                                                            className="form-input"
+                                                        >
                                                             <option value="">-- Razmerni tanlang --</option>
-                                                            {creditSellGroup.variants.filter((v) => !usedSizes.includes(v.size) || v.size === row.size).map((v) => (
-                                                                <option key={v.id} value={v.size || ''}>{v.size || 'Standart'} (Qoldiq: {v.quantity} ta)</option>
-                                                            ))}
+                                                            {creditSellGroup.variants
+                                                                .filter((v) => !usedIds.includes(String(v.id)) || String(v.id) === String(row.variant_id))
+                                                                .map((v) => (
+                                                                    <option key={v.id} value={String(v.id)}>
+                                                                        {v.size || 'Standart'} (Qoldiq: {v.quantity} ta)
+                                                                    </option>
+                                                                ))}
                                                         </select>
                                                     </div>
                                                 )}
@@ -2643,7 +2677,7 @@ const DashboardPage = () => {
                                     <div className="info-banner info-success">✅ Tanlangan: <b>{sellGroup.name}</b></div>
                                     {sellData.rows.map((row, index) => {
                                         const variant = resolveVariant(sellGroup, row);
-                                        const usedSizes = usedSellSizes(index);
+                                        const usedIds = usedSellVariantIds(index);
                                         const noSize = !needsSizeSelect(sellGroup);
                                         const maxQty = noSize ? groupTotalQty(sellGroup) : (variant?.quantity || 0);
                                         return (
@@ -2655,11 +2689,27 @@ const DashboardPage = () => {
                                                 ) : needsSizeSelect(sellGroup) && (
                                                     <div className="form-group">
                                                         <label>Razmer * :</label>
-                                                        <select value={row.size} onChange={(e) => updateSellRow(index, { size: e.target.value })} required className="form-input">
+                                                        <select
+                                                            value={row.variant_id || ''}
+                                                            onChange={(e) => {
+                                                                const vid = e.target.value;
+                                                                const v = sellGroup.variants.find((x) => String(x.id) === String(vid));
+                                                                updateSellRow(index, {
+                                                                    variant_id: vid,
+                                                                    size: v ? (v.size || 'Standart') : ''
+                                                                });
+                                                            }}
+                                                            required
+                                                            className="form-input"
+                                                        >
                                                             <option value="">-- Tanlang --</option>
-                                                            {sellGroup.variants.filter((v) => !usedSizes.includes(v.size) || v.size === row.size).map((v) => (
-                                                                <option key={v.id} value={v.size || ''}>{v.size || 'Standart'} (Qoldiq: {v.quantity})</option>
-                                                            ))}
+                                                            {sellGroup.variants
+                                                                .filter((v) => !usedIds.includes(String(v.id)) || String(v.id) === String(row.variant_id))
+                                                                .map((v) => (
+                                                                    <option key={v.id} value={String(v.id)}>
+                                                                        {v.size || 'Standart'} (Qoldiq: {v.quantity})
+                                                                    </option>
+                                                                ))}
                                                         </select>
                                                     </div>
                                                 )}
@@ -2776,7 +2826,7 @@ const DashboardPage = () => {
                                     </div>
                                     {deleteData.rows.map((row, index) => {
                                         const variant = resolveVariant(deleteGroup, row);
-                                        const usedSizes = usedDeleteSizes(index);
+                                        const usedIds = usedDeleteVariantIds(index);
                                         const noSize = !needsSizeSelect(deleteGroup);
                                         const maxQty = noSize ? groupTotalQty(deleteGroup) : (variant?.quantity || 0);
                                         return (
@@ -2788,11 +2838,27 @@ const DashboardPage = () => {
                                                 ) : needsSizeSelect(deleteGroup) && (
                                                     <div className="form-group">
                                                         <label>Razmer * ({index + 1}-qator) :</label>
-                                                        <select value={row.size} onChange={(e) => updateDeleteRow(index, { size: e.target.value })} required className="form-input">
+                                                        <select
+                                                            value={row.variant_id || ''}
+                                                            onChange={(e) => {
+                                                                const vid = e.target.value;
+                                                                const v = deleteGroup.variants.find((x) => String(x.id) === String(vid));
+                                                                updateDeleteRow(index, {
+                                                                    variant_id: vid,
+                                                                    size: v ? (v.size || 'Standart') : ''
+                                                                });
+                                                            }}
+                                                            required
+                                                            className="form-input"
+                                                        >
                                                             <option value="">-- Razmerni tanlang --</option>
-                                                            {deleteGroup.variants.filter((v) => !usedSizes.includes(v.size) || v.size === row.size).map((v) => (
-                                                                <option key={v.id} value={v.size || ''}>{v.size || 'Standart'} (Qoldiq: {v.quantity} ta)</option>
-                                                            ))}
+                                                            {deleteGroup.variants
+                                                                .filter((v) => !usedIds.includes(String(v.id)) || String(v.id) === String(row.variant_id))
+                                                                .map((v) => (
+                                                                    <option key={v.id} value={String(v.id)}>
+                                                                        {v.size || 'Standart'} (Qoldiq: {v.quantity} ta)
+                                                                    </option>
+                                                                ))}
                                                         </select>
                                                     </div>
                                                 )}
