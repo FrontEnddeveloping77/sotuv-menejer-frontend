@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Sotuv Menejer</string>
+    <string name="title_activity_main">Sotuv Menejer</string>
+    <string name="package_name">com.sotuvmenejer.app</string>
+    <string name="custom_url_scheme">com.sotuvmenejer.app</string>
+</resources>

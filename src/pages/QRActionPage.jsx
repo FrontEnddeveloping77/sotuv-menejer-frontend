@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/qr-action.css';
 
@@ -16,6 +16,7 @@ const money = (value) =>
 
 export default function QRActionPage() {
     const { token } = useParams();
+    const navigate = useNavigate();
 
     const [product, setProduct] = useState(null);
     const [mode, setMode] = useState('choice');
@@ -202,6 +203,13 @@ export default function QRActionPage() {
         return (
             <main className="qr-page">
                 <div className="qr-card">
+                    <button
+                        type="button"
+                        className="back-to-home-btn"
+                        onClick={() => navigate('/')}
+                    >
+                        ← Bosh sahifa
+                    </button>
                     <div className="qr-icon">⚠️</div>
                     <h2>QR kodi topilmadi</h2>
                     <p>{error}</p>
@@ -221,6 +229,14 @@ export default function QRActionPage() {
             return (
                 <main className="qr-page">
                     <div className="qr-card success-card">
+                        <button
+                            type="button"
+                            className="back-to-home-btn"
+                            onClick={() => navigate('/')}
+                        >
+                            ← Bosh sahifa
+                        </button>
+
                         <div className="success-icon">✓</div>
                         <h2>
                             {result.type === 'credit-sell'
@@ -283,6 +299,14 @@ export default function QRActionPage() {
             return (
                 <main className="qr-page">
                     <div className="qr-card success-card">
+                        <button
+                            type="button"
+                            className="back-to-home-btn"
+                            onClick={() => navigate('/')}
+                        >
+                            ← Bosh sahifa
+                        </button>
+
                         <div className="success-icon">✏️</div>
                         <h2>Tovar tahrirlandi!</h2>
                         <p>{result.message}</p>
@@ -304,6 +328,14 @@ export default function QRActionPage() {
         return (
             <main className="qr-page">
                 <div className="qr-card success-card">
+                    <button
+                        type="button"
+                        className="back-to-home-btn"
+                        onClick={() => navigate('/')}
+                    >
+                        ← Bosh sahifa
+                    </button>
+
                     <div className="success-icon">🗑️</div>
                     <h2>Tovar o‘chirildi!</h2>
                     <ProductImage src={product?.image_url} alt={product?.name} />
@@ -321,6 +353,13 @@ export default function QRActionPage() {
     return (
         <main className="qr-page">
             <div className="qr-card">
+                <button
+                    type="button"
+                    className="back-to-home-btn"
+                    onClick={() => navigate('/')}
+                >
+                    ← Bosh sahifa
+                </button>
 
                 <div className="qr-icon">📦</div>
                 <div className="qr-label">OMBORDAGI TOVAR</div>

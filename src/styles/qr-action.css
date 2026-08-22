@@ -216,3 +216,31 @@
         transform: rotate(360deg)
     }
 }
+
+/* Bosh sahifaga qaytish tugmasi stili */
+.back-to-home-btn {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 12px;
+}
+
+.back-to-home-btn:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+    border-color: #94a3b8;
+}
+
+.back-to-home-btn:active {
+    transform: scale(0.97);
+}
