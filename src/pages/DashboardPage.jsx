@@ -111,6 +111,20 @@ const clearDashboardCache = async () => {
 const DashboardPage = () => {
     const navigate = useNavigate();
 
+    const [darkMode, setDarkMode] = useState(() => {
+        return localStorage.getItem('sotuv_menejer_theme') === 'dark';
+    });
+
+    useEffect(() => {
+        document.documentElement.classList.toggle('dashboard-dark', darkMode);
+        document.body.classList.toggle('dashboard-dark', darkMode);
+
+        localStorage.setItem(
+            'sotuv_menejer_theme',
+            darkMode ? 'dark' : 'light'
+        );
+    }, [darkMode]);
+
     const [stats, setStats] = useState({
         storeName: "Mening Do'konim",
         totalProducts: 0,
@@ -1663,15 +1677,26 @@ const DashboardPage = () => {
         <div className="dashboard-container">
             <header className="dashboard-header">
                 <div className="header-left">
-                    <h2>🏬 {stats.storeName || "Mening Do'konim"} Boshqaruv Paneli</h2>
-                    <button
-                        type="button"
-                        className="btn-menu-toggle"
-                        onClick={() => setMenuOpen(true)}
-                        aria-label="Menyu"
-                    >
-                        ☰ Menyu
-                    </button>
+                    <h2>🏬 Sotuv Menejer</h2>
+                    <div className="buttons">
+                        <button
+                            type="button"
+                            className="btn-menu-toggle"
+                            onClick={() => setMenuOpen(true)}
+                            aria-label="Menyu"
+                        >
+                            ☰ Menyu
+                        </button>
+
+                        <button
+                            type="button"
+                            className="theme-toggle"
+                            onClick={() => setDarkMode(prev => !prev)}
+                            aria-label={darkMode ? "Oddiy rejimga o'tish" : "Qora rejimga o'tish"}
+                        >
+                            {darkMode ? "☀️ Kun" : "🌙 Tun"}
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -1720,47 +1745,47 @@ const DashboardPage = () => {
 
             <section className="stats-grid">
                 <div className="stat-card">
-                    <h4>Ombor Holati</h4>
+                    <h4 className='sarlavha'>Ombor Holati</h4>
                     <p><b>Jami tovar turi:</b> {stats.totalProducts || 0} xil</p>
                     <p><b>Jami qoldiq:</b> {stats.totalStock || 0} dona</p>
                     <p><b>Ombordagi tovarlar summasi:</b> {formatSum(stats.totalStockValue)} so'm</p>
                 </div>
                 <div className="stat-card">
-                    <h4>📥 Do'konga kirgan tovarlar</h4>
+                    <h4 className='sarlavha'>📥 Do'konga kirgan tovarlar</h4>
                     <p><b>Kirgan turi:</b> {stats.enteredTypes || 0} xil</p>
                     <p><b>Kirgan soni:</b> {stats.enteredQty || 0} dona</p>
                     <p><b>Kirgan summasi:</b> {formatSum(stats.enteredSum)} so'm</p>
                 </div>
                 <div className="stat-card">
-                    <h4>Bugungi Hisobot</h4>
+                    <h4 className='sarlavha'>Bugungi Hisobot</h4>
                     <p><b>Sotildi:</b> {stats.dailySold || 0} dona</p>
                     <p><b>Tushum:</b> {formatSum(stats.dailyRevenue)} so'm</p>
                     <p><b>Sof Foyda:</b> <span className={(stats.dailyProfit || 0) >= 0 ? "profit-plus" : "profit-minus"}>{formatSum(stats.dailyProfit)} so'm</span></p>
                 </div>
                 <div className="stat-card">
-                    <h4>Oylik Hisobot</h4>
+                    <h4 className='sarlavha'>Oylik Hisobot</h4>
                     <p><b>Sotildi:</b> {stats.monthlySold || 0} dona</p>
                     <p><b>Tushum:</b> {formatSum(stats.monthlyRevenue)} so'm</p>
                     <p><b>Sof Foyda:</b> <span className={(stats.monthlyProfit || 0) >= 0 ? "profit-plus" : "profit-minus"}>{formatSum(stats.monthlyProfit)} so'm</span></p>
                 </div>
                 <div className="stat-card">
-                    <h4>Jami Rasxodlar</h4>
+                    <h4 className='sarlavha'>Jami Rasxodlar</h4>
                     <p><b>Bugun:</b> {formatSum(stats.dailyExpense)} so'm</p>
                     <p><b>Shu Oy:</b> {formatSum(stats.monthlyExpense)} so'm</p>
                     <p><b>Jami:</b> {formatSum(stats.totalExpense)} so'm</p>
                 </div>
                 <div className="stat-card">
-                    <h4>Umumiy Hisobot (Butun Davr)</h4>
+                    <h4 className='sarlavha'>Umumiy Hisobot (Butun Davr)</h4>
                     <p><b>Jami sotilgan:</b> {stats.totalSold || 0} dona</p>
                     <p><b>Tushum:</b> {formatSum(stats.totalRevenue)} so'm</p>
                     <p><b>Sof Foyda:</b> <span className={(stats.totalProfit || 0) >= 0 ? "profit-plus" : "profit-minus"}>{formatSum(stats.totalProfit)} so'm</span></p>
                 </div>
                 <div className="stat-card">
-                    <h4>💳 Jami Qarzimiz</h4>
+                    <h4 className='sarlavha'>💳 Jami Qarzimiz</h4>
                     <p><b>Jami qarz:</b> <span style={{ color: '#ef4444', fontWeight: 'bold' }}>{formatSum(stats.totalDebt || 0)} so'm</span></p>
                 </div>
                 <div className="stat-card">
-                    <h4>👤 Mijozning qarzi</h4>
+                    <h4 className='sarlavha'>👤 Mijozning qarzi</h4>
                     <p><b>Jami mijoz qarzi:</b> <span style={{ color: '#ef4444', fontWeight: 'bold' }}>{formatSum(stats.totalCustomerDebt || 0)} so'm</span></p>
                 </div>
             </section>

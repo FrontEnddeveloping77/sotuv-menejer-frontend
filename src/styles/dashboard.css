@@ -80,7 +80,6 @@
     font-size: 14px !important;
     /* 13px -> 14px */
     font-weight: 700 !important;
-    color: #475569 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
     margin: 0 0 12px 0 !important;
@@ -1732,6 +1731,13 @@ body {
     gap: 12px !important;
 }
 
+.header-left .buttons {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+}
+
 .header-left {
     display: flex !important;
     align-items: center !important;
@@ -1859,9 +1865,6 @@ body {
 }
 
 @media (max-width: 480px) {
-    .header-left h2 {
-        font-size: 15px !important;
-    }
 
     .btn-menu-toggle {
         padding: 9px 12px !important;
@@ -1871,4 +1874,484 @@ body {
     .side-menu {
         width: min(300px, 90vw) !important;
     }
+}
+
+.sarlavha {
+    color: dodgerblue !important;
+}
+
+
+/* =========================================================
+   ODDIY / QORA REJIM
+   ========================================================= */
+
+/* Theme tugmasi */
+.theme-toggle {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+
+    padding: 10px 16px !important;
+    border-radius: 9px !important;
+
+    border: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+
+    font-size: 14px !important;
+    font-weight: 700 !important;
+
+    cursor: pointer !important;
+    transition:
+        background-color 0.25s ease,
+        color 0.25s ease,
+        border-color 0.25s ease,
+        transform 0.2s ease !important;
+}
+
+.theme-toggle:hover {
+    transform: translateY(-1px) !important;
+    background: #f8fafc !important;
+}
+
+
+/* =========================================================
+   QORA REJIM
+   ========================================================= */
+
+html.dashboard-dark,
+body.dashboard-dark {
+    background: #0f172a !important;
+    color: #f8fafc !important;
+}
+
+
+/* Asosiy dashboard */
+body.dashboard-dark .dashboard-container {
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
+}
+
+
+/* Header */
+body.dashboard-dark .dashboard-header {
+    background-color: #111827 !important;
+    border-bottom-color: #334155 !important;
+}
+
+body.dashboard-dark .dashboard-header h2 {
+    color: #f8fafc !important;
+}
+
+
+/* Theme tugmasi */
+body.dashboard-dark .theme-toggle {
+    background: #1e293b !important;
+    color: #f8fafc !important;
+    border-color: #475569 !important;
+}
+
+body.dashboard-dark .theme-toggle:hover {
+    background: #334155 !important;
+}
+
+body.dashboard-dark .btn-menu-toggle {
+    background: #1e293b !important;
+    color: #f8fafc !important;
+    border-color: #475569 !important;
+    padding: 10px 16px !important;
+    border-radius: 9px !important;
+}
+
+body.dashboard-dark .theme-toggle:hover {
+    background: #334155 !important;
+}
+
+
+/* =========================================================
+   STATISTIKA KARTOCHKALARI
+   ========================================================= */
+
+body.dashboard-dark .stat-card,
+body.dashboard-dark .stats-grid .stat-card {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+}
+
+body.dashboard-dark .stat-card h4,
+body.dashboard-dark .stats-grid .stat-card h4 {
+    color: dodgerblue !important;
+    border-bottom-color: #334155 !important;
+}
+
+body.dashboard-dark .stat-card h3,
+body.dashboard-dark .stats-grid .stat-card h3 {
+    color: #f8fafc !important;
+}
+
+body.dashboard-dark .stat-card p,
+body.dashboard-dark .stats-grid .stat-card p {
+    color: #94a3b8 !important;
+}
+
+body.dashboard-dark .stat-card p b,
+body.dashboard-dark .stats-grid .stat-card p b {
+    color: #e2e8f0 !important;
+}
+
+
+/* =========================================================
+   SECTION / BOX KARTOCHKALAR
+   ========================================================= */
+
+body.dashboard-dark .box-card,
+body.dashboard-dark .products-section {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22) !important;
+}
+
+body.dashboard-dark .category-header h3,
+body.dashboard-dark .section-header h3 {
+    color: #f8fafc !important;
+}
+
+
+/* =========================================================
+   CATEGORY BUTTONS
+   ========================================================= */
+
+body.dashboard-dark .category-btn {
+    background-color: #1e293b !important;
+    color: #cbd5e1 !important;
+    border-color: #475569 !important;
+}
+
+body.dashboard-dark .category-btn:hover {
+    background-color: #334155 !important;
+}
+
+body.dashboard-dark .category-btn.active {
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #2563eb !important;
+}
+
+
+/* =========================================================
+   INPUT / SELECT
+   ========================================================= */
+
+body.dashboard-dark .form-input,
+body.dashboard-dark .search-input,
+body.dashboard-dark input[type="text"],
+body.dashboard-dark input[type="number"],
+body.dashboard-dark select {
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
+    border-color: #475569 !important;
+}
+
+body.dashboard-dark .form-input::placeholder,
+body.dashboard-dark .search-input::placeholder,
+body.dashboard-dark input[type="text"]::placeholder,
+body.dashboard-dark input[type="number"]::placeholder {
+    color: #64748b !important;
+}
+
+body.dashboard-dark .form-input:focus,
+body.dashboard-dark .search-input:focus,
+body.dashboard-dark input[type="text"]:focus,
+body.dashboard-dark input[type="number"]:focus,
+body.dashboard-dark select:focus {
+    border-color: #3b82f6 !important;
+    background-color: #111827 !important;
+}
+
+body.dashboard-dark .product-form label,
+body.dashboard-dark .form-group label {
+    color: #cbd5e1 !important;
+}
+
+
+/* Select option */
+body.dashboard-dark select option {
+    background: #0f172a !important;
+    color: #f8fafc !important;
+}
+
+
+/* =========================================================
+   TABLE
+   ========================================================= */
+
+body.dashboard-dark .table-wrapper {
+    border-color: #334155 !important;
+}
+
+body.dashboard-dark .products-table {
+    background-color: #1e293b !important;
+    color: #e2e8f0 !important;
+}
+
+body.dashboard-dark .products-table th,
+body.dashboard-dark .products-table td {
+    border-bottom-color: #334155 !important;
+}
+
+body.dashboard-dark .products-table th {
+    background-color: #111827 !important;
+    color: #94a3b8 !important;
+}
+
+body.dashboard-dark .products-table td {
+    color: #e2e8f0 !important;
+}
+
+body.dashboard-dark .products-table tr:hover td {
+    background-color: #273449 !important;
+}
+
+body.dashboard-dark .no-data {
+    color: #94a3b8 !important;
+}
+
+
+/* =========================================================
+   BADGE'LAR
+   ========================================================= */
+
+body.dashboard-dark .category-badge {
+    background-color: #172554 !important;
+    color: #60a5fa !important;
+}
+
+body.dashboard-dark .color-badge {
+    background-color: #334155 !important;
+    color: #cbd5e1 !important;
+}
+
+body.dashboard-dark .size-badge {
+    background-color: #064e3b !important;
+    color: #6ee7b7 !important;
+    border-color: #047857 !important;
+}
+
+body.dashboard-dark .size-badge-low {
+    background-color: #450a0a !important;
+    color: #fca5a5 !important;
+    border-color: #991b1b !important;
+}
+
+
+/* =========================================================
+   MODALLAR
+   ========================================================= */
+
+body.dashboard-dark .modal-overlay {
+    background-color: rgba(2, 6, 23, 0.78) !important;
+}
+
+body.dashboard-dark .modal-box,
+body.dashboard-dark .modal-box-wide {
+    background-color: #1e293b !important;
+    color: #e2e8f0 !important;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.45) !important;
+}
+
+body.dashboard-dark .modal-box h3,
+body.dashboard-dark .modal-box h4 {
+    color: #f8fafc !important;
+}
+
+
+/* =========================================================
+   CART ROW
+   ========================================================= */
+
+body.dashboard-dark .cart-row {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+}
+
+
+/* =========================================================
+   CALCULATION BOX
+   ========================================================= */
+
+body.dashboard-dark .calculation-box {
+    background-color: #0f172a !important;
+    border-color: #475569 !important;
+}
+
+body.dashboard-dark .calc-row {
+    color: #cbd5e1 !important;
+}
+
+body.dashboard-dark .calc-total {
+    border-top-color: #475569 !important;
+    color: #f8fafc !important;
+}
+
+
+/* =========================================================
+   INFO BANNER
+   ========================================================= */
+
+body.dashboard-dark .info-banner {
+    background-color: #1e293b !important;
+}
+
+body.dashboard-dark .info-success {
+    background-color: #063b2b !important;
+    color: #6ee7b7 !important;
+    border-color: #047857 !important;
+}
+
+body.dashboard-dark .info-danger {
+    background-color: #450a0a !important;
+    color: #fca5a5 !important;
+    border-color: #991b1b !important;
+}
+
+
+/* =========================================================
+   QARZ KARTALARI
+   ========================================================= */
+
+body.dashboard-dark .debt-card {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25) !important;
+}
+
+body.dashboard-dark .debt-phone {
+    color: #cbd5e1 !important;
+}
+
+body.dashboard-dark .debt-meta {
+    color: #94a3b8 !important;
+}
+
+body.dashboard-dark .debt-card ul {
+    color: #cbd5e1 !important;
+}
+
+body.dashboard-dark .debts-empty {
+    background: #0f172a !important;
+    color: #94a3b8 !important;
+    border-color: #475569 !important;
+}
+
+
+/* =========================================================
+   YON MENYU
+   ========================================================= */
+
+body.dashboard-dark .side-menu {
+    background: #111827 !important;
+    box-shadow: -8px 0 30px rgba(0, 0, 0, 0.45) !important;
+}
+
+body.dashboard-dark .side-menu-header {
+    border-bottom-color: #334155 !important;
+}
+
+body.dashboard-dark .side-menu-header h3 {
+    color: #f8fafc !important;
+}
+
+body.dashboard-dark .side-menu-close {
+    background: #1e293b !important;
+    color: #cbd5e1 !important;
+}
+
+body.dashboard-dark .side-menu-close:hover {
+    background: #334155 !important;
+}
+
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+body.dashboard-dark .loading-spinner,
+body.dashboard-dark .loading-state {
+    background-color: #0f172a !important;
+    color: #60a5fa !important;
+}
+
+body.dashboard-dark .loading-spinner::after,
+body.dashboard-dark .loading-state::after {
+    border-color: #334155 !important;
+    border-top-color: #3b82f6 !important;
+}
+
+
+/* =========================================================
+   TO'LOV MUDDATI TUGAGAN EKRAN
+   ========================================================= */
+
+body.dashboard-dark .subscription-expired-screen {
+    background-color: #0f172a !important;
+}
+
+body.dashboard-dark .subscription-expired-card {
+    background-color: #1e293b !important;
+    border-color: #7f1d1d !important;
+}
+
+body.dashboard-dark .subscription-expired-card p {
+    color: #cbd5e1 !important;
+}
+
+
+/* =========================================================
+   DETAILS / BATAFSIL
+   ========================================================= */
+
+body.dashboard-dark .details-info p {
+    color: #cbd5e1 !important;
+}
+
+body.dashboard-dark .details-info p b {
+    color: #f8fafc !important;
+}
+
+
+/* =========================================================
+   UMUMIY TEXT
+   ========================================================= */
+
+body.dashboard-dark .empty-text,
+body.dashboard-dark .form-hint {
+    color: #94a3b8 !important;
+}
+
+
+/* =========================================================
+   O'TISH ANIMATSIYASI
+   ========================================================= */
+
+body,
+.dashboard-container,
+.dashboard-header,
+.stat-card,
+.box-card,
+.products-section,
+.modal-box,
+.side-menu,
+.products-table,
+.form-input,
+.search-input,
+select,
+.category-btn,
+.debt-card {
+    transition:
+        background-color 0.25s ease,
+        color 0.25s ease,
+        border-color 0.25s ease,
+        box-shadow 0.25s ease !important;
 }
