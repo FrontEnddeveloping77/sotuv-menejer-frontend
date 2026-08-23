@@ -3061,7 +3061,7 @@ const DashboardPage = () => {
                                     })
                                     .map((debt, index) => (
                                         <div key={index} className="debt-card">
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                                            <div className='qarzlar-card' style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
                                                 <strong style={{ fontSize: 16 }}>{debt.supplier}</strong>
                                                 <span className="debt-amount" style={{ background: '#ef4444', color: '#fff', padding: '4px 12px', borderRadius: 8, fontWeight: 700 }}>
                                                     {formatSum(debt.debt)} so‘m

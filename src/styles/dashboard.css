@@ -2386,3 +2386,10 @@ select,
         border-color 0.25s ease,
         box-shadow 0.25s ease !important;
 }
+
+@media (max-width: 440px) {
+    .qarzlar-card{
+        flex-direction: column;
+        align-items: start !important;
+    }
+}
