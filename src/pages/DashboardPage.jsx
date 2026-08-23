@@ -1805,15 +1805,15 @@ const DashboardPage = () => {
                     <table className="products-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Kategoriya</th>
-                                <th>Tovar Nomi</th>
-                                <th className="col-hide-mobile">Rangi</th>
-                                <th className="col-hide-narrow">Kelgan Narxi (Tannarx)</th>
-                                <th className="col-hide-mobile">O'lchamlar / Qoldiq</th>
-                                <th className="col-hide-mobile">QR</th>
-                                <th className="col-hide-tiny">Jami Qoldiq</th>
-                                <th className="col-details-only">Amal</th>
+                                <th id="ombor-tovar">ID</th>
+                                <th id="ombor-tovar">Kategoriya</th>
+                                <th id="ombor-tovar">Tovar Nomi</th>
+                                <th id="ombor-tovar" className="col-hide-mobile">Rangi</th>
+                                <th id="ombor-tovar" className="col-hide-narrow">Kelgan Narxi (Tannarx)</th>
+                                <th id="ombor-tovar" className="col-hide-mobile">O'lchamlar / Qoldiq</th>
+                                <th id="ombor-tovar" className="col-hide-mobile">QR</th>
+                                <th id="ombor-tovar" className="col-hide-tiny">Jami Qoldiq</th>
+                                <th id="ombor-tovar" className="col-details-only">Amal</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1822,7 +1822,7 @@ const DashboardPage = () => {
                                     const totalQty = g.variants.reduce((sum, v) => sum + v.quantity, 0);
                                     return (
                                         <tr key={g.local_id}>
-                                            <td><b>#{g.local_id}</b></td>
+                                            <td id='id'><b>#{g.local_id}</b></td>
                                             <td><span className="category-badge">{g.category || 'Umumiy'}</span></td>
                                             <td><b>{g.name}</b></td>
                                             <td className="col-hide-mobile">{g.color ? <span className="color-badge">{g.color}</span> : ''}</td>
