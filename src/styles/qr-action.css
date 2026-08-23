@@ -6,7 +6,8 @@
     justify-content: center;
     padding: 20px;
     font-family: Inter, Arial, sans-serif;
-    color: #172033
+    color: #172033;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 .qr-card {
@@ -15,7 +16,8 @@
     border-radius: 28px;
     padding: 28px;
     box-shadow: 0 20px 60px rgba(31, 52, 91, .14);
-    text-align: center
+    text-align: center;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
 .qr-icon,
@@ -28,7 +30,8 @@
     font-size: 12px;
     font-weight: 800;
     letter-spacing: 1.5px;
-    color: #718096
+    color: #718096;
+    transition: color 0.3s ease;
 }
 
 .qr-card h1 {
@@ -47,14 +50,16 @@
     background: #f3f6fa;
     padding: 8px 11px;
     border-radius: 12px;
-    font-size: 13px
+    font-size: 13px;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 .cost-box {
     margin: 18px 0;
     padding: 13px;
     background: #f8fafc;
-    border-radius: 14px
+    border-radius: 14px;
+    transition: background 0.3s ease;
 }
 
 .qr-actions {
@@ -117,7 +122,8 @@
     border: 1px solid #d9e1ea;
     border-radius: 13px;
     font-size: 18px;
-    outline: none
+    outline: none;
+    transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .profit-preview {
@@ -153,7 +159,8 @@
 
 .qr-secondary {
     background: #eef2f7;
-    color: #334155
+    color: #334155;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 .qr-danger {
@@ -171,7 +178,8 @@
     background: #fff0f0;
     color: #b42318;
     padding: 11px;
-    border-radius: 12px
+    border-radius: 12px;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 .success-card {
@@ -187,7 +195,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #16a36a
+    color: #16a36a;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 .result-grid {
@@ -198,7 +207,8 @@
     text-align: left;
     background: #f8fafc;
     padding: 16px;
-    border-radius: 16px
+    border-radius: 16px;
+    transition: background 0.3s ease;
 }
 
 .qr-spinner {
@@ -243,4 +253,159 @@
 
 .back-to-home-btn:active {
     transform: scale(0.97);
+}
+
+/* ====================================================
+   DARK MODE STYLES (Tungi rejim)
+   ==================================================== */
+
+/* Body/HTML ga .dark klassi berilganda yoki tizim bo'yicha */
+body.dark .qr-page,
+[data-theme="dark"] .qr-page {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: #f8fafc;
+}
+
+body.dark .qr-card,
+[data-theme="dark"] .qr-card {
+    background: #1e293b;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+body.dark .qr-label,
+[data-theme="dark"] .qr-label {
+    color: #94a3b8;
+}
+
+body.dark .product-details span,
+[data-theme="dark"] .product-details span {
+    background: #334155;
+    color: #e2e8f0;
+}
+
+body.dark .cost-box,
+body.dark .result-grid,
+[data-theme="dark"] .cost-box,
+[data-theme="dark"] .result-grid {
+    background: #0f172a;
+}
+
+body.dark .qr-sell-form input,
+[data-theme="dark"] .qr-sell-form input {
+    background: #0f172a;
+    border-color: #334155;
+    color: #f8fafc;
+}
+
+body.dark .qr-sell-form input:focus,
+[data-theme="dark"] .qr-sell-form input:focus {
+    border-color: #3b82f6;
+}
+
+body.dark .profit-preview.positive,
+[data-theme="dark"] .profit-preview.positive {
+    background: rgba(22, 163, 106, 0.2);
+    color: #4ade80;
+}
+
+body.dark .profit-preview.negative,
+[data-theme="dark"] .profit-preview.negative {
+    background: rgba(229, 83, 83, 0.2);
+    color: #f87171;
+}
+
+body.dark .qr-secondary,
+[data-theme="dark"] .qr-secondary {
+    background: #334155;
+    color: #f1f5f9;
+}
+
+body.dark .qr-secondary:hover,
+[data-theme="dark"] .qr-secondary:hover {
+    background: #475569;
+}
+
+body.dark .qr-error,
+[data-theme="dark"] .qr-error {
+    background: rgba(229, 83, 83, 0.2);
+    color: #f87171;
+}
+
+body.dark .success-icon,
+[data-theme="dark"] .success-icon {
+    background: rgba(22, 163, 106, 0.2);
+    color: #4ade80;
+}
+
+body.dark .back-to-home-btn,
+[data-theme="dark"] .back-to-home-btn {
+    background: #334155;
+    color: #cbd5e1;
+    border-color: #475569;
+}
+
+body.dark .back-to-home-btn:hover,
+[data-theme="dark"] .back-to-home-btn:hover {
+    background: #475569;
+    color: #ffffff;
+    border-color: #64748b;
+}
+
+/* Operatsion tizim avtomatik rejimiga moslashish (Agar JS sizingiz bo'lmasa) */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .qr-page {
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+        color: #f8fafc;
+    }
+
+    :root:not([data-theme="light"]) .qr-card {
+        background: #1e293b;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+    }
+
+    :root:not([data-theme="light"]) .qr-label {
+        color: #94a3b8;
+    }
+
+    :root:not([data-theme="light"]) .product-details span {
+        background: #334155;
+        color: #e2e8f0;
+    }
+
+    :root:not([data-theme="light"]) .cost-box,
+    :root:not([data-theme="light"]) .result-grid {
+        background: #0f172a;
+    }
+
+    :root:not([data-theme="light"]) .qr-sell-form input {
+        background: #0f172a;
+        border-color: #334155;
+        color: #f8fafc;
+    }
+
+    :root:not([data-theme="light"]) .profit-preview.positive {
+        background: rgba(22, 163, 106, 0.2);
+        color: #4ade80;
+    }
+
+    :root:not([data-theme="light"]) .profit-preview.negative {
+        background: rgba(229, 83, 83, 0.2);
+        color: #f87171;
+    }
+
+    :root:not([data-theme="light"]) .qr-secondary {
+        background: #334155;
+        color: #f1f5f9;
+    }
+
+    :root:not([data-theme="light"]) .success-icon {
+        background: rgba(22, 163, 106, 0.2);
+        color: #4ade80;
+    }
+
+    :root:not([data-theme="light"]) .back-to-home-btn {
+        background: #334155;
+        color: #cbd5e1;
+        border-color: #475569;
+    }
 }
