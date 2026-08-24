@@ -7,9 +7,15 @@ const ProductQR = ({ product }) => {
 
     if (!product?.qr_token) return null;
 
+    // MUHIM: window.location.origin fallback endi ishlatilMAYDI.
+    // Telefonda (ayniqsa WebView/Capacitor/PWA ilovalarda) window.location.origin
+    // ko'pincha "http://localhost" ni qaytaradi, chunki ilova fayllari qurilma
+    // ichidan mahalliy tarzda yuklanadi. Shu sabab QR har doim FAQAT aniq
+    // belgilangan production domenga (VITE_PUBLIC_APP_URL) tayanadi.
+    const PUBLIC_SITE_URL = 'https://sotuv-menejer-frontend.vercel.app';
+
     const publicBase = (
-        import.meta.env.VITE_PUBLIC_APP_URL ||
-        window.location.origin
+        import.meta.env.VITE_PUBLIC_APP_URL || PUBLIC_SITE_URL
     ).replace(/\/$/, '');
 
     const url = `${publicBase}/qr/${product.qr_token}`;
@@ -52,30 +58,22 @@ const ProductQR = ({ product }) => {
         const gap = 22;
         const lineHeight = 26;
 
-        // Matn qatorlari — label'siz
         const lines = [];
 
-        // Faqat tovar nomi (Tovar: yo'q)
         lines.push(product.name || product.title || "Noma'lum");
 
-        // Faqat rang (Rangi: yo'q)
         if (product.color && String(product.color).trim()) {
             lines.push(product.color.trim());
         }
 
-        // ID umuman qo'shilmaydi
-
-        // Faqat razmer (Razmer: yo'q)
         if (product.size && String(product.size).trim()) {
             lines.push(product.size);
         }
 
-        // Sotilish narxi (agar bor bo'lsa)
         if (product.selling_price != null && product.selling_price !== '' && Number(product.selling_price) >= 0) {
             lines.push(`${formatSum(product.selling_price)} so'm`);
         }
 
-        // Taxminiy matn balandligi
         const infoHeight = lines.length * lineHeight + 30;
 
         const outputCanvas = document.createElement('canvas');
@@ -85,22 +83,18 @@ const ProductQR = ({ product }) => {
         const ctx = outputCanvas.getContext('2d');
         if (!ctx) return;
 
-        // Oq fon
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
 
-        // QR kodni markazga
         const qrX = (width - qrSize) / 2;
         ctx.drawImage(qrCanvas, qrX, topPadding, qrSize, qrSize);
 
-        // Matnlar
         const centerX = width / 2;
         let textY = topPadding + qrSize + gap + 8;
 
         ctx.textAlign = 'center';
         ctx.fillStyle = '#111827';
 
-        // Tovar nomi (qalin)
         ctx.font = 'bold 20px Arial, sans-serif';
         textY = wrapText(
             ctx,
@@ -113,10 +107,8 @@ const ProductQR = ({ product }) => {
 
         textY += 6;
 
-        // Qolgan qatorlar
         ctx.font = '16px Arial, sans-serif';
         for (let i = 1; i < lines.length; i++) {
-            // Sotilish narxi qalinroq va yashil
             if (lines[i].includes("so'm")) {
                 ctx.font = 'bold 17px Arial, sans-serif';
                 ctx.fillStyle = '#0f766e';
