@@ -497,3 +497,47 @@ body.dark .qr-spinner,
         border-top-color: #3b82f6;
     }
 }
+
+/* ========== SUCCESS PAGE BUTTON (Foydani ko'rish) ========== */
+
+.success-card .qr-primary,
+.success-card button.qr-primary,
+.qr-card .qr-primary {
+    background: #1769e0;
+    color: #ffffff !important;
+    font-weight: 700;
+}
+
+/* Dark mode uchun maxsus */
+body.dark .success-card .qr-primary,
+body.dark .success-card button.qr-primary,
+body.dark .qr-card .qr-primary,
+[data-theme="dark"] .success-card .qr-primary,
+[data-theme="dark"] .success-card button.qr-primary,
+[data-theme="dark"] .qr-card .qr-primary {
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+    border: none;
+}
+
+/* Agar tugma oq/ochiq rangda bo'lsa (hozirgi holat) */
+body.dark .success-card button:not(.qr-danger):not(.qr-secondary),
+[data-theme="dark"] .success-card button:not(.qr-danger):not(.qr-secondary) {
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+}
+
+/* prefers-color-scheme uchun ham */
+@media (prefers-color-scheme: dark) {
+
+    :root:not([data-theme="light"]) .success-card .qr-primary,
+    :root:not([data-theme="light"]) .success-card button.qr-primary {
+        background: #3b82f6 !important;
+        color: #ffffff !important;
+    }
+
+    :root:not([data-theme="light"]) .success-card button:not(.qr-danger):not(.qr-secondary) {
+        background: #3b82f6 !important;
+        color: #ffffff !important;
+    }
+}
