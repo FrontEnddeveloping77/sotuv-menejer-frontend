@@ -573,15 +573,9 @@ body.dark .success-card button:hover,
     color: #ffffff !important;
 }
 
-body.dark .success-card button,
-[data-theme="dark"] .success-card button {
+[data-theme="dark"] fjfjfjfj {
     background: #2563eb !important;
     color: #ffffff !important;
     font-weight: 700 !important;
     opacity: 1 !important;
-}
-
-body.dark .success-card button *,
-[data-theme="dark"] .success-card button * {
-    color: #ffffff !important;
 }

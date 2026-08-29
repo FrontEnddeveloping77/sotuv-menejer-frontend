@@ -321,6 +321,7 @@ export default function QRActionPage() {
                         </div>
 
                         <div
+                        className='fjfjfjfj'
                             style={{
                                 marginTop: '20px',
                                 padding: '14px',
