@@ -573,13 +573,15 @@ body.dark .success-card button:hover,
     color: #ffffff !important;
 }
 
-/* Tizim dark mode */
-@media (prefers-color-scheme: dark) {
+body.dark .success-card button,
+[data-theme="dark"] .success-card button {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    opacity: 1 !important;
+}
 
-    :root:not([data-theme="light"]) .success-card button,
-    :root:not([data-theme="light"]) .success-card .qr-primary {
-        background: #3b82f6 !important;
-        color: #ffffff !important;
-        font-weight: 700;
-    }
+body.dark .success-card button *,
+[data-theme="dark"] .success-card button * {
+    color: #ffffff !important;
 }
