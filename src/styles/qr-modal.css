@@ -1,3 +1,5 @@
+/* ====================== QR MINI BUTTON & MODAL ====================== */
+
 .qr-mini-btn {
     border: 0;
     background: #eef6ff;
@@ -6,7 +8,12 @@
     padding: 5px 8px;
     font-size: 11px;
     font-weight: 800;
-    cursor: pointer
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.qr-mini-btn:hover {
+    background: #dbeafe;
 }
 
 .qr-modal-overlay {
@@ -17,7 +24,7 @@
     align-items: center;
     justify-content: center;
     z-index: 9999;
-    padding: 20px
+    padding: 20px;
 }
 
 .qr-modal {
@@ -27,7 +34,8 @@
     border-radius: 22px;
     padding: 26px;
     text-align: center;
-    box-shadow: 0 25px 80px rgba(0, 0, 0, .25)
+    box-shadow: 0 25px 80px rgba(0, 0, 0, .25);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
 .qr-close {
@@ -38,18 +46,23 @@
     background: transparent;
     font-size: 30px;
     cursor: pointer;
-    color: #64748b
+    color: #64748b;
+    transition: color 0.2s ease;
+}
+
+.qr-close:hover {
+    color: #0f172a;
 }
 
 .qr-canvas-wrap {
     display: flex;
     justify-content: center;
-    margin: 18px 0
+    margin: 18px 0;
 }
 
 .qr-meta {
     color: #64748b;
-    margin-top: -8px
+    margin-top: -8px;
 }
 
 .qr-url {
@@ -57,5 +70,87 @@
     word-break: break-all;
     color: #64748b;
     font-size: 10px;
-    margin-bottom: 14px
+    margin-bottom: 14px;
+}
+
+/* ====================== DARK MODE ====================== */
+
+body.dark .qr-mini-btn,
+[data-theme="dark"] .qr-mini-btn {
+    background: #1e3a5f;
+    color: #60a5fa;
+}
+
+body.dark .qr-mini-btn:hover,
+[data-theme="dark"] .qr-mini-btn:hover {
+    background: #1e40af;
+    color: #93c5fd;
+}
+
+body.dark .qr-modal-overlay,
+[data-theme="dark"] .qr-modal-overlay {
+    background: rgba(0, 0, 0, 0.75);
+}
+
+body.dark .qr-modal,
+[data-theme="dark"] .qr-modal {
+    background: #1e293b;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.55);
+    color: #f1f5f9;
+}
+
+body.dark .qr-close,
+[data-theme="dark"] .qr-close {
+    color: #94a3b8;
+}
+
+body.dark .qr-close:hover,
+[data-theme="dark"] .qr-close:hover {
+    color: #f8fafc;
+}
+
+body.dark .qr-meta,
+[data-theme="dark"] .qr-meta {
+    color: #94a3b8;
+}
+
+body.dark .qr-url,
+[data-theme="dark"] .qr-url {
+    color: #94a3b8;
+}
+
+/* prefers-color-scheme uchun ham */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .qr-mini-btn {
+        background: #1e3a5f;
+        color: #60a5fa;
+    }
+
+    :root:not([data-theme="light"]) .qr-mini-btn:hover {
+        background: #1e40af;
+        color: #93c5fd;
+    }
+
+    :root:not([data-theme="light"]) .qr-modal-overlay {
+        background: rgba(0, 0, 0, 0.75);
+    }
+
+    :root:not([data-theme="light"]) .qr-modal {
+        background: #1e293b;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.55);
+        color: #f1f5f9;
+    }
+
+    :root:not([data-theme="light"]) .qr-close {
+        color: #94a3b8;
+    }
+
+    :root:not([data-theme="light"]) .qr-close:hover {
+        color: #f8fafc;
+    }
+
+    :root:not([data-theme="light"]) .qr-meta,
+    :root:not([data-theme="light"]) .qr-url {
+        color: #94a3b8;
+    }
 }
