@@ -17,13 +17,13 @@
     padding: 28px;
     box-shadow: 0 20px 60px rgba(31, 52, 91, .14);
     text-align: center;
-    transition: background 0.3s ease, box-shadow 0.3s ease;
+    transition: background 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
 }
 
 .qr-icon,
 .success-icon {
     font-size: 42px;
-    margin-bottom: 8px
+    margin-bottom: 8px;
 }
 
 .qr-label {
@@ -36,14 +36,16 @@
 
 .qr-card h1 {
     font-size: 28px;
-    margin: 7px 0 16px
+    margin: 7px 0 16px;
+    color: #0f172a;
+    transition: color 0.3s ease;
 }
 
 .product-details {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    justify-content: center
+    justify-content: center;
 }
 
 .product-details span {
@@ -51,6 +53,7 @@
     padding: 8px 11px;
     border-radius: 12px;
     font-size: 13px;
+    color: #334155;
     transition: background 0.3s ease, color 0.3s ease;
 }
 
@@ -59,13 +62,14 @@
     padding: 13px;
     background: #f8fafc;
     border-radius: 14px;
-    transition: background 0.3s ease;
+    color: #334155;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 .qr-actions {
     display: grid;
     gap: 12px;
-    margin-top: 22px
+    margin-top: 22px;
 }
 
 .qr-action {
@@ -76,43 +80,52 @@
     cursor: pointer;
     color: #fff;
     font-size: 17px;
-    font-weight: 800
+    font-weight: 800;
+    transition: transform 0.15s ease, opacity 0.2s ease;
+}
+
+.qr-action:active {
+    transform: scale(0.98);
 }
 
 .qr-action span {
-    display: block
+    display: block;
 }
 
 .qr-action small {
     display: block;
     margin-top: 4px;
     opacity: .85;
-    font-weight: 500
+    font-weight: 500;
 }
 
 .qr-action.delete {
-    background: #e55353
+    background: #e55353;
 }
 
 .qr-action.sell {
-    background: #16a36a
+    background: #16a36a;
 }
 
 .qr-confirm,
 .qr-sell-form {
     margin-top: 20px;
-    text-align: left
+    text-align: left;
 }
 
 .qr-confirm h3,
 .qr-sell-form h3 {
-    text-align: center
+    text-align: center;
+    color: #0f172a;
+    transition: color 0.3s ease;
 }
 
 .qr-sell-form label {
     display: block;
     font-weight: 700;
-    margin: 14px 0 7px
+    margin: 14px 0 7px;
+    color: #334155;
+    transition: color 0.3s ease;
 }
 
 .qr-sell-form input {
@@ -123,29 +136,35 @@
     border-radius: 13px;
     font-size: 18px;
     outline: none;
+    background: #fff;
+    color: #0f172a;
     transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.qr-sell-form input::placeholder {
+    color: #94a3b8;
 }
 
 .profit-preview {
     margin: 12px 0;
     padding: 12px;
-    border-radius: 12px
+    border-radius: 12px;
 }
 
 .profit-preview.positive {
     background: #eaf9f0;
-    color: #12733f
+    color: #12733f;
 }
 
 .profit-preview.negative {
     background: #fff0f0;
-    color: #b52c2c
+    color: #b52c2c;
 }
 
 .confirm-actions {
     display: flex;
     gap: 10px;
-    margin-top: 18px
+    margin-top: 18px;
 }
 
 .confirm-actions button {
@@ -154,7 +173,8 @@
     padding: 13px;
     border-radius: 12px;
     font-weight: 800;
-    cursor: pointer
+    cursor: pointer;
+    transition: opacity 0.2s ease;
 }
 
 .qr-secondary {
@@ -165,12 +185,12 @@
 
 .qr-danger {
     background: #e55353;
-    color: #fff
+    color: #fff;
 }
 
 .qr-primary {
     background: #1769e0;
-    color: #fff
+    color: #fff;
 }
 
 .qr-error {
@@ -183,7 +203,7 @@
 }
 
 .success-card {
-    padding-top: 38px
+    padding-top: 38px;
 }
 
 .success-icon {
@@ -208,7 +228,8 @@
     background: #f8fafc;
     padding: 16px;
     border-radius: 16px;
-    transition: background 0.3s ease;
+    color: #334155;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 .qr-spinner {
@@ -218,16 +239,16 @@
     border-top-color: #1769e0;
     border-radius: 50%;
     animation: qrspin .8s linear infinite;
-    margin: 0 auto 12px
+    margin: 0 auto 12px;
 }
 
 @keyframes qrspin {
     to {
-        transform: rotate(360deg)
+        transform: rotate(360deg);
     }
 }
 
-/* Bosh sahifaga qaytish tugmasi stili */
+/* Bosh sahifaga qaytish tugmasi */
 .back-to-home-btn {
     align-self: flex-start;
     display: inline-flex;
@@ -256,25 +277,30 @@
 }
 
 /* ====================================================
-   DARK MODE STYLES (Tungi rejim)
+   DARK MODE (Yaxshilangan)
    ==================================================== */
 
-/* Body/HTML ga .dark klassi berilganda yoki tizim bo'yicha */
 body.dark .qr-page,
 [data-theme="dark"] .qr-page {
     background: linear-gradient(135deg, #0f172a, #1e293b);
-    color: #f8fafc;
+    color: #f1f5f9;
 }
 
 body.dark .qr-card,
 [data-theme="dark"] .qr-card {
     background: #1e293b;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    color: #f1f5f9;
 }
 
 body.dark .qr-label,
 [data-theme="dark"] .qr-label {
     color: #94a3b8;
+}
+
+body.dark .qr-card h1,
+[data-theme="dark"] .qr-card h1 {
+    color: #f8fafc;
 }
 
 body.dark .product-details span,
@@ -284,33 +310,50 @@ body.dark .product-details span,
 }
 
 body.dark .cost-box,
-body.dark .result-grid,
-[data-theme="dark"] .cost-box,
-[data-theme="dark"] .result-grid {
+[data-theme="dark"] .cost-box {
     background: #0f172a;
+    color: #cbd5e1;
+}
+
+body.dark .qr-confirm h3,
+body.dark .qr-sell-form h3,
+[data-theme="dark"] .qr-confirm h3,
+[data-theme="dark"] .qr-sell-form h3 {
+    color: #f8fafc;
+}
+
+body.dark .qr-sell-form label,
+[data-theme="dark"] .qr-sell-form label {
+    color: #cbd5e1;
 }
 
 body.dark .qr-sell-form input,
 [data-theme="dark"] .qr-sell-form input {
     background: #0f172a;
-    border-color: #334155;
+    border-color: #475569;
     color: #f8fafc;
+}
+
+body.dark .qr-sell-form input::placeholder,
+[data-theme="dark"] .qr-sell-form input::placeholder {
+    color: #64748b;
 }
 
 body.dark .qr-sell-form input:focus,
 [data-theme="dark"] .qr-sell-form input:focus {
     border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
 }
 
 body.dark .profit-preview.positive,
 [data-theme="dark"] .profit-preview.positive {
-    background: rgba(22, 163, 106, 0.2);
+    background: rgba(22, 163, 106, 0.18);
     color: #4ade80;
 }
 
 body.dark .profit-preview.negative,
 [data-theme="dark"] .profit-preview.negative {
-    background: rgba(229, 83, 83, 0.2);
+    background: rgba(229, 83, 83, 0.18);
     color: #f87171;
 }
 
@@ -327,14 +370,20 @@ body.dark .qr-secondary:hover,
 
 body.dark .qr-error,
 [data-theme="dark"] .qr-error {
-    background: rgba(229, 83, 83, 0.2);
+    background: rgba(229, 83, 83, 0.18);
     color: #f87171;
 }
 
 body.dark .success-icon,
 [data-theme="dark"] .success-icon {
-    background: rgba(22, 163, 106, 0.2);
+    background: rgba(22, 163, 106, 0.18);
     color: #4ade80;
+}
+
+body.dark .result-grid,
+[data-theme="dark"] .result-grid {
+    background: #0f172a;
+    color: #cbd5e1;
 }
 
 body.dark .back-to-home-btn,
@@ -351,20 +400,31 @@ body.dark .back-to-home-btn:hover,
     border-color: #64748b;
 }
 
-/* Operatsion tizim avtomatik rejimiga moslashish (Agar JS sizingiz bo'lmasa) */
+body.dark .qr-spinner,
+[data-theme="dark"] .qr-spinner {
+    border-color: #334155;
+    border-top-color: #3b82f6;
+}
+
+/* Tizim avtomatik dark mode (prefers-color-scheme) */
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) .qr-page {
         background: linear-gradient(135deg, #0f172a, #1e293b);
-        color: #f8fafc;
+        color: #f1f5f9;
     }
 
     :root:not([data-theme="light"]) .qr-card {
         background: #1e293b;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        color: #f1f5f9;
     }
 
     :root:not([data-theme="light"]) .qr-label {
         color: #94a3b8;
+    }
+
+    :root:not([data-theme="light"]) .qr-card h1 {
+        color: #f8fafc;
     }
 
     :root:not([data-theme="light"]) .product-details span {
@@ -372,24 +432,37 @@ body.dark .back-to-home-btn:hover,
         color: #e2e8f0;
     }
 
-    :root:not([data-theme="light"]) .cost-box,
-    :root:not([data-theme="light"]) .result-grid {
+    :root:not([data-theme="light"]) .cost-box {
         background: #0f172a;
+        color: #cbd5e1;
+    }
+
+    :root:not([data-theme="light"]) .qr-confirm h3,
+    :root:not([data-theme="light"]) .qr-sell-form h3 {
+        color: #f8fafc;
+    }
+
+    :root:not([data-theme="light"]) .qr-sell-form label {
+        color: #cbd5e1;
     }
 
     :root:not([data-theme="light"]) .qr-sell-form input {
         background: #0f172a;
-        border-color: #334155;
+        border-color: #475569;
         color: #f8fafc;
     }
 
+    :root:not([data-theme="light"]) .qr-sell-form input::placeholder {
+        color: #64748b;
+    }
+
     :root:not([data-theme="light"]) .profit-preview.positive {
-        background: rgba(22, 163, 106, 0.2);
+        background: rgba(22, 163, 106, 0.18);
         color: #4ade80;
     }
 
     :root:not([data-theme="light"]) .profit-preview.negative {
-        background: rgba(229, 83, 83, 0.2);
+        background: rgba(229, 83, 83, 0.18);
         color: #f87171;
     }
 
@@ -398,14 +471,29 @@ body.dark .back-to-home-btn:hover,
         color: #f1f5f9;
     }
 
+    :root:not([data-theme="light"]) .qr-error {
+        background: rgba(229, 83, 83, 0.18);
+        color: #f87171;
+    }
+
     :root:not([data-theme="light"]) .success-icon {
-        background: rgba(22, 163, 106, 0.2);
+        background: rgba(22, 163, 106, 0.18);
         color: #4ade80;
+    }
+
+    :root:not([data-theme="light"]) .result-grid {
+        background: #0f172a;
+        color: #cbd5e1;
     }
 
     :root:not([data-theme="light"]) .back-to-home-btn {
         background: #334155;
         color: #cbd5e1;
         border-color: #475569;
+    }
+
+    :root:not([data-theme="light"]) .qr-spinner {
+        border-color: #334155;
+        border-top-color: #3b82f6;
     }
 }
