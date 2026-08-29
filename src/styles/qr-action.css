@@ -531,12 +531,12 @@ body.dark .success-card button:not(.qr-danger):not(.qr-secondary),
 @media (prefers-color-scheme: dark) {
 
     :root:not([data-theme="light"]) .success-card .qr-primary,
-    :root:not([data-theme="light"]) .success-card button.qr-primary {
+    .success-card button.qr-primary {
         background: #3b82f6 !important;
         color: #ffffff !important;
     }
 
-    :root:not([data-theme="light"]) .success-card button:not(.qr-danger):not(.qr-secondary) {
+    .success-card button:not(.qr-danger):not(.qr-secondary) {
         background: #3b82f6 !important;
         color: #ffffff !important;
     }
