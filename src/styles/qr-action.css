@@ -530,7 +530,7 @@ body.dark .success-card button:not(.qr-danger):not(.qr-secondary),
 /* prefers-color-scheme uchun ham */
 @media (prefers-color-scheme: dark) {
 
-    :root:not([data-theme="light"]) .success-card .qr-primary,
+    .success-card .qr-primary,
     .success-card button.qr-primary {
         background: #3b82f6 !important;
         color: #ffffff !important;
@@ -539,5 +539,47 @@ body.dark .success-card button:not(.qr-danger):not(.qr-secondary),
     .success-card button:not(.qr-danger):not(.qr-secondary) {
         background: #3b82f6 !important;
         color: #ffffff !important;
+    }
+}
+
+/* ========== FOYDALI SOTUV TUGMASI (SUCCESS PAGE) ========== */
+
+/* Oddiy holat */
+.success-card button,
+.success-card .qr-primary,
+.qr-card .success-actions button {
+    background: #1769e0 !important;
+    color: #ffffff !important;
+    font-weight: 700;
+    border: none;
+}
+
+/* Dark mode */
+body.dark .success-card button,
+body.dark .success-card .qr-primary,
+body.dark .qr-card .success-actions button,
+[data-theme="dark"] .success-card button,
+[data-theme="dark"] .success-card .qr-primary,
+[data-theme="dark"] .qr-card .success-actions button {
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+    font-weight: 700;
+    border: none;
+}
+
+body.dark .success-card button:hover,
+[data-theme="dark"] .success-card button:hover {
+    background: #2563eb !important;
+    color: #ffffff !important;
+}
+
+/* Tizim dark mode */
+@media (prefers-color-scheme: dark) {
+
+    :root:not([data-theme="light"]) .success-card button,
+    :root:not([data-theme="light"]) .success-card .qr-primary {
+        background: #3b82f6 !important;
+        color: #ffffff !important;
+        font-weight: 700;
     }
 }
