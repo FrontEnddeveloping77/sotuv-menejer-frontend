@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/qr-action.css';
@@ -13,6 +13,73 @@ const api = axios.create({
 
 const money = (value) =>
     Number(value || 0).toLocaleString('uz-UZ');
+
+/**
+ * Rasm manzilini tozalab beradi.
+ * Bo'sh satr / faqat bo'shliq / null / undefined bo'lsa — null qaytaradi.
+ */
+const normalizeImageSrc = (value) => {
+    if (typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : null;
+};
+
+/**
+ * ★★★ MUHIM TUZATISH ★★★
+ * Bu komponent ILGARI QRActionPage FUNKSIYASI ICHIDA e'lon qilingan edi.
+ * Bu React uchun jiddiy xato hisoblanadi: har bir re-render'da (masalan,
+ * foydalanuvchi inputga harf kiritganda) React uni "butunlay yangi
+ * komponent turi" deb hisoblab, eski <img> elementini unmount qilib,
+ * qaytadan yaratardi. Natijada forma to'ldirilayotganda rasm qayta-qayta
+ * yuklanar, miltillar yoki ko'rinishdan yo'qolib qolardi.
+ *
+ * Komponent endi modul darajasida (tashqarida) e'lon qilingan — u endi
+ * har bir renderda qayta yaratilmaydi, faqat `src` haqiqatan o'zgarganda
+ * qayta chiziladi.
+ */
+const ProductImage = ({ src, alt, style }) => {
+    const [failed, setFailed] = useState(false);
+    const cleanSrc = normalizeImageSrc(src);
+
+    // src o'zgarsa, oldingi xato holatini tozalaymiz — yangi rasmga
+    // qayta urinib ko'rish imkoniyati bo'lsin
+    useEffect(() => {
+        setFailed(false);
+    }, [cleanSrc]);
+
+    if (!cleanSrc || failed) return null;
+
+    return (
+        <div
+            style={{
+                width: '100%',
+                display: 'flex',
+                justifyContent: 'center',
+                marginBottom: 16,
+                ...style
+            }}
+        >
+            <img
+                key={cleanSrc}
+                src={cleanSrc}
+                alt={alt || 'Tovar rasmi'}
+                style={{
+                    maxWidth: '100%',
+                    maxHeight: 220,
+                    objectFit: 'contain',
+                    borderRadius: 14,
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                }}
+                onError={() => {
+                    console.warn('[QRActionPage] Rasm yuklanmadi:', cleanSrc);
+                    setFailed(true);
+                }}
+            />
+        </div>
+    );
+};
 
 export default function QRActionPage() {
     const { token } = useParams();
@@ -57,6 +124,17 @@ export default function QRActionPage() {
                 setLoading(false);
             });
     }, [token]);
+
+    // Har bir amal natijasida ko'rsatiladigan rasmni bitta joydan aniqlaymiz:
+    // 1) serverdan qaytgan yangi ma'lumotdagi rasm
+    // 2) sahifa ochilganda yuklangan asl mahsulot rasmi
+    const resolveResultImage = useCallback(
+        (data) =>
+            normalizeImageSrc(data?.product?.image_url) ||
+            normalizeImageSrc(product?.image_url) ||
+            null,
+        [product]
+    );
 
     const handleDelete = async () => {
         const confirmed = window.confirm(
@@ -156,38 +234,6 @@ export default function QRActionPage() {
         }
     };
 
-    const ProductImage = ({ src, alt, style }) => {
-        if (!src) return null;
-        return (
-            <div
-                style={{
-                    width: '100%',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    marginBottom: 16,
-                    ...style
-                }}
-            >
-                <img
-                    src={src}
-                    alt={alt || 'Tovar rasmi'}
-                    style={{
-                        maxWidth: '100%',
-                        maxHeight: 220,
-                        objectFit: 'contain',
-                        borderRadius: 14,
-                        background: '#f8fafc',
-                        border: '1px solid #e2e8f0',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-                    }}
-                    onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                    }}
-                />
-            </div>
-        );
-    };
-
     if (loading) {
         return (
             <main className="qr-page">
@@ -221,10 +267,7 @@ export default function QRActionPage() {
     if (result) {
         if (result.type === 'sell' || result.type === 'credit-sell') {
             const data = result.data;
-            const imgSrc =
-                data.product?.image_url ||
-                product?.image_url ||
-                null;
+            const imgSrc = resolveResultImage(data);
 
             return (
                 <main className="qr-page">
