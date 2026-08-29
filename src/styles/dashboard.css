@@ -1934,11 +1934,11 @@ body {
     background: #334155 !important;
 }
 
-#id{
+#id {
     color: dodgerblue !important;
 }
 
-#ombor-tovar{
+#ombor-tovar {
     color: dodgerblue !important;
 }
 
@@ -2388,8 +2388,58 @@ select,
 }
 
 @media (max-width: 440px) {
-    .qarzlar-card{
+    .qarzlar-card {
         flex-direction: column;
         align-items: start !important;
     }
+}
+
+
+
+/* ========== QR TUGMALARI (Light + Dark) ========== */
+
+.qr-list button,
+.qr-btn,
+button.qr,
+.products-table .qr-list button {
+    background: #eff6ff !important;
+    color: #1d4ed8 !important;
+    border: 1px solid #bfdbfe !important;
+    border-radius: 8px !important;
+    padding: 5px 10px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.qr-list button:hover,
+.qr-btn:hover,
+button.qr:hover,
+.products-table .qr-list button:hover {
+    background: #dbeafe !important;
+    border-color: #93c5fd !important;
+    color: #1e40af !important;
+}
+
+/* Dark mode */
+body.dashboard-dark .qr-list button,
+body.dashboard-dark .qr-btn,
+body.dashboard-dark button.qr,
+body.dashboard-dark .products-table .qr-list button {
+    background: #1e3a5f !important;
+    color: #93c5fd !important;
+    border: 1px solid #1e40af !important;
+}
+
+body.dashboard-dark .qr-list button:hover,
+body.dashboard-dark .qr-btn:hover,
+body.dashboard-dark button.qr:hover,
+body.dashboard-dark .products-table .qr-list button:hover {
+    background: #1e40af !important;
+    color: #dbeafe !important;
+    border-color: #3b82f6 !important;
 }
