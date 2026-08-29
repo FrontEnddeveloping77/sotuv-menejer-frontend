@@ -321,21 +321,24 @@ export default function QRActionPage() {
                         </div>
 
                         <div
-                        className='fjfjfjfj'
+                            className='fjfjfjfj'
                             style={{
+                                background: '#2563eb!important',
+                                color: '#ffffff!important',
+                                fontWeight: '700 !important',
+                                opacity: '1 !important',
                                 marginTop: '20px',
                                 padding: '14px',
                                 borderRadius: '12px',
-                                background: (data.profit ?? 0) >= 0 ? '#e8f7ee' : '#fdecec',
                                 textAlign: 'center'
                             }}
                         >
-                            {(data.profit ?? 0) >= 0
-                                ? '📈 Foydali sotuv'
-                                : '📉 Ziyon bilan sotuv'}
-                        </div>
+                        {(data.profit ?? 0) >= 0
+                            ? '📈 Foydali sotuv'
+                            : '📉 Ziyon bilan sotuv'}
                     </div>
-                </main>
+                </div>
+                </main >
             );
         }
 
