@@ -321,7 +321,6 @@ export default function QRActionPage() {
                         </div>
 
                         <div
-                            className='fjfjfjfj'
                             style={{
                                 background: '#2563eb!important',
                                 color: '#ffffff!important',
