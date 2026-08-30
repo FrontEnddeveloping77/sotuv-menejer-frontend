@@ -473,9 +473,22 @@ const DashboardPage = () => {
     const isProductEditable = (_group) => true;
 
     const matchesQuery = (group, query) => {
-        const q = query.toLowerCase().trim();
+        const q = String(query || '').toLowerCase().trim();
         if (!q) return true;
-        return (group.name || '').toLowerCase().includes(q);
+        const idStr = group.local_id != null ? String(group.local_id) : '';
+        const nameStr = (group.name || '').toLowerCase();
+        const categoryStr = (group.category || '').toLowerCase();
+        const colorStr = (group.color || '').toLowerCase();
+        const sizesStr = (group.variants || [])
+            .map((v) => String(v.size || '').toLowerCase())
+            .join(' ');
+        return (
+            idStr.includes(q) ||
+            nameStr.includes(q) ||
+            categoryStr.includes(q) ||
+            colorStr.includes(q) ||
+            sizesStr.includes(q)
+        );
     };
 
     const filteredSellGroups = productGroups.filter((g) => matchesQuery(g, sellSearch));
@@ -1396,10 +1409,18 @@ const DashboardPage = () => {
     const matchesReturnSale = (sale, query) => {
         const q = String(query || '').toLowerCase().trim();
         if (!q) return true;
+        const idStr = sale.local_id != null ? String(sale.local_id) : '';
         const name = String(sale.title || sale.name || '').toLowerCase();
         const size = String(sale.size || '').toLowerCase();
         const color = String(sale.color || '').toLowerCase();
-        return name.includes(q) || size.includes(q) || color.includes(q);
+        const category = String(sale.category || '').toLowerCase();
+        return (
+            idStr.includes(q) ||
+            name.includes(q) ||
+            size.includes(q) ||
+            color.includes(q) ||
+            category.includes(q)
+        );
     };
 
     const handleReturnSale = async (saleId) => {
@@ -1869,7 +1890,7 @@ const DashboardPage = () => {
                         <form onSubmit={handleCreditSell} className="product-form">
                             <div className="form-group">
                                 <label>Tovar nomi bo'yicha qidirish :</label>
-                                <input type="text" placeholder="Masalan: Nike, Divan..." value={creditSellSearch} onChange={(e) => setCreditSellSearch(e.target.value)} className="form-input" />
+                                <input type="text" placeholder="ID, nom, kategoriya yoki rang..." value={creditSellSearch} onChange={(e) => setCreditSellSearch(e.target.value)} className="form-input" />
                             </div>
                             <div className="form-group">
                                 <label>Tovarni tanlang * :</label>
@@ -2082,7 +2103,7 @@ const DashboardPage = () => {
                         <div className="form-group" style={{ marginBottom: 12 }}>
                             <input
                                 type="text"
-                                placeholder="Nom, kategoriya yoki rang bo'yicha qidirish..."
+                                placeholder="ID, nom, kategoriya yoki rang bo'yicha qidirish..."
                                 value={editSelectSearch}
                                 onChange={(e) => setEditSelectSearch(e.target.value)}
                                 className="form-input"
@@ -2664,7 +2685,7 @@ const DashboardPage = () => {
                         <form onSubmit={handleSellProduct} className="product-form">
                             <div className="form-group">
                                 <label>Tovar nomi bo'yicha qidirish :</label>
-                                <input type="text" placeholder="Masalan: Nike..." value={sellSearch} onChange={(e) => setSellSearch(e.target.value)} className="form-input" />
+                                <input type="text" placeholder="ID, nom, kategoriya yoki rang..." value={sellSearch} onChange={(e) => setSellSearch(e.target.value)} className="form-input" />
                             </div>
                             <div className="form-group">
                                 <label>Tovarni tanlang * :</label>
@@ -2811,7 +2832,7 @@ const DashboardPage = () => {
                         <form onSubmit={handleDeleteProduct} className="product-form">
                             <div className="form-group">
                                 <label>Tovar nomi bo'yicha qidirish :</label>
-                                <input type="text" value={deleteSearch} onChange={(e) => setDeleteSearch(e.target.value)} className="form-input" placeholder="Masalan: Oscar, Nike..." />
+                                <input type="text" value={deleteSearch} onChange={(e) => setDeleteSearch(e.target.value)} className="form-input" placeholder="ID, nom, kategoriya yoki rang..." />
                             </div>
                             <div className="form-group">
                                 <label>Tovarni tanlang * :</label>
@@ -2928,7 +2949,7 @@ const DashboardPage = () => {
                         <div className="form-group" style={{ marginBottom: 12 }}>
                             <input
                                 type="text"
-                                placeholder="Nom, rang yoki razmer bo‘yicha qidirish..."
+                                placeholder="ID, nom, rang yoki razmer bo‘yicha qidirish..."
                                 value={returnSearch}
                                 onChange={(e) => setReturnSearch(e.target.value)}
                                 className="form-input"
@@ -3316,7 +3337,7 @@ const DashboardPage = () => {
                         <div className="form-group" style={{ marginBottom: 12 }}>
                             <input
                                 type="text"
-                                placeholder="Nomi, razmer yoki kategoriya bo'yicha qidirish..."
+                                placeholder="ID, nomi, razmer yoki kategoriya bo'yicha qidirish..."
                                 value={restoreSearch}
                                 onChange={(e) => setRestoreSearch(e.target.value)}
                                 className="form-input"
