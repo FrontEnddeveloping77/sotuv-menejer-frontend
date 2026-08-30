@@ -18,7 +18,7 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
-const PRODUCT_EDIT_WINDOW_DAYS = 7;
+// PRODUCT_EDIT_WINDOW_DAYS olib tashlandi — tovarni istalgan vaqtda tahrirlash mumkin
 const SALE_RETURN_WINDOW_DAYS = 7;
 const EXPENSE_EDIT_WINDOW_DAYS = 30;
 const DEBT_PAYMENT_UNDO_WINDOW_DAYS = 30;
@@ -469,10 +469,8 @@ const DashboardPage = () => {
 
     const productGroups = groupProductsByLocalId(products);
 
-    const isProductEditable = (group) => {
-        if (!group.createdAt) return true;
-        return daysSince(group.createdAt) <= PRODUCT_EDIT_WINDOW_DAYS;
-    };
+    // Tahrirlash muddati cheklovi olib tashlandi — barcha tovarlar tahrirlanadi
+    const isProductEditable = (_group) => true;
 
     const matchesQuery = (group, query) => {
         const q = query.toLowerCase().trim();
@@ -635,11 +633,6 @@ const DashboardPage = () => {
     };
 
     const openEditProduct = async (group) => {
-        if (!isProductEditable(group)) {
-            alert(`Bu tovar qo'shilganiga ${PRODUCT_EDIT_WINDOW_DAYS} kundan ko'p vaqt o'tgan, tahrirlab bo'lmaydi!`);
-            return;
-        }
-
         let imageUrl = group.image_url || '';
         // Ro'yxat light rejimda — rasm alohida so'rov bilan
         if (!imageUrl && group.has_image) {
@@ -2084,7 +2077,7 @@ const DashboardPage = () => {
                             <h3>✏️ Tovarni tahrirlash</h3>
                         </div>
                         <p style={{ fontSize: 13, color: '#64748b', marginBottom: 12 }}>
-                            Faqat oxirgi <b>{PRODUCT_EDIT_WINDOW_DAYS} kun</b> ichida qo&apos;shilgan tovarlar tahrirlanadi.
+                            Ombordagi istalgan tovarni tahrirlashingiz mumkin.
                         </p>
                         <div className="form-group" style={{ marginBottom: 12 }}>
                             <input
@@ -2101,19 +2094,13 @@ const DashboardPage = () => {
                                 <div className="info-banner">Tovar topilmadi</div>
                             ) : (
                                 filteredEditGroups.map((g) => {
-                                    const editable = isProductEditable(g);
                                     const totalQty = (g.variants || []).reduce((s, v) => s + (Number(v.quantity) || 0), 0);
                                     return (
                                         <div
                                             key={g.local_id}
                                             className="debt-card"
-                                            style={{
-                                                opacity: editable ? 1 : 0.55,
-                                                cursor: editable ? 'pointer' : 'not-allowed'
-                                            }}
-                                            onClick={() => {
-                                                if (editable) openEditProduct(g);
-                                            }}
+                                            style={{ cursor: 'pointer' }}
+                                            onClick={() => openEditProduct(g)}
                                         >
                                             <strong>#{g.local_id} — {g.name}</strong>
                                             <div style={{ marginTop: 6, fontSize: 14, color: '#64748b' }}>
@@ -2122,24 +2109,17 @@ const DashboardPage = () => {
                                                 {' · '}
                                                 {totalQty} dona
                                             </div>
-                                            {!editable && (
-                                                <div style={{ marginTop: 8, color: '#ef4444', fontSize: 13 }}>
-                                                    Muddat o&apos;tgan — tahrirlab bo&apos;lmaydi
-                                                </div>
-                                            )}
-                                            {editable && (
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-primary"
-                                                    style={{ marginTop: 10 }}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        openEditProduct(g);
-                                                    }}
-                                                >
-                                                    Tahrirlash
-                                                </button>
-                                            )}
+                                            <button
+                                                type="button"
+                                                className="btn btn-primary"
+                                                style={{ marginTop: 10 }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openEditProduct(g);
+                                                }}
+                                            >
+                                                Tahrirlash
+                                            </button>
                                         </div>
                                     );
                                 })
@@ -2941,6 +2921,9 @@ const DashboardPage = () => {
                 <div className="modal-overlay">
                     <div className="modal-box modal-box-wide">
                         <div className="modal-header"><h3>↩️ Vozvrat</h3></div>
+                        <p style={{ fontSize: 13, color: '#64748b', marginBottom: 12 }}>
+                            Faqat oxirgi <b>{SALE_RETURN_WINDOW_DAYS} kun</b> ichida sotilgan tovarlar qaytariladi.
+                        </p>
 
                         <div className="form-group" style={{ marginBottom: 12 }}>
                             <input
@@ -2956,8 +2939,9 @@ const DashboardPage = () => {
                         {salesLoading ? <p>Yuklanmoqda...</p> : (
                             <div className="debts-list">
                                 {(() => {
+                                    // Faqat oxirgi 7 kun ichida sotilgan (vozvrat mumkin) tovarlar
                                     const list = (salesList || [])
-                                        .filter((s) => !s.returned)
+                                        .filter((s) => isSaleReturnable(s))
                                         .filter((s) => matchesReturnSale(s, returnSearch));
 
                                     if (list.length === 0) {
@@ -2965,7 +2949,7 @@ const DashboardPage = () => {
                                             <div className="info-banner">
                                                 {returnSearch.trim()
                                                     ? 'Qidiruv bo‘yicha sotuv topilmadi'
-                                                    : "Vozvrat qilinadigan sotuv yo'q"}
+                                                    : "Oxirgi 7 kun ichida vozvrat qilinadigan sotuv yo'q"}
                                             </div>
                                         );
                                     }
@@ -2995,19 +2979,15 @@ const DashboardPage = () => {
                                             <div style={{ fontSize: 13, color: '#64748b' }}>
                                                 {new Date(sale.sold_at).toLocaleString('uz-UZ')}
                                             </div>
-                                            {isSaleReturnable(sale) ? (
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-primary"
-                                                    style={{ marginTop: 10 }}
-                                                    onClick={() => handleReturnSale(sale.id)}
-                                                    disabled={isSubmitting}
-                                                >
-                                                    Vozvrat qilish
-                                                </button>
-                                            ) : (
-                                                <span style={{ color: '#ef4444', fontSize: 13 }}>Muddat o'tgan</span>
-                                            )}
+                                            <button
+                                                type="button"
+                                                className="btn btn-primary"
+                                                style={{ marginTop: 10 }}
+                                                onClick={() => handleReturnSale(sale.id)}
+                                                disabled={isSubmitting}
+                                            >
+                                                Vozvrat qilish
+                                            </button>
                                         </div>
                                     ));
                                 })()}
