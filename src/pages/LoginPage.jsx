@@ -13,7 +13,7 @@ const LoginPage = () => {
         setErrorMessage('');
         setLoading(true);
 
-        const BASE_URL = import.meta.env.VITE_API_URL || 'https://sotuv-menejer-backend.onrender.com';
+        const BASE_URL = import.meta.env.VITE_API_URL || 'https://sotuv-menejer-backend.vercel.app';
 
         try {
             const res = await fetch(`${BASE_URL}/api/login`, {
