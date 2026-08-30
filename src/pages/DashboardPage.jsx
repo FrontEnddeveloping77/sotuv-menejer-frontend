@@ -479,15 +479,11 @@ const DashboardPage = () => {
         const nameStr = (group.name || '').toLowerCase();
         const categoryStr = (group.category || '').toLowerCase();
         const colorStr = (group.color || '').toLowerCase();
-        const sizesStr = (group.variants || [])
-            .map((v) => String(v.size || '').toLowerCase())
-            .join(' ');
         return (
             idStr.includes(q) ||
             nameStr.includes(q) ||
             categoryStr.includes(q) ||
-            colorStr.includes(q) ||
-            sizesStr.includes(q)
+            colorStr.includes(q)
         );
     };
 
@@ -1411,13 +1407,11 @@ const DashboardPage = () => {
         if (!q) return true;
         const idStr = sale.local_id != null ? String(sale.local_id) : '';
         const name = String(sale.title || sale.name || '').toLowerCase();
-        const size = String(sale.size || '').toLowerCase();
         const color = String(sale.color || '').toLowerCase();
         const category = String(sale.category || '').toLowerCase();
         return (
             idStr.includes(q) ||
             name.includes(q) ||
-            size.includes(q) ||
             color.includes(q) ||
             category.includes(q)
         );
@@ -1511,12 +1505,16 @@ const DashboardPage = () => {
     const filteredGroups = productGroups.filter((g) => {
         const query = searchQuery.toLowerCase().trim();
         if (!query) return true;
-        const idStr = g.local_id ? String(g.local_id) : '';
+        const idStr = g.local_id != null ? String(g.local_id) : '';
         const nameStr = (g.name || '').toLowerCase();
         const categoryStr = (g.category || '').toLowerCase();
         const colorStr = (g.color || '').toLowerCase();
-        const sizesStr = g.variants.map((v) => (v.size || '').toLowerCase()).join(' ');
-        return idStr.includes(query) || nameStr.includes(query) || categoryStr.includes(query) || colorStr.includes(query) || sizesStr.includes(query);
+        return (
+            idStr.includes(query) ||
+            nameStr.includes(query) ||
+            categoryStr.includes(query) ||
+            colorStr.includes(query)
+        );
     });
 
     if (isInitialLoading) {
@@ -1809,7 +1807,7 @@ const DashboardPage = () => {
                     <h3>📦 Ombordagi Tovarlar</h3>
                     <input
                         type="text"
-                        placeholder="ID, Nomi, Kategoriya, Rang yoki O'lchami bo'yicha qidirish..."
+                        placeholder="ID, Nomi, Kategoriya yoki Rang bo'yicha qidirish..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="search-input"
@@ -2949,7 +2947,7 @@ const DashboardPage = () => {
                         <div className="form-group" style={{ marginBottom: 12 }}>
                             <input
                                 type="text"
-                                placeholder="ID, nom, rang yoki razmer bo‘yicha qidirish..."
+                                placeholder="ID, nom, rang yoki kategoriya bo‘yicha qidirish..."
                                 value={returnSearch}
                                 onChange={(e) => setReturnSearch(e.target.value)}
                                 className="form-input"
@@ -2960,7 +2958,7 @@ const DashboardPage = () => {
                         {salesLoading ? <p>Yuklanmoqda...</p> : (
                             <div className="debts-list">
                                 {(() => {
-                                    // Faqat oxirgi 7 kun ichida sotilgan (vozvrat mumkin) tovarlar
+                                    // Faqat oxirgi SALE_RETURN_WINDOW_DAYS kun ichida sotilgan (vozvrat mumkin) tovarlar
                                     const list = (salesList || [])
                                         .filter((s) => isSaleReturnable(s))
                                         .filter((s) => matchesReturnSale(s, returnSearch));
@@ -2970,7 +2968,7 @@ const DashboardPage = () => {
                                             <div className="info-banner">
                                                 {returnSearch.trim()
                                                     ? 'Qidiruv bo‘yicha sotuv topilmadi'
-                                                    : "Oxirgi 7 kun ichida vozvrat qilinadigan sotuv yo'q"}
+                                                    : `Oxirgi ${SALE_RETURN_WINDOW_DAYS} kun ichida vozvrat qilinadigan sotuv yo'q`}
                                             </div>
                                         );
                                     }
@@ -3337,7 +3335,7 @@ const DashboardPage = () => {
                         <div className="form-group" style={{ marginBottom: 12 }}>
                             <input
                                 type="text"
-                                placeholder="ID, nomi, razmer yoki kategoriya bo'yicha qidirish..."
+                                placeholder="ID, nomi, kategoriya yoki rang bo'yicha qidirish..."
                                 value={restoreSearch}
                                 onChange={(e) => setRestoreSearch(e.target.value)}
                                 className="form-input"
@@ -3355,7 +3353,6 @@ const DashboardPage = () => {
                                         if (!q) return true;
                                         return (
                                             (p.name || '').toLowerCase().includes(q) ||
-                                            (p.size || '').toLowerCase().includes(q) ||
                                             (p.category || '').toLowerCase().includes(q) ||
                                             (p.color || '').toLowerCase().includes(q) ||
                                             String(p.local_id || '').includes(q)
@@ -3429,8 +3426,7 @@ const DashboardPage = () => {
                                             String(p.name || '').toLowerCase().includes(q) ||
                                             String(p.category || '').toLowerCase().includes(q) ||
                                             String(p.color || '').toLowerCase().includes(q) ||
-                                            String(p.local_id || '').includes(q) ||
-                                            (p.sizes || []).join(' ').toLowerCase().includes(q)
+                                            String(p.local_id || '').includes(q)
                                         );
                                     });
                                     if (list.length === 0) {
