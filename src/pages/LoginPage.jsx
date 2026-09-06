@@ -13,8 +13,8 @@ const LoginPage = () => {
         setErrorMessage('');
         setLoading(true);
 
-        const BASE_URL = import.meta.env.VITE_API_URL || 'https://sotuv-menejer-backend.vercel.app';
-
+        const BASE_URL = import.meta.env.VITE_API_URL || 'http://92.5.35.67:5000';
+        
         try {
             const res = await fetch(`${BASE_URL}/api/login`, {
                 method: 'POST',

@@ -6,7 +6,7 @@ import '../styles/product-image-upload.css';
 import '../styles/qr-modal.css';
 import ProductQR from '../components/ProductQR';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://sotuv-menejer-backend.vercel.app';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://92.5.35.67:5000';
 
 const api = axios.create({ baseURL: BASE_URL });
 

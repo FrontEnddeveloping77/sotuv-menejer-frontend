@@ -3,9 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/qr-action.css';
 
-const BASE_URL =
-    import.meta.env.VITE_API_URL ||
-    'https://sotuv-menejer-backend.onrender.com';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://92.5.35.67:5000';
 
 const api = axios.create({
     baseURL: BASE_URL
@@ -332,11 +330,11 @@ export default function QRActionPage() {
                                 textAlign: 'center'
                             }}
                         >
-                        {(data.profit ?? 0) >= 0
-                            ? '📈 Foydali sotuv'
-                            : '📉 Ziyon bilan sotuv'}
+                            {(data.profit ?? 0) >= 0
+                                ? '📈 Foydali sotuv'
+                                : '📉 Ziyon bilan sotuv'}
+                        </div>
                     </div>
-                </div>
                 </main >
             );
         }
