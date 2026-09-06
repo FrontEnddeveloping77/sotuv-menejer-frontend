@@ -12,7 +12,7 @@ const ProductQR = ({ product }) => {
     // ko'pincha "http://localhost" ni qaytaradi, chunki ilova fayllari qurilma
     // ichidan mahalliy tarzda yuklanadi. Shu sabab QR har doim FAQAT aniq
     // belgilangan production domenga (VITE_PUBLIC_APP_URL) tayanadi.
-    const PUBLIC_SITE_URL = 'https://sotuv-menejer-frontend.vercel.app';
+    const PUBLIC_SITE_URL = 'https://sotuvmenejer.uz';
 
     const publicBase = (
         import.meta.env.VITE_PUBLIC_APP_URL || PUBLIC_SITE_URL
