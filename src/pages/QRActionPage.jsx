@@ -5,8 +5,18 @@ import '../styles/qr-action.css';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://92.5.35.67:5000';
 
+// JWT tokenini headerga qo'shib so'rov yuboradigan axios instance
 const api = axios.create({
     baseURL: BASE_URL
+});
+
+// Har bir so'rovga localStorage-dan tokenni avtomatik qo'shamiz
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
 });
 
 const money = (value) =>
@@ -100,9 +110,18 @@ export default function QRActionPage() {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
+    const [wrongUser, setWrongUser] = useState(false);
     const [result, setResult] = useState(null);
 
     useEffect(() => {
+        const jwtToken = localStorage.getItem('token');
+
+        // Login qilinmagan bo'lsa, login sahifasiga yo'naltiramiz
+        if (!jwtToken) {
+            navigate('/login', { replace: true });
+            return;
+        }
+
         api.get(`/api/qr/${token}`)
             .then((res) => {
                 const p = res.data.product;
@@ -113,15 +132,31 @@ export default function QRActionPage() {
                 setEditSize(p.size || '');
             })
             .catch((err) => {
+                const status = err.response?.status;
+                const data = err.response?.data;
+
+                if (status === 401 || data?.requireLogin) {
+                    // Login qilinmagan yoki token eskirgan
+                    navigate('/login', { replace: true });
+                    return;
+                }
+
+                if (status === 403 || data?.wrongUser) {
+                    // Boshqa logindan kirgan
+                    setWrongUser(true);
+                    setLoading(false);
+                    return;
+                }
+
                 setError(
-                    err.response?.data?.message ||
+                    data?.message ||
                     'QR kodi topilmadi!'
                 );
             })
             .finally(() => {
                 setLoading(false);
             });
-    }, [token]);
+    }, [token, navigate]);
 
     // Har bir amal natijasida ko'rsatiladigan rasmni bitta joydan aniqlaymiz:
     // 1) serverdan qaytgan yangi ma'lumotdagi rasm
@@ -238,6 +273,31 @@ export default function QRActionPage() {
                 <div className="qr-card">
                     <div className="qr-spinner" />
                     <p>Ma’lumot yuklanmoqda...</p>
+                </div>
+            </main>
+        );
+    }
+
+    if (wrongUser) {
+        return (
+            <main className="qr-page">
+                <div className="qr-card">
+                    <div className="qr-icon">🔒</div>
+                    <h2>Ruxsat yo'q</h2>
+                    <p style={{ color: '#64748b', marginBottom: 20 }}>
+                        Bu QR kod boshqa foydalanuvchiga tegishli.
+                        Uni ko'rish uchun o'sha logindan kirishingiz kerak.
+                    </p>
+                    <button
+                        type="button"
+                        className="qr-primary"
+                        onClick={() => {
+                            localStorage.removeItem('token');
+                            navigate('/login', { replace: true });
+                        }}
+                    >
+                        🔑 Boshqa logindan kirish
+                    </button>
                 </div>
             </main>
         );

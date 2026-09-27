@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import '../styles/login.css';
 
 const LoginPage = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false); // Parolni ko'rsatish/yashirish holati
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+
+    const navigate = useNavigate();
+    const location = useLocation();
+    // QR sahifasiga o'tishga uringan bo'lsa, login bo'lganidan keyin o'sha yerga qaytamiz
+    const redirectTo = location.state?.from?.pathname || '/dashboard';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -28,7 +34,8 @@ const LoginPage = () => {
 
             if (res.ok && data.token) {
                 localStorage.setItem('token', data.token);
-                window.location.href = '/dashboard';
+                // QR sahifasiga uringan bo'lsa o'sha yerga, yo'qsa dashboard ga
+                navigate(redirectTo, { replace: true });
             } else {
                 setErrorMessage(data.message || 'Login yoki parol xato!');
             }
