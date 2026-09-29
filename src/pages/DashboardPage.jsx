@@ -6,7 +6,7 @@ import '../styles/product-image-upload.css';
 import '../styles/qr-modal.css';
 import ProductQR from '../components/ProductQR';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://92.5.35.67:5000';
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://api.sotuvmenejer.uz';
 
 const api = axios.create({ baseURL: BASE_URL });
 
@@ -1577,10 +1577,19 @@ const DashboardPage = () => {
         setSavingAllQrs(true);
         try {
             // qrcode npm paketi shart emas — tashqi QR API + canvas
-            const origin = window.location.origin;
+            const PUBLIC_SITE_URL = 'https://sotuvmenejer.uz';
+            const isLocalOrApp = typeof window !== 'undefined' && (
+                window.location.origin.includes('localhost') ||
+                window.location.origin.includes('capacitor://')
+            );
+            const publicBase = (
+                import.meta.env.VITE_PUBLIC_APP_URL ||
+                (!isLocalOrApp && typeof window !== 'undefined' ? window.location.origin : PUBLIC_SITE_URL)
+            ).replace(/\/$/, '');
+
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
-                const qrLink = `${origin}/qr/${item.token}`;
+                const qrLink = `${publicBase}/qr/${item.token}`;
                 const apiUrl =
                     'https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=8&data=' +
                     encodeURIComponent(qrLink);

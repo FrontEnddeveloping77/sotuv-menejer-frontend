@@ -14,8 +14,14 @@ const ProductQR = ({ product }) => {
     // belgilangan production domenga (VITE_PUBLIC_APP_URL) tayanadi.
     const PUBLIC_SITE_URL = 'https://sotuvmenejer.uz';
 
+    const isLocalOrApp = typeof window !== 'undefined' && (
+        window.location.origin.includes('localhost') ||
+        window.location.origin.includes('capacitor://')
+    );
+
     const publicBase = (
-        import.meta.env.VITE_PUBLIC_APP_URL || PUBLIC_SITE_URL
+        import.meta.env.VITE_PUBLIC_APP_URL ||
+        (!isLocalOrApp && typeof window !== 'undefined' ? window.location.origin : PUBLIC_SITE_URL)
     ).replace(/\/$/, '');
 
     const url = `${publicBase}/qr/${product.qr_token}`;
@@ -233,7 +239,7 @@ const ProductQR = ({ product }) => {
                                 type="button"
                                 className="btn btn-secondary"
                                 onClick={() =>
-                                    window.open(url, '_blank')
+                                    window.open(`/qr/${product.qr_token}`, '_blank')
                                 }
                             >
                                 🔗 Sahifani ochish

@@ -19,10 +19,10 @@ const LoginPage = () => {
         setErrorMessage('');
         setLoading(true);
 
-        const BASE_URL = import.meta.env.VITE_API_URL || 'http://92.5.35.67:5000';
+        const BASE_URL = import.meta.env.VITE_API_URL || 'https://api.sotuvmenejer.uz';
         
         try {
-            const res = await fetch(`https://api.sotuvmenenjer.uz/api/login`, {
+            const res = await fetch(`${BASE_URL}/api/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

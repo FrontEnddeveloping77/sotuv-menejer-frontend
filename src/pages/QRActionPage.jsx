@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/qr-action.css';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://92.5.35.67:5000';
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://api.sotuvmenejer.uz';
 
 // JWT tokenini headerga qo'shib so'rov yuboradigan axios instance
 const api = axios.create({
@@ -14,6 +14,7 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
     if (token) {
+        config.headers = config.headers || {};
         config.headers['Authorization'] = `Bearer ${token}`;
     }
     return config;
@@ -118,7 +119,10 @@ export default function QRActionPage() {
 
         // Login qilinmagan bo'lsa, login sahifasiga yo'naltiramiz
         if (!jwtToken) {
-            navigate('/login', { replace: true });
+            navigate('/login', {
+                replace: true,
+                state: { from: { pathname: `/qr/${token}` } }
+            });
             return;
         }
 
@@ -136,8 +140,12 @@ export default function QRActionPage() {
                 const data = err.response?.data;
 
                 if (status === 401 || data?.requireLogin) {
-                    // Login qilinmagan yoki token eskirgan
-                    navigate('/login', { replace: true });
+                    // Login qilinmagan yoki token eskirgan — eskisini tozalab login sahifasiga qaytaramiz
+                    localStorage.removeItem('token');
+                    navigate('/login', {
+                        replace: true,
+                        state: { from: { pathname: `/qr/${token}` } }
+                    });
                     return;
                 }
 
