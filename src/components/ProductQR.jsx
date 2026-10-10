@@ -57,81 +57,99 @@ const ProductQR = ({ product }) => {
         const qrCanvas = qrRef.current;
         if (!qrCanvas) return;
 
-        const width = 440;
-        const qrSize = 280;
-        const topPadding = 28;
-        const sidePadding = 24;
-        const gap = 22;
-        const lineHeight = 26;
+        // 1 mm = 10 px
+        const MM = 10;
+        const pad5mm = 5 * MM; // 5 mm (50px) tashqi bo'shliq
+        const border3mm = 3 * MM; // 3 mm (30px) ramka chizig'i
+        const qrSize = 280; // QR kod kengligi va balandligi
+        const width = qrSize + pad5mm * 2; // 380px (yon tomonlardan 5 mmdan joy)
 
-        const lines = [];
+        const hasSize = Boolean(product.size && String(product.size).trim());
+        const hasPrice = product.selling_price != null && product.selling_price !== '' && Number(product.selling_price) >= 0;
 
-        lines.push(product.name || product.title || "Noma'lum");
+        const sizeText = hasSize ? String(product.size).trim() : '';
+        const priceText = hasPrice ? `${formatSum(product.selling_price)} so'm` : '';
 
-        if (product.color && String(product.color).trim()) {
-            lines.push(product.color.trim());
+        // Razmer o'lchamlari
+        const sizeFontSize = 32;
+        const sizeHeight = hasSize ? Math.round(sizeFontSize * 1.15) : 0;
+
+        // Vertikal oraliqlar
+        const gapAfterQR = (hasSize || hasPrice) ? 14 : 0;
+        const gapAfterSize = (hasSize && hasPrice) ? 10 : 0;
+
+        // Narx o'lchamlarini hisoblash (uzunligi aynan QR kod kengligiga teng bo'lishi uchun)
+        let priceHeight = 0;
+        let optimalPriceFontSize = 36;
+        if (hasPrice) {
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.font = 'bold 30px Arial, sans-serif';
+            const measuredW = tempCtx.measureText(priceText).width;
+            optimalPriceFontSize = 30 * (qrSize / (measuredW || 1));
+            priceHeight = Math.round(optimalPriceFontSize * 0.95);
         }
 
-        if (product.size && String(product.size).trim()) {
-            lines.push(product.size);
+        let contentHeight = qrSize;
+        if (hasSize) {
+            contentHeight += gapAfterQR + sizeHeight;
+        }
+        if (hasPrice) {
+            contentHeight += (hasSize ? gapAfterSize : gapAfterQR) + priceHeight;
         }
 
-        if (product.selling_price != null && product.selling_price !== '' && Number(product.selling_price) >= 0) {
-            lines.push(`${formatSum(product.selling_price)} so'm`);
-        }
-
-        const infoHeight = lines.length * lineHeight + 30;
+        // Tepa va pastdan ham aynan 5 mm bo'shliq
+        const totalHeight = pad5mm + contentHeight + pad5mm;
 
         const outputCanvas = document.createElement('canvas');
         outputCanvas.width = width;
-        outputCanvas.height = topPadding + qrSize + gap + infoHeight + 20;
+        outputCanvas.height = totalHeight;
 
         const ctx = outputCanvas.getContext('2d');
         if (!ctx) return;
 
+        // 1. Oq fon
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
+        ctx.fillRect(0, 0, width, totalHeight);
 
-        const qrX = (width - qrSize) / 2;
-        ctx.drawImage(qrCanvas, qrX, topPadding, qrSize, qrSize);
+        // 2. Hamma tomondan 3 mm uzoqlikdagi dizayn chizig'i (ramka)
+        ctx.strokeStyle = '#111827';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(border3mm, border3mm, width - border3mm * 2, totalHeight - border3mm * 2);
 
-        const centerX = width / 2;
-        let textY = topPadding + qrSize + gap + 8;
+        // 3. QR kod (tepa va chapdan 5 mm masofada)
+        const qrX = pad5mm;
+        let currentY = pad5mm;
+        ctx.drawImage(qrCanvas, qrX, currentY, qrSize, qrSize);
+        currentY += qrSize;
 
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#111827';
+        // 4. Razmer (kattalashtirilgan)
+        if (hasSize) {
+            currentY += gapAfterQR;
+            ctx.font = `bold ${sizeFontSize}px Arial, sans-serif`;
+            ctx.fillStyle = '#111827';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText(sizeText, width / 2, currentY);
+            currentY += sizeHeight;
+        }
 
-        ctx.font = 'bold 20px Arial, sans-serif';
-        textY = wrapText(
-            ctx,
-            lines[0],
-            centerX,
-            textY,
-            width - sidePadding * 2,
-            26
-        );
+        // 5. Narx (kattalashtirilgan va uzunligi aynan QR kod uzunligi bilan teng)
+        if (hasPrice) {
+            currentY += (hasSize ? gapAfterSize : gapAfterQR);
+            ctx.font = `bold ${optimalPriceFontSize}px Arial, sans-serif`;
+            const finalMeasuredW = ctx.measureText(priceText).width;
 
-        textY += 6;
-
-        ctx.font = '16px Arial, sans-serif';
-        for (let i = 1; i < lines.length; i++) {
-            if (lines[i].includes("so'm")) {
-                ctx.font = 'bold 17px Arial, sans-serif';
-                ctx.fillStyle = '#0f766e';
-            } else {
-                ctx.font = '16px Arial, sans-serif';
-                ctx.fillStyle = '#111827';
-            }
-
-            textY = wrapText(
-                ctx,
-                lines[i],
-                centerX,
-                textY,
-                width - sidePadding * 2,
-                lineHeight
-            );
-            textY += 4;
+            ctx.save();
+            ctx.translate(qrX, currentY);
+            // Kenglikni 100% qrSize (QR kod kengligi) ga tenglashtirish
+            const scaleX = qrSize / (finalMeasuredW || 1);
+            ctx.scale(scaleX, 1);
+            ctx.fillStyle = '#111827';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillText(priceText, 0, 0);
+            ctx.restore();
         }
 
         const pngUrl = outputCanvas.toDataURL('image/png');
@@ -209,8 +227,8 @@ const ProductQR = ({ product }) => {
                             <QRCodeCanvas
                                 ref={qrRef}
                                 value={url}
-                                size={260}
-                                includeMargin={true}
+                                size={280}
+                                includeMargin={false}
                                 level="H"
                             />
                         </div>
