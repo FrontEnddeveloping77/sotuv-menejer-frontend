@@ -1609,17 +1609,19 @@ const DashboardPage = () => {
                 const qrDrawSize = 280;
                 const width = qrDrawSize + pad5mm * 2;
 
-                const hasSize = Boolean(item.size && String(item.size).trim());
-                const hasPrice = item.selling_price != null && item.selling_price !== '' && Number(item.selling_price) >= 0;
+                const rawSize = item.size != null ? String(item.size).trim() : '';
+                const isSizeEmpty = !rawSize || rawSize === '-' || rawSize.toLowerCase() === 'null' || rawSize.toLowerCase() === 'undefined' || rawSize.toLowerCase() === 'standart' || rawSize.toLowerCase() === "yo'q";
+                const hasSize = !isSizeEmpty;
+                const sizeText = hasSize ? rawSize : '';
 
-                const sizeText = hasSize ? String(item.size).trim() : '';
+                const hasPrice = item.selling_price != null && item.selling_price !== '' && Number(item.selling_price) >= 0;
                 const priceText = hasPrice ? `${formatSum(item.selling_price)} so'm` : '';
 
-                const sizeFontSize = 32;
+                const sizeFontSize = 44;
                 const sizeHeight = hasSize ? Math.round(sizeFontSize * 1.15) : 0;
 
-                const gapAfterQR = (hasSize || hasPrice) ? 14 : 0;
-                const gapAfterSize = (hasSize && hasPrice) ? 10 : 0;
+                const gapAfterQR = hasSize ? 14 : (hasPrice ? 14 : 0);
+                const gapAfterSize = (hasSize && hasPrice) ? 12 : 0;
 
                 let priceHeight = 0;
                 let optimalPriceFontSize = 36;

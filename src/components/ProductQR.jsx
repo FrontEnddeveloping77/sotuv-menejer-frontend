@@ -64,19 +64,21 @@ const ProductQR = ({ product }) => {
         const qrSize = 280; // QR kod kengligi va balandligi
         const width = qrSize + pad5mm * 2; // 380px (yon tomonlardan 5 mmdan joy)
 
-        const hasSize = Boolean(product.size && String(product.size).trim());
-        const hasPrice = product.selling_price != null && product.selling_price !== '' && Number(product.selling_price) >= 0;
+        const rawSize = product.size != null ? String(product.size).trim() : '';
+        const isSizeEmpty = !rawSize || rawSize === '-' || rawSize.toLowerCase() === 'null' || rawSize.toLowerCase() === 'undefined' || rawSize.toLowerCase() === 'standart' || rawSize.toLowerCase() === "yo'q";
+        const hasSize = !isSizeEmpty;
+        const sizeText = hasSize ? rawSize : '';
 
-        const sizeText = hasSize ? String(product.size).trim() : '';
+        const hasPrice = product.selling_price != null && product.selling_price !== '' && Number(product.selling_price) >= 0;
         const priceText = hasPrice ? `${formatSum(product.selling_price)} so'm` : '';
 
-        // Razmer o'lchamlari
-        const sizeFontSize = 32;
+        // Razmer o'lchamlari (kattalashtirildi)
+        const sizeFontSize = 44;
         const sizeHeight = hasSize ? Math.round(sizeFontSize * 1.15) : 0;
 
         // Vertikal oraliqlar
-        const gapAfterQR = (hasSize || hasPrice) ? 14 : 0;
-        const gapAfterSize = (hasSize && hasPrice) ? 10 : 0;
+        const gapAfterQR = hasSize ? 14 : (hasPrice ? 14 : 0);
+        const gapAfterSize = (hasSize && hasPrice) ? 12 : 0;
 
         // Narx o'lchamlarini hisoblash (uzunligi aynan QR kod kengligiga teng bo'lishi uchun)
         let priceHeight = 0;
