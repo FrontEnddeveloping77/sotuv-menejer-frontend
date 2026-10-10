@@ -1591,7 +1591,7 @@ const DashboardPage = () => {
                 const item = items[i];
                 const qrLink = `${publicBase}/qr/${item.token}`;
                 const apiUrl =
-                    'https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=8&data=' +
+                    'https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=0&data=' +
                     encodeURIComponent(qrLink);
 
                 const img = await new Promise((resolve, reject) => {
@@ -1602,53 +1602,88 @@ const DashboardPage = () => {
                     image.src = apiUrl;
                 });
 
-                // Kichikroq QR + kattaroq yozuvlar (ProductQR uslubi)
-                const canvas = document.createElement('canvas');
-                const padX = 40;
-                const padTop = 20;
-                const textH = 160;
-                const qrDrawSize = 220; // QR ni kichikroq chizamiz
-                canvas.width = Math.max(qrDrawSize + padX * 2, 320);
-                canvas.height = padTop + qrDrawSize + textH;
-                const ctx = canvas.getContext('2d');
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // 1 mm = 10 px
+                const MM = 10;
+                const pad5mm = 5 * MM;
+                const border3mm = 3 * MM;
+                const qrDrawSize = 280;
+                const width = qrDrawSize + pad5mm * 2;
 
-                const qrX = (canvas.width - qrDrawSize) / 2;
-                ctx.drawImage(img, qrX, padTop, qrDrawSize, qrDrawSize);
+                const hasSize = Boolean(item.size && String(item.size).trim());
+                const hasPrice = item.selling_price != null && item.selling_price !== '' && Number(item.selling_price) >= 0;
 
-                const cx = canvas.width / 2;
-                let ty = padTop + qrDrawSize + 32;
+                const sizeText = hasSize ? String(item.size).trim() : '';
+                const priceText = hasPrice ? `${formatSum(item.selling_price)} so'm` : '';
 
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
+                const sizeFontSize = 32;
+                const sizeHeight = hasSize ? Math.round(sizeFontSize * 1.15) : 0;
 
-                // Nom — katta
-                ctx.fillStyle = '#0f172a';
-                ctx.font = 'bold 28px system-ui, -apple-system, sans-serif';
-                ctx.fillText(String(item.name || '').slice(0, 28), cx, ty, canvas.width - 24);
-                ty += 34;
+                const gapAfterQR = (hasSize || hasPrice) ? 14 : 0;
+                const gapAfterSize = (hasSize && hasPrice) ? 10 : 0;
 
-                // Rang
-                if (item.color) {
-                    ctx.fillStyle = '#64748b';
-                    ctx.font = '22px system-ui, -apple-system, sans-serif';
-                    ctx.fillText(String(item.color).slice(0, 28), cx, ty, canvas.width - 24);
-                    ty += 30;
+                let priceHeight = 0;
+                let optimalPriceFontSize = 36;
+                if (hasPrice) {
+                    const tempCanvas = document.createElement('canvas');
+                    const tempCtx = tempCanvas.getContext('2d');
+                    tempCtx.font = 'bold 30px Arial, sans-serif';
+                    const measuredW = tempCtx.measureText(priceText).width;
+                    optimalPriceFontSize = 30 * (qrDrawSize / (measuredW || 1));
+                    priceHeight = Math.round(optimalPriceFontSize * 0.95);
                 }
 
-                // Razmer
-                ctx.fillStyle = '#64748b';
-                ctx.font = '22px system-ui, -apple-system, sans-serif';
-                ctx.fillText(String(item.size || 'Standart'), cx, ty, canvas.width - 24);
-                ty += 32;
+                let contentHeight = qrDrawSize;
+                if (hasSize) contentHeight += gapAfterQR + sizeHeight;
+                if (hasPrice) contentHeight += (hasSize ? gapAfterSize : gapAfterQR) + priceHeight;
 
-                // Narx (yashil) — katta
-                if (item.selling_price != null) {
-                    ctx.fillStyle = '#0f766e';
-                    ctx.font = 'bold 24px system-ui, -apple-system, sans-serif';
-                    const priceText = `${formatSum(item.selling_price)} so'm`;
-                    ctx.fillText(priceText, cx, ty, canvas.width - 24);
+                const totalHeight = pad5mm + contentHeight + pad5mm;
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = totalHeight;
+                const ctx = canvas.getContext('2d');
+
+                // 1. Oq fon
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, width, totalHeight);
+
+                // 2. 3 mm ramka chizig'i
+                ctx.strokeStyle = '#111827';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(border3mm, border3mm, width - border3mm * 2, totalHeight - border3mm * 2);
+
+                // 3. QR kod
+                const qrX = pad5mm;
+                let currentY = pad5mm;
+                ctx.drawImage(img, qrX, currentY, qrDrawSize, qrDrawSize);
+                currentY += qrDrawSize;
+
+                // 4. Razmer
+                if (hasSize) {
+                    currentY += gapAfterQR;
+                    ctx.font = `bold ${sizeFontSize}px Arial, sans-serif`;
+                    ctx.fillStyle = '#111827';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'top';
+                    ctx.fillText(sizeText, width / 2, currentY);
+                    currentY += sizeHeight;
+                }
+
+                // 5. Narx (kengligi aynan QR kod bilan bir xil)
+                if (hasPrice) {
+                    currentY += (hasSize ? gapAfterSize : gapAfterQR);
+                    ctx.font = `bold ${optimalPriceFontSize}px Arial, sans-serif`;
+                    const finalMeasuredW = ctx.measureText(priceText).width;
+
+                    ctx.save();
+                    ctx.translate(qrX, currentY);
+                    const scaleX = qrDrawSize / (finalMeasuredW || 1);
+                    ctx.scale(scaleX, 1);
+                    ctx.fillStyle = '#111827';
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'top';
+                    ctx.fillText(priceText, 0, 0);
+                    ctx.restore();
                 }
 
                 const finalUrl = canvas.toDataURL('image/png');
