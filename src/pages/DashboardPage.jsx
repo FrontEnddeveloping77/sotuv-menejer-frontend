@@ -5,6 +5,10 @@ import '../styles/dashboard.css';
 import '../styles/product-image-upload.css';
 import '../styles/qr-modal.css';
 import ProductQR from '../components/ProductQR';
+import {
+    formatLocalDateTime,
+    timestampToEpoch
+} from '../utils/dateTime';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'https://api.sotuvmenejer.uz';
 
@@ -15,6 +19,7 @@ api.interceptors.request.use((config) => {
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
+    config.headers['X-Time-Zone'] = Intl.DateTimeFormat().resolvedOptions().timeZone;
     return config;
 });
 
@@ -25,7 +30,7 @@ const DEBT_PAYMENT_UNDO_WINDOW_DAYS = 30;
 
 const daysSince = (dateValue) => {
     if (!dateValue) return Infinity;
-    const then = new Date(dateValue).getTime();
+    const then = timestampToEpoch(dateValue);
     if (Number.isNaN(then)) return Infinity;
     return (Date.now() - then) / (1000 * 60 * 60 * 24);
 };
@@ -447,7 +452,11 @@ const DashboardPage = () => {
                 });
             }
             const group = map.get(key);
-            if (p.created_at && (!group.createdAt || new Date(p.created_at) < new Date(group.createdAt))) {
+            if (
+                p.created_at &&
+                (!group.createdAt ||
+                    timestampToEpoch(p.created_at) < timestampToEpoch(group.createdAt))
+            ) {
                 group.createdAt = p.created_at;
             }
             if (p.selling_price != null && group.selling_price == null) {
@@ -3042,7 +3051,10 @@ const DashboardPage = () => {
                                                 {sale.quantity} dona — {formatSum(sale.selling_price)} so'm
                                             </div>
                                             <div style={{ fontSize: 13, color: '#64748b' }}>
-                                                {new Date(sale.sold_at).toLocaleString('uz-UZ')}
+                                                Sotilgan: {formatLocalDateTime(sale.sold_at)}
+                                                {sale.returned_at && (
+                                                    <> · Qaytarilgan: {formatLocalDateTime(sale.returned_at)}</>
+                                                )}
                                             </div>
                                             <button
                                                 type="button"
@@ -3319,7 +3331,7 @@ const DashboardPage = () => {
                                     <div key={exp.id} className="debt-card">
                                         <strong>{exp.title}</strong>
                                         <div>{formatSum(exp.amount)} so'm — {formatExpenseType(exp.expense_type)}</div>
-                                        <div style={{ fontSize: 13, color: '#64748b' }}>{new Date(exp.created_at).toLocaleString('uz-UZ')}</div>
+                                        <div style={{ fontSize: 13, color: '#64748b' }}>{formatLocalDateTime(exp.created_at)}</div>
                                         {isExpenseEditable(exp) && (
                                             <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
                                                 <button type="button" className="btn btn-primary" onClick={() => openEditExpense(exp)}>Tahrirlash</button>
@@ -3409,7 +3421,7 @@ const DashboardPage = () => {
                                             <div className="restore-card-top">
                                                 <strong>#{p.local_id} — {p.name}</strong>
                                                 <span className="restore-date">
-                                                    {new Date(p.deleted_at).toLocaleString('uz-UZ')}
+                                                    {formatLocalDateTime(p.deleted_at)}
                                                 </span>
                                             </div>
                                             <div className="restore-meta">
