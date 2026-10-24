@@ -1806,7 +1806,7 @@ const DashboardPage = () => {
                             <span className="btn-text">Tovarni tahrirlash</span>
                             <span className="btn-arrow">›</span>
                         </button>
-                        <button type="button" onClick={() => { setDeleteModal(true); setMenuOpen(false); }} className="side-menu-btn btn-cat-product-danger">
+                        <button type="button" onClick={() => { setDeleteModal(true); setMenuOpen(false); }} className="side-menu-btn btn-cat-product">
                             <span className="btn-icon">🗑️</span>
                             <span className="btn-text">Tovarni o‘chirish</span>
                             <span className="btn-arrow">›</span>

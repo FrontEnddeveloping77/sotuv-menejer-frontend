@@ -1866,26 +1866,26 @@ body {
 }
 
 .side-menu-section-title {
-    font-size: 11px !important;
+    font-size: 11.5px !important;
     font-weight: 800 !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.8px !important;
+    letter-spacing: 0.6px !important;
     color: #64748b !important;
     padding: 0 4px !important;
-    margin-bottom: 2px !important;
+    margin-bottom: 4px !important;
 }
 
 .side-menu-buttons .side-menu-btn {
     width: 100% !important;
     margin: 0 !important;
-    padding: 9px 12px !important;
-    font-size: 13.5px !important;
-    font-weight: 600 !important;
-    border-radius: 10px !important;
-    border: 1px solid transparent !important;
+    padding: 11px 14px !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    border-radius: 12px !important;
+    border: none !important;
     display: flex !important;
     align-items: center !important;
-    gap: 10px !important;
+    gap: 11px !important;
     cursor: pointer !important;
     text-align: left !important;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -1893,128 +1893,99 @@ body {
 }
 
 .side-menu-btn:hover {
-    transform: translateX(3px) !important;
+    transform: translateY(-1px) scale(1.01) !important;
+    filter: brightness(1.08) !important;
 }
 
 .side-menu-btn:active {
-    transform: translateX(1px) scale(0.99) !important;
+    transform: translateY(0) scale(0.99) !important;
 }
 
 .side-menu-btn .btn-icon {
-    font-size: 15px !important;
-    width: 28px !important;
-    height: 28px !important;
-    border-radius: 7px !important;
+    font-size: 16px !important;
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 8px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     flex-shrink: 0 !important;
+    background: rgba(255, 255, 255, 0.2) !important;
 }
 
 .side-menu-btn .btn-text {
     flex: 1 !important;
-    font-weight: 600 !important;
+    font-weight: 700 !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+    letter-spacing: 0.2px !important;
 }
 
 .side-menu-btn .btn-arrow {
-    font-size: 14px !important;
-    opacity: 0.35 !important;
+    font-size: 16px !important;
+    opacity: 0.7 !important;
     transition: opacity 0.2s, transform 0.2s !important;
 }
 
 .side-menu-btn:hover .btn-arrow {
-    opacity: 0.9 !important;
-    transform: translateX(2px) !important;
+    opacity: 1 !important;
+    transform: translateX(3px) !important;
 }
 
-/* Category 1: TOVARLAR */
+/* Category 1: TOVARLAR - Yashil/Ko'k bitta rang (Vibrant Royal Blue) */
 .side-menu-btn.btn-cat-product {
-    background: #f0f7ff !important;
-    color: #1e40af !important;
-    border-color: #dbeafe !important;
-}
-.side-menu-btn.btn-cat-product .btn-icon {
-    background: #dbeafe !important;
+    background: #2563eb !important;
+    color: #ffffff !important;
+    box-shadow: 0 3px 8px rgba(37, 99, 235, 0.28) !important;
 }
 .side-menu-btn.btn-cat-product:hover {
-    background: #e0f2fe !important;
-    border-color: #bfdbfe !important;
+    background: #1d4ed8 !important;
+    box-shadow: 0 5px 12px rgba(37, 99, 235, 0.38) !important;
 }
 
-.side-menu-btn.btn-cat-product-danger {
-    background: #fef2f2 !important;
-    color: #b91c1c !important;
-    border-color: #fee2e2 !important;
-}
-.side-menu-btn.btn-cat-product-danger .btn-icon {
-    background: #fee2e2 !important;
-}
-.side-menu-btn.btn-cat-product-danger:hover {
-    background: #fee2e2 !important;
-    border-color: #fecaca !important;
-}
-
-/* Category 2: SOTUV VA QAYTARISH */
+/* Category 2: SOTUV VA QAYTARISH - Bitta rang (Vibrant Green) */
 .side-menu-btn.btn-cat-sale {
-    background: #f0fdf4 !important;
-    color: #15803d !important;
-    border-color: #bbf7d0 !important;
-}
-.side-menu-btn.btn-cat-sale .btn-icon {
-    background: #dcfce7 !important;
+    background: #16a34a !important;
+    color: #ffffff !important;
+    box-shadow: 0 3px 8px rgba(22, 163, 74, 0.28) !important;
 }
 .side-menu-btn.btn-cat-sale:hover {
-    background: #dcfce7 !important;
-    border-color: #86efac !important;
+    background: #15803d !important;
+    box-shadow: 0 5px 12px rgba(22, 163, 74, 0.38) !important;
 }
 
-/* Category 3: RASXODLAR (Rasxod yozish + Rasxodlarni tahrirlash bir xil uslubda) */
+/* Category 3: RASXODLAR - Bitta rang (Vibrant Amber/Orange) */
 .side-menu-btn.btn-cat-expense {
-    background: #fffbeb !important;
-    color: #b45309 !important;
-    border-color: #fde68a !important;
-}
-.side-menu-btn.btn-cat-expense .btn-icon {
-    background: #fef3c7 !important;
+    background: #ea580c !important;
+    color: #ffffff !important;
+    box-shadow: 0 3px 8px rgba(234, 88, 12, 0.28) !important;
 }
 .side-menu-btn.btn-cat-expense:hover {
-    background: #fef3c7 !important;
-    border-color: #fcd34d !important;
+    background: #c2410c !important;
+    box-shadow: 0 5px 12px rgba(234, 88, 12, 0.38) !important;
 }
 
-/* Category 4: QARZLAR VA HAMKORLAR */
+/* Category 4: QARZLAR VA HAMKORLAR - Bitta rang (Vibrant Purple/Violet) */
 .side-menu-btn.btn-cat-debt {
-    background: #f5f3ff !important;
-    color: #6d28d9 !important;
-    border-color: #ddd6fe !important;
-}
-.side-menu-btn.btn-cat-debt .btn-icon {
-    background: #ede9fe !important;
+    background: #7c3aed !important;
+    color: #ffffff !important;
+    box-shadow: 0 3px 8px rgba(124, 58, 237, 0.28) !important;
 }
 .side-menu-btn.btn-cat-debt:hover {
-    background: #ede9fe !important;
-    border-color: #c4b5fd !important;
+    background: #6d28d9 !important;
+    box-shadow: 0 5px 12px rgba(124, 58, 237, 0.38) !important;
 }
 
-/* Category 5: CHIQISH */
+/* Category 5: CHIQISH - Dark Slate */
 .side-menu-btn.btn-cat-logout {
-    background: #f8fafc !important;
-    color: #475569 !important;
-    border-color: #e2e8f0 !important;
-}
-.side-menu-btn.btn-cat-logout .btn-icon {
-    background: #e2e8f0 !important;
+    background: #1e293b !important;
+    color: #ffffff !important;
+    box-shadow: 0 3px 8px rgba(30, 41, 59, 0.28) !important;
 }
 .side-menu-btn.btn-cat-logout:hover {
-    background: #fee2e2 !important;
-    color: #dc2626 !important;
-    border-color: #fecaca !important;
-}
-.side-menu-btn.btn-cat-logout:hover .btn-icon {
-    background: #fecaca !important;
+    background: #dc2626 !important;
+    box-shadow: 0 5px 12px rgba(220, 38, 38, 0.38) !important;
 }
 
 @media (max-width: 480px) {
