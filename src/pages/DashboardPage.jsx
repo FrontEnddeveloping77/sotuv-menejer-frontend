@@ -3147,6 +3147,13 @@ const DashboardPage = () => {
                                                     <> · Qaytarilgan: {formatLocalDateTime(sale.returned_at)}</>
                                                 )}
                                             </div>
+                                            <ProductQR
+                                                product={{
+                                                    ...sale,
+                                                    name: sale.title,
+                                                    local_id: sale.local_id
+                                                }}
+                                            />
                                             <button
                                                 type="button"
                                                 className="btn btn-primary"
@@ -3521,7 +3528,26 @@ const DashboardPage = () => {
                                                 <span>📦 {p.quantity} dona</span>
                                                 <span>💰 {formatSum(p.cost_price)} so'm</span>
                                             </div>
+                                            {p.image_url && (
+                                                <img
+                                                    src={p.image_url}
+                                                    alt={p.name}
+                                                    style={{
+                                                        width: '100%',
+                                                        maxHeight: 180,
+                                                        objectFit: 'contain',
+                                                        borderRadius: 10,
+                                                        marginTop: 10
+                                                    }}
+                                                />
+                                            )}
                                             {p.category && <span className="category-badge">{p.category}</span>}
+                                            <ProductQR
+                                                product={{
+                                                    ...p,
+                                                    quantity: Number(p.quantity) || 0
+                                                }}
+                                            />
                                             <button
                                                 type="button"
                                                 className="btn btn-restore-action"
