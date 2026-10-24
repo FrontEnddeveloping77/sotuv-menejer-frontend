@@ -1393,6 +1393,10 @@ const DashboardPage = () => {
     };
 
     const openReturnModal = async () => {
+        if (stats.returns_enabled === false) {
+            alert("Do‘kon sozlamalariga ko‘ra tovarlarni qaytarish (vozvrat) o‘chirilgan!");
+            return;
+        }
         setReturnSearch('');
         setReturnModal(true);
         setSalesLoading(true);
@@ -1427,6 +1431,10 @@ const DashboardPage = () => {
     };
 
     const handleReturnSale = async (saleId) => {
+        if (stats.returns_enabled === false) {
+            alert("Do‘kon sozlamalariga ko‘ra tovarlarni qaytarish (vozvrat) o‘chirilgan!");
+            return;
+        }
         if (!window.confirm("Ushbu sotuvni vozvrat qilishni tasdiqlaysizmi? Tovar omborga qaytariladi.")) return;
         setIsSubmitting(true);
         try {
@@ -1785,28 +1793,111 @@ const DashboardPage = () => {
                     </button>
                 </div>
                 <div className="side-menu-buttons">
-                    <button type="button" onClick={() => { setAddProductModal(true); setMenuOpen(false); }} className="btn btn-add">➕ Tovar Qo'shish</button>
-                    <button type="button" onClick={() => { openEditSelectModal(); setMenuOpen(false); }} className="btn btn-edit-product">✏️ Tovarni tahrirlash</button>
-                    <button type="button" onClick={() => { setSellModal(true); setMenuOpen(false); }} className="btn btn-sell">🛒 Tovar Sotish</button>
-                    <button type="button" onClick={() => { setCreditSellModal(true); setMenuOpen(false); }} className="btn btn-credit-sell">🛒 Nasiyaga sotish</button>
-                    <button type="button" onClick={() => { openUndoDebtModal(); setMenuOpen(false); }} className="btn btn-undo-debt">↩️ Qarz to‘lovini bekor qilish</button>
-                    <button type="button" onClick={() => { setExpenseModal(true); setMenuOpen(false); }} className="btn btn-expense">💸 Rasxod Yozish</button>
-                    <button type="button" onClick={() => { setDeleteModal(true); setMenuOpen(false); }} className="btn btn-delete">🗑️ Tovarni O'chirish</button>
-                    <button type="button" onClick={() => { openRestoreModal(); setMenuOpen(false); }} className="btn btn-restore-deleted">↩️ O'chirilganlarni qaytarish</button>
-                    <button type="button" onClick={() => { openDebtsModal(); setMenuOpen(false); }} className="btn btn-debts">💳 Qarzlar</button>
-                    <button type="button" onClick={() => { openCustomerDebtsModal(); setMenuOpen(false); }} className="btn btn-customer-debts">👥 Qarzga tovar berganlarimiz</button>
-                    <button type="button" onClick={() => { openSuppliersModal(); setMenuOpen(false); }} className="btn btn-suppliers">👥 Tovar berganlar</button>
-                    <button type="button" onClick={() => { openReturnModal(); setMenuOpen(false); }} className="btn btn-return">↩️ Vozvrat</button>
-                    <button type="button" onClick={() => { openExpenseListModal(); setMenuOpen(false); }} className="btn btn-edit-expense">📋 Rasxodlarni taxrirlash</button>
-                    <button
-                        type="button"
-                        onClick={() => { setMenuOpen(false); handleSaveAllQrs(); }}
-                        className="btn btn-primary"
-                        disabled={savingAllQrs}
-                    >
-                        {savingAllQrs ? '⏳ QR saqlanmoqda...' : '📲 Barcha QR larni saqlash'}
-                    </button>
-                    <button type="button" onClick={() => { setMenuOpen(false); handleLogout(); }} className="btn btn-logout">🚪 Chiqish</button>
+                    {/* 1. TOVARLAR */}
+                    <div className="side-menu-section">
+                        <div className="side-menu-section-title">📦 Tovarlar</div>
+                        <button type="button" onClick={() => { setAddProductModal(true); setMenuOpen(false); }} className="side-menu-btn btn-cat-product">
+                            <span className="btn-icon">➕</span>
+                            <span className="btn-text">Tovar qo‘shish</span>
+                            <span className="btn-arrow">›</span>
+                        </button>
+                        <button type="button" onClick={() => { openEditSelectModal(); setMenuOpen(false); }} className="side-menu-btn btn-cat-product">
+                            <span className="btn-icon">✏️</span>
+                            <span className="btn-text">Tovarni tahrirlash</span>
+                            <span className="btn-arrow">›</span>
+                        </button>
+                        <button type="button" onClick={() => { setDeleteModal(true); setMenuOpen(false); }} className="side-menu-btn btn-cat-product-danger">
+                            <span className="btn-icon">🗑️</span>
+                            <span className="btn-text">Tovarni o‘chirish</span>
+                            <span className="btn-arrow">›</span>
+                        </button>
+                        <button type="button" onClick={() => { openRestoreModal(); setMenuOpen(false); }} className="side-menu-btn btn-cat-product">
+                            <span className="btn-icon">📦</span>
+                            <span className="btn-text">O‘chirilganlarni qaytarish</span>
+                            <span className="btn-arrow">›</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => { setMenuOpen(false); handleSaveAllQrs(); }}
+                            className="side-menu-btn btn-cat-product"
+                            disabled={savingAllQrs}
+                        >
+                            <span className="btn-icon">{savingAllQrs ? '⏳' : '📲'}</span>
+                            <span className="btn-text">{savingAllQrs ? 'QR saqlanmoqda...' : 'Barcha QR larni saqlash'}</span>
+                            <span className="btn-arrow">›</span>
+                        </button>
+                    </div>
+
+                    {/* 2. SOTUV VA VOZVRAT */}
+                    <div className="side-menu-section">
+                        <div className="side-menu-section-title">🛒 Sotuv va Qaytarish</div>
+                        <button type="button" onClick={() => { setSellModal(true); setMenuOpen(false); }} className="side-menu-btn btn-cat-sale">
+                            <span className="btn-icon">💰</span>
+                            <span className="btn-text">Tovar sotish</span>
+                            <span className="btn-arrow">›</span>
+                        </button>
+                        <button type="button" onClick={() => { setCreditSellModal(true); setMenuOpen(false); }} className="side-menu-btn btn-cat-sale">
+                            <span className="btn-icon">🛍️</span>
+                            <span className="btn-text">Nasiyaga sotish</span>
+                            <span className="btn-arrow">›</span>
+                        </button>
+                        {stats.returns_enabled !== false && (
+                            <button type="button" onClick={() => { openReturnModal(); setMenuOpen(false); }} className="side-menu-btn btn-cat-sale">
+                                <span className="btn-icon">🔄</span>
+                                <span className="btn-text">Vozvrat (qaytarish)</span>
+                                <span className="btn-arrow">›</span>
+                            </button>
+                        )}
+                    </div>
+
+                    {/* 3. RASXODLAR — yonma-yon va bir xil dizaynda */}
+                    <div className="side-menu-section">
+                        <div className="side-menu-section-title">💸 Rasxodlar</div>
+                        <button type="button" onClick={() => { setExpenseModal(true); setMenuOpen(false); }} className="side-menu-btn btn-cat-expense">
+                            <span className="btn-icon">💸</span>
+                            <span className="btn-text">Rasxod yozish</span>
+                            <span className="btn-arrow">›</span>
+                        </button>
+                        <button type="button" onClick={() => { openExpenseListModal(); setMenuOpen(false); }} className="side-menu-btn btn-cat-expense">
+                            <span className="btn-icon">📋</span>
+                            <span className="btn-text">Rasxodlarni tahrirlash</span>
+                            <span className="btn-arrow">›</span>
+                        </button>
+                    </div>
+
+                    {/* 4. QARZLAR VA HAMKORLAR */}
+                    <div className="side-menu-section">
+                        <div className="side-menu-section-title">💳 Qarzlar va Hamkorlar</div>
+                        <button type="button" onClick={() => { openDebtsModal(); setMenuOpen(false); }} className="side-menu-btn btn-cat-debt">
+                            <span className="btn-icon">💳</span>
+                            <span className="btn-text">Bizning qarzlarimiz</span>
+                            <span className="btn-arrow">›</span>
+                        </button>
+                        <button type="button" onClick={() => { openCustomerDebtsModal(); setMenuOpen(false); }} className="side-menu-btn btn-cat-debt">
+                            <span className="btn-icon">👤</span>
+                            <span className="btn-text">Qarzga tovar berganlarimiz</span>
+                            <span className="btn-arrow">›</span>
+                        </button>
+                        <button type="button" onClick={() => { openUndoDebtModal(); setMenuOpen(false); }} className="side-menu-btn btn-cat-debt">
+                            <span className="btn-icon">↩️</span>
+                            <span className="btn-text">Qarz to‘lovini bekor qilish</span>
+                            <span className="btn-arrow">›</span>
+                        </button>
+                        <button type="button" onClick={() => { openSuppliersModal(); setMenuOpen(false); }} className="side-menu-btn btn-cat-debt">
+                            <span className="btn-icon">🚚</span>
+                            <span className="btn-text">Tovar berganlar (yetkazuvchilar)</span>
+                            <span className="btn-arrow">›</span>
+                        </button>
+                    </div>
+
+                    {/* 5. TIZIM */}
+                    <div className="side-menu-section" style={{ marginTop: 'auto', paddingTop: '8px' }}>
+                        <button type="button" onClick={() => { setMenuOpen(false); handleLogout(); }} className="side-menu-btn btn-cat-logout">
+                            <span className="btn-icon">🚪</span>
+                            <span className="btn-text">Tizimdan chiqish</span>
+                            <span className="btn-arrow">›</span>
+                        </button>
+                    </div>
                 </div>
             </aside>
 
@@ -2991,7 +3082,7 @@ const DashboardPage = () => {
             )}
 
             {/* ===================== VOZVRAT MODALI ===================== */}
-            {returnModal && (
+            {returnModal && stats.returns_enabled !== false && (
                 <div className="modal-overlay">
                     <div className="modal-box modal-box-wide">
                         <div className="modal-header"><h3>↩️ Vozvrat</h3></div>

@@ -1844,24 +1844,177 @@ body {
 }
 
 /* Tugmalar — width 100%, ozgina margin, qalin shrift */
+/* Tugmalar — width 100%, ozgina margin, qalin shrift */
 .side-menu-buttons {
     flex: 1 !important;
     overflow-y: auto !important;
     padding: 12px 14px 24px !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 10px !important;
+    gap: 0 !important;
 }
 
-.side-menu-buttons .btn {
+.side-menu-section {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    margin-bottom: 14px !important;
+}
+
+.side-menu-section:last-child {
+    margin-bottom: 0 !important;
+}
+
+.side-menu-section-title {
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+    color: #64748b !important;
+    padding: 0 4px !important;
+    margin-bottom: 2px !important;
+}
+
+.side-menu-buttons .side-menu-btn {
     width: 100% !important;
     margin: 0 !important;
-    padding: 12px 14px !important;
-    font-size: 14px !important;
-    font-weight: 700 !important;
+    padding: 9px 12px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
     border-radius: 10px !important;
-    justify-content: flex-start !important;
+    border: 1px solid transparent !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    cursor: pointer !important;
+    text-align: left !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     box-sizing: border-box !important;
+}
+
+.side-menu-btn:hover {
+    transform: translateX(3px) !important;
+}
+
+.side-menu-btn:active {
+    transform: translateX(1px) scale(0.99) !important;
+}
+
+.side-menu-btn .btn-icon {
+    font-size: 15px !important;
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 7px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+}
+
+.side-menu-btn .btn-text {
+    flex: 1 !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.side-menu-btn .btn-arrow {
+    font-size: 14px !important;
+    opacity: 0.35 !important;
+    transition: opacity 0.2s, transform 0.2s !important;
+}
+
+.side-menu-btn:hover .btn-arrow {
+    opacity: 0.9 !important;
+    transform: translateX(2px) !important;
+}
+
+/* Category 1: TOVARLAR */
+.side-menu-btn.btn-cat-product {
+    background: #f0f7ff !important;
+    color: #1e40af !important;
+    border-color: #dbeafe !important;
+}
+.side-menu-btn.btn-cat-product .btn-icon {
+    background: #dbeafe !important;
+}
+.side-menu-btn.btn-cat-product:hover {
+    background: #e0f2fe !important;
+    border-color: #bfdbfe !important;
+}
+
+.side-menu-btn.btn-cat-product-danger {
+    background: #fef2f2 !important;
+    color: #b91c1c !important;
+    border-color: #fee2e2 !important;
+}
+.side-menu-btn.btn-cat-product-danger .btn-icon {
+    background: #fee2e2 !important;
+}
+.side-menu-btn.btn-cat-product-danger:hover {
+    background: #fee2e2 !important;
+    border-color: #fecaca !important;
+}
+
+/* Category 2: SOTUV VA QAYTARISH */
+.side-menu-btn.btn-cat-sale {
+    background: #f0fdf4 !important;
+    color: #15803d !important;
+    border-color: #bbf7d0 !important;
+}
+.side-menu-btn.btn-cat-sale .btn-icon {
+    background: #dcfce7 !important;
+}
+.side-menu-btn.btn-cat-sale:hover {
+    background: #dcfce7 !important;
+    border-color: #86efac !important;
+}
+
+/* Category 3: RASXODLAR (Rasxod yozish + Rasxodlarni tahrirlash bir xil uslubda) */
+.side-menu-btn.btn-cat-expense {
+    background: #fffbeb !important;
+    color: #b45309 !important;
+    border-color: #fde68a !important;
+}
+.side-menu-btn.btn-cat-expense .btn-icon {
+    background: #fef3c7 !important;
+}
+.side-menu-btn.btn-cat-expense:hover {
+    background: #fef3c7 !important;
+    border-color: #fcd34d !important;
+}
+
+/* Category 4: QARZLAR VA HAMKORLAR */
+.side-menu-btn.btn-cat-debt {
+    background: #f5f3ff !important;
+    color: #6d28d9 !important;
+    border-color: #ddd6fe !important;
+}
+.side-menu-btn.btn-cat-debt .btn-icon {
+    background: #ede9fe !important;
+}
+.side-menu-btn.btn-cat-debt:hover {
+    background: #ede9fe !important;
+    border-color: #c4b5fd !important;
+}
+
+/* Category 5: CHIQISH */
+.side-menu-btn.btn-cat-logout {
+    background: #f8fafc !important;
+    color: #475569 !important;
+    border-color: #e2e8f0 !important;
+}
+.side-menu-btn.btn-cat-logout .btn-icon {
+    background: #e2e8f0 !important;
+}
+.side-menu-btn.btn-cat-logout:hover {
+    background: #fee2e2 !important;
+    color: #dc2626 !important;
+    border-color: #fecaca !important;
+}
+.side-menu-btn.btn-cat-logout:hover .btn-icon {
+    background: #fecaca !important;
 }
 
 @media (max-width: 480px) {
@@ -2301,6 +2454,89 @@ body.dashboard-dark .side-menu-close {
 
 body.dashboard-dark .side-menu-close:hover {
     background: #334155 !important;
+}
+
+body.dashboard-dark .side-menu-section-title {
+    color: #94a3b8 !important;
+}
+
+body.dashboard-dark .side-menu-btn.btn-cat-product {
+    background: rgba(30, 58, 138, 0.25) !important;
+    color: #93c5fd !important;
+    border-color: rgba(59, 130, 246, 0.3) !important;
+}
+body.dashboard-dark .side-menu-btn.btn-cat-product .btn-icon {
+    background: rgba(59, 130, 246, 0.25) !important;
+}
+body.dashboard-dark .side-menu-btn.btn-cat-product:hover {
+    background: rgba(30, 58, 138, 0.4) !important;
+    border-color: rgba(59, 130, 246, 0.5) !important;
+}
+
+body.dashboard-dark .side-menu-btn.btn-cat-product-danger {
+    background: rgba(153, 27, 27, 0.25) !important;
+    color: #fca5a5 !important;
+    border-color: rgba(239, 68, 68, 0.3) !important;
+}
+body.dashboard-dark .side-menu-btn.btn-cat-product-danger .btn-icon {
+    background: rgba(239, 68, 68, 0.25) !important;
+}
+body.dashboard-dark .side-menu-btn.btn-cat-product-danger:hover {
+    background: rgba(153, 27, 27, 0.4) !important;
+    border-color: rgba(239, 68, 68, 0.5) !important;
+}
+
+body.dashboard-dark .side-menu-btn.btn-cat-sale {
+    background: rgba(6, 78, 59, 0.25) !important;
+    color: #86efac !important;
+    border-color: rgba(16, 185, 129, 0.3) !important;
+}
+body.dashboard-dark .side-menu-btn.btn-cat-sale .btn-icon {
+    background: rgba(16, 185, 129, 0.25) !important;
+}
+body.dashboard-dark .side-menu-btn.btn-cat-sale:hover {
+    background: rgba(6, 78, 59, 0.4) !important;
+    border-color: rgba(16, 185, 129, 0.5) !important;
+}
+
+body.dashboard-dark .side-menu-btn.btn-cat-expense {
+    background: rgba(120, 53, 15, 0.25) !important;
+    color: #fcd34d !important;
+    border-color: rgba(245, 158, 11, 0.3) !important;
+}
+body.dashboard-dark .side-menu-btn.btn-cat-expense .btn-icon {
+    background: rgba(245, 158, 11, 0.25) !important;
+}
+body.dashboard-dark .side-menu-btn.btn-cat-expense:hover {
+    background: rgba(120, 53, 15, 0.4) !important;
+    border-color: rgba(245, 158, 11, 0.5) !important;
+}
+
+body.dashboard-dark .side-menu-btn.btn-cat-debt {
+    background: rgba(88, 28, 135, 0.25) !important;
+    color: #c4b5fd !important;
+    border-color: rgba(139, 92, 246, 0.3) !important;
+}
+body.dashboard-dark .side-menu-btn.btn-cat-debt .btn-icon {
+    background: rgba(139, 92, 246, 0.25) !important;
+}
+body.dashboard-dark .side-menu-btn.btn-cat-debt:hover {
+    background: rgba(88, 28, 135, 0.4) !important;
+    border-color: rgba(139, 92, 246, 0.5) !important;
+}
+
+body.dashboard-dark .side-menu-btn.btn-cat-logout {
+    background: rgba(30, 41, 59, 0.6) !important;
+    color: #94a3b8 !important;
+    border-color: #334155 !important;
+}
+body.dashboard-dark .side-menu-btn.btn-cat-logout .btn-icon {
+    background: #334155 !important;
+}
+body.dashboard-dark .side-menu-btn.btn-cat-logout:hover {
+    background: rgba(153, 27, 27, 0.35) !important;
+    color: #fca5a5 !important;
+    border-color: rgba(239, 68, 68, 0.4) !important;
 }
 
 

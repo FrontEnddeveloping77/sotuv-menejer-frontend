@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { formatLocalDateTime } from '../utils/dateTime';
 import '../styles/qr-action.css';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'https://api.sotuvmenejer.uz';
@@ -17,6 +18,7 @@ api.interceptors.request.use((config) => {
         config.headers = config.headers || {};
         config.headers['Authorization'] = `Bearer ${token}`;
     }
+    config.headers['X-Time-Zone'] = Intl.DateTimeFormat().resolvedOptions().timeZone;
     return config;
 });
 
@@ -95,6 +97,9 @@ export default function QRActionPage() {
     const navigate = useNavigate();
 
     const [product, setProduct] = useState(null);
+    const [productStatus, setProductStatus] = useState('in_stock'); // 'in_stock' | 'deleted' | 'sold' | 'already_returned'
+    const [saleData, setSaleData] = useState(null);
+    const [returnsEnabled, setReturnsEnabled] = useState(true);
     const [mode, setMode] = useState('choice');
 
     const [soldAmount, setSoldAmount] = useState('');
@@ -114,7 +119,7 @@ export default function QRActionPage() {
     const [wrongUser, setWrongUser] = useState(false);
     const [result, setResult] = useState(null);
 
-    useEffect(() => {
+    const loadProduct = useCallback(() => {
         const jwtToken = localStorage.getItem('token');
 
         // Login qilinmagan bo'lsa, login sahifasiga yo'naltiramiz
@@ -126,14 +131,26 @@ export default function QRActionPage() {
             return;
         }
 
+        setLoading(true);
+        setError('');
+
         api.get(`/api/qr/${token}`)
             .then((res) => {
                 const p = res.data.product;
+                const status = res.data.status || 'in_stock';
+                const sale = res.data.sale || null;
+                const returnsSetting = res.data.returns_enabled !== false;
+
                 setProduct(p);
-                setEditName(p.name || '');
-                setEditColor(p.color || '');
-                setEditCost(p.cost_price || '');
-                setEditSize(p.size || '');
+                setProductStatus(status);
+                setSaleData(sale);
+                setReturnsEnabled(returnsSetting);
+                setMode('choice');
+
+                setEditName(p?.name || '');
+                setEditColor(p?.color || '');
+                setEditCost(p?.cost_price || '');
+                setEditSize(p?.size || '');
             })
             .catch((err) => {
                 const status = err.response?.status;
@@ -165,6 +182,10 @@ export default function QRActionPage() {
                 setLoading(false);
             });
     }, [token, navigate]);
+
+    useEffect(() => {
+        loadProduct();
+    }, [loadProduct]);
 
     // Har bir amal natijasida ko'rsatiladigan rasmni bitta joydan aniqlaymiz:
     // 1) serverdan qaytgan yangi ma'lumotdagi rasm
@@ -200,6 +221,71 @@ export default function QRActionPage() {
             setError(
                 err.response?.data?.message ||
                 'O‘chirishda xatolik yuz berdi!'
+            );
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleRestore = async () => {
+        const confirmed = window.confirm(
+            'Ushbu tovarni omborga qaytarishni (tiklashni) tasdiqlaysizmi?'
+        );
+
+        if (!confirmed) return;
+
+        setSubmitting(true);
+        setError('');
+
+        try {
+            const res = await api.post(
+                `/api/qr/${token}/restore`
+            );
+
+            setResult({
+                type: 'restore',
+                message: res.data.message || 'Tovar omborga muvaffaqiyatli qaytarildi!',
+                product: res.data.product
+            });
+        } catch (err) {
+            setError(
+                err.response?.data?.message ||
+                'Omborga qaytarishda xatolik yuz berdi!'
+            );
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleReturnSale = async () => {
+        if (!returnsEnabled) {
+            setError("Do‘kon sozlamalariga ko‘ra tovarlarni qaytarish (vozvrat) o‘chirilgan!");
+            return;
+        }
+
+        const confirmed = window.confirm(
+            'Ushbu tovar sotuvini qaytarishni (vozvrat) tasdiqlaysizmi? Tovar yana omborga qo‘shiladi.'
+        );
+
+        if (!confirmed) return;
+
+        setSubmitting(true);
+        setError('');
+
+        try {
+            const res = await api.post(
+                `/api/qr/${token}/return`
+            );
+
+            setResult({
+                type: 'return',
+                message: res.data.message || 'Tovar muvaffaqiyatli qaytarildi va omborga qo‘shildi!',
+                product: res.data.product
+            });
+        } catch (err) {
+            setError(
+                err.response?.data?.message ||
+                'Tovarni qaytarishda xatolik yuz berdi!'
             );
         } finally {
             setSubmitting(false);
@@ -437,6 +523,74 @@ export default function QRActionPage() {
             );
         }
 
+        if (result.type === 'restore') {
+            return (
+                <main className="qr-page">
+                    <div className="qr-card success-card">
+                        <button
+                            type="button"
+                            className="back-to-home-btn"
+                            onClick={() => navigate('/')}
+                        >
+                            ← Bosh sahifa
+                        </button>
+
+                        <div className="success-icon">📦</div>
+                        <h2>Tovar omborga qaytarildi!</h2>
+                        <ProductImage
+                            src={result.product?.image_url || product?.image_url}
+                            alt={result.product?.name || product?.name}
+                        />
+                        <p>{result.message}</p>
+                        <button
+                            className="qr-primary"
+                            style={{ marginTop: 16 }}
+                            onClick={() => {
+                                setResult(null);
+                                loadProduct();
+                            }}
+                        >
+                            📦 Tovarni ko‘rish / Sotish
+                        </button>
+                    </div>
+                </main>
+            );
+        }
+
+        if (result.type === 'return') {
+            return (
+                <main className="qr-page">
+                    <div className="qr-card success-card">
+                        <button
+                            type="button"
+                            className="back-to-home-btn"
+                            onClick={() => navigate('/')}
+                        >
+                            ← Bosh sahifa
+                        </button>
+
+                        <div className="success-icon">🔄</div>
+                        <h2>Vozvrat amalga oshirildi!</h2>
+                        <ProductImage
+                            src={result.product?.image_url || product?.image_url}
+                            alt={result.product?.name || product?.name}
+                        />
+                        <p>{result.message}</p>
+                        <button
+                            className="qr-primary"
+                            style={{ marginTop: 16 }}
+                            onClick={() => {
+                                setResult(null);
+                                loadProduct();
+                            }}
+                        >
+                            📦 Tovarni ko‘rish / Sotish
+                        </button>
+                    </div>
+                </main>
+            );
+        }
+
         return (
             <main className="qr-page">
                 <div className="qr-card success-card">
@@ -452,6 +606,16 @@ export default function QRActionPage() {
                     <h2>Tovar o‘chirildi!</h2>
                     <ProductImage src={product?.image_url} alt={product?.name} />
                     <p>{result.message}</p>
+                    <button
+                        className="qr-secondary"
+                        style={{ marginTop: 16 }}
+                        onClick={() => {
+                            setResult(null);
+                            loadProduct();
+                        }}
+                    >
+                        Holatni ko‘rish
+                    </button>
                 </div>
             </main>
         );
@@ -460,7 +624,7 @@ export default function QRActionPage() {
     const profitPreview =
         soldAmount === ''
             ? null
-            : Number(soldAmount) - Number(product.cost_price || 0);
+            : Number(soldAmount) - Number(product?.cost_price || 0);
 
     return (
         <main className="qr-page">
@@ -473,71 +637,210 @@ export default function QRActionPage() {
                     ← Bosh sahifa
                 </button>
 
-                <div className="qr-icon">📦</div>
-                <div className="qr-label">OMBORDAGI TOVAR</div>
+                {/* 1. O'CHIRILGAN TOVAR */}
+                {productStatus === 'deleted' && (
+                    <>
+                        <div className="qr-icon">🗑️</div>
+                        <div className="qr-label qr-label-deleted">OMBORDAN O‘CHIRILGAN TOVAR</div>
 
-                <ProductImage src={product.image_url} alt={product.name} />
+                        <ProductImage src={product.image_url} alt={product.name} />
 
-                <h1>{product.name}</h1>
+                        <h1>{product.name}</h1>
 
-                <div className="product-details">
-                    <span>🆔 #{product.local_id}</span>
-                    <span>📏 {product.size || 'Standart'}</span>
-                    <span>🎨 {product.color || 'Ko‘rsatilmagan'}</span>
-                    <span>📦 {product.quantity} dona</span>
-                </div>
+                        <div className="product-details">
+                            <span>🆔 #{product.local_id || '—'}</span>
+                            <span>📏 {product.size || 'Standart'}</span>
+                            <span>🎨 {product.color || 'Ko‘rsatilmagan'}</span>
+                            <span>📦 {product.quantity || 1} dona</span>
+                            {product.deleted_at && (
+                                <span>🕒 O‘chirilgan: {formatLocalDateTime(product.deleted_at)}</span>
+                            )}
+                        </div>
 
-                <div className="cost-box">
-                    💰 Kelgan narxi:{' '}
-                    <b>{money(product.cost_price)} so‘m</b>
-                </div>
+                        <div className="cost-box">
+                            💰 Kelgan narxi: <b>{money(product.cost_price)} so‘m</b>
+                        </div>
 
-                {error && (
-                    <div className="qr-error">⚠️ {error}</div>
+                        {error && (
+                            <div className="qr-error">⚠️ {error}</div>
+                        )}
+
+                        <div className="qr-info-banner warning">
+                            ⚠️ Ushbu tovar ombordan chiqarilgan. Uni qayta tiklab, yana omborga qo‘shishingiz mumkin:
+                        </div>
+
+                        <div className="qr-actions">
+                            <button
+                                type="button"
+                                className="qr-action restore-action"
+                                onClick={handleRestore}
+                                disabled={submitting}
+                            >
+                                📦
+                                <span>Omborga qaytarish</span>
+                                <small>{submitting ? 'Qaytarilmoqda...' : 'Tovarni omborga qayta tiklash'}</small>
+                            </button>
+                        </div>
+                    </>
                 )}
 
-                {mode === 'choice' && (
-                    <div className="qr-actions">
+                {/* 2. SOTILGAN TOVAR */}
+                {productStatus === 'sold' && (
+                    <>
+                        <div className="qr-icon">🛍️</div>
+                        <div className="qr-label qr-label-sold">SOTILGAN TOVAR</div>
 
-                        <button
-                            className="qr-action delete"
-                            onClick={() => setMode('delete')}
-                        >
-                            🗑️
-                            <span>O‘chirib yuborish</span>
-                            <small>Tovarni ombordan chiqarish</small>
-                        </button>
+                        <ProductImage src={product.image_url} alt={product.name} />
 
-                        <button
-                            className="qr-action sell"
-                            onClick={() => {
-                                setMode('sell');
-                                setSoldAmount('');
-                                setError('');
-                            }}
-                        >
-                            💰
-                            <span>Sotish</span>
-                            <small>1 dona sotuvini qayd etish</small>
-                        </button>
+                        <h1>{product.name}</h1>
 
-                        <button
-                            className="qr-action"
-                            style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', color: '#fff' }}
-                            onClick={() => {
-                                setMode('credit-sell');
-                                setSoldAmount('');
-                                setCustomerName('');
-                                setCustomerPhone('');
-                                setPaidNow('');
-                                setError('');
-                            }}
-                        >
-                            🛒
-                            <span>Nasiyaga sotish</span>
-                            <small>Mijozga qarzga berish</small>
-                        </button>
-                    </div>
+                        <div className="product-details">
+                            <span>🆔 #{product.local_id || saleData?.local_id || '—'}</span>
+                            <span>📏 {product.size || saleData?.size || 'Standart'}</span>
+                            <span>🎨 {product.color || saleData?.color || 'Ko‘rsatilmagan'}</span>
+                            {saleData?.sold_at && (
+                                <span>🕒 Sotilgan: {formatLocalDateTime(saleData.sold_at)}</span>
+                            )}
+                            {saleData?.is_credit && (
+                                <span>🛒 Nasiyaga sotilgan</span>
+                            )}
+                        </div>
+
+                        {saleData && (
+                            <div className="cost-box">
+                                💵 Sotilgan narxi: <b>{money(saleData.selling_price)} so‘m</b>
+                                {saleData.customer_name && (
+                                    <div className="qr-customer-info">
+                                        👤 Mijoz: <b>{saleData.customer_name}</b> {saleData.customer_phone ? `(${saleData.customer_phone})` : ''}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {error && (
+                            <div className="qr-error">⚠️ {error}</div>
+                        )}
+
+                        {returnsEnabled ? (
+                            <>
+                                <div className="qr-info-banner info">
+                                    ℹ️ Ushbu tovar sotib yuborilgan. Agar xaridor tovarni qaytarib bergan bo‘lsa (vozvrat), uni omborga qaytarishingiz mumkin:
+                                </div>
+
+                                <div className="qr-actions">
+                                    <button
+                                        type="button"
+                                        className="qr-action return-action"
+                                        onClick={handleReturnSale}
+                                        disabled={submitting}
+                                    >
+                                        🔄
+                                        <span>Vozvrat qilish</span>
+                                        <small>{submitting ? 'Qaytarilmoqda...' : 'Tovarni qaytarib omborga qo‘shish'}</small>
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="qr-info-banner info">
+                                ℹ️ Ushbu tovar sotib yuborilgan.
+                            </div>
+                        )}
+                    </>
+                )}
+
+                {/* 3. ALLAQACHON QAYTARILGAN */}
+                {productStatus === 'already_returned' && (
+                    <>
+                        <div className="qr-icon">🔄</div>
+                        <div className="qr-label qr-label-returned">ALLAQACHON QAYTARILGAN</div>
+
+                        <ProductImage src={product.image_url} alt={product.name} />
+
+                        <h1>{product.name}</h1>
+
+                        <div className="product-details">
+                            <span>📏 {product.size || 'Standart'}</span>
+                            <span>🎨 {product.color || 'Ko‘rsatilmagan'}</span>
+                            {saleData?.returned_at && (
+                                <span>🕒 Qaytarilgan: {formatLocalDateTime(saleData.returned_at)}</span>
+                            )}
+                        </div>
+
+                        <div className="qr-info-banner info">
+                            ℹ️ Ushbu tovar sotuvi allaqachon qaytarilgan va omborga olingan.
+                        </div>
+                    </>
+                )}
+
+                {/* 4. OMBORDA MAVJUD TOVAR (IN STOCK) */}
+                {productStatus === 'in_stock' && (
+                    <>
+                        <div className="qr-icon">📦</div>
+                        <div className="qr-label">OMBORDAGI TOVAR</div>
+
+                        <ProductImage src={product.image_url} alt={product.name} />
+
+                        <h1>{product.name}</h1>
+
+                        <div className="product-details">
+                            <span>🆔 #{product.local_id}</span>
+                            <span>📏 {product.size || 'Standart'}</span>
+                            <span>🎨 {product.color || 'Ko‘rsatilmagan'}</span>
+                            <span>📦 {product.quantity} dona</span>
+                        </div>
+
+                        <div className="cost-box">
+                            💰 Kelgan narxi:{' '}
+                            <b>{money(product.cost_price)} so‘m</b>
+                        </div>
+
+                        {error && (
+                            <div className="qr-error">⚠️ {error}</div>
+                        )}
+
+                        {mode === 'choice' && (
+                            <div className="qr-actions">
+                                <button
+                                    className="qr-action delete"
+                                    onClick={() => setMode('delete')}
+                                >
+                                    🗑️
+                                    <span>O‘chirib yuborish</span>
+                                    <small>Tovarni ombordan chiqarish</small>
+                                </button>
+
+                                <button
+                                    className="qr-action sell"
+                                    onClick={() => {
+                                        setMode('sell');
+                                        setSoldAmount('');
+                                        setError('');
+                                    }}
+                                >
+                                    💰
+                                    <span>Sotish</span>
+                                    <small>1 dona sotuvini qayd etish</small>
+                                </button>
+
+                                <button
+                                    className="qr-action"
+                                    style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', color: '#fff' }}
+                                    onClick={() => {
+                                        setMode('credit-sell');
+                                        setSoldAmount('');
+                                        setCustomerName('');
+                                        setCustomerPhone('');
+                                        setPaidNow('');
+                                        setError('');
+                                    }}
+                                >
+                                    🛒
+                                    <span>Nasiyaga sotish</span>
+                                    <small>Mijozga qarzga berish</small>
+                                </button>
+                            </div>
+                        )}
+                    </>
                 )}
 
                 {mode === 'delete' && (
