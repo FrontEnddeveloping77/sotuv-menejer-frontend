@@ -2,8 +2,10 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    background-color: #f4f6f8;
+    min-height: 100vh;
+    padding: 24px 12px;
+    box-sizing: border-box;
+    background: linear-gradient(135deg, #eff6ff, #f8fafc);
 }
 
 .login-card {
@@ -11,7 +13,198 @@
     border-radius: 10px;
     background-color: #fff;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    width: 350px;
+    width: min(100%, 430px);
+    box-sizing: border-box;
+}
+
+.onboarding-card h1,
+.payment-card h1 {
+    margin: 0 0 8px;
+    color: #0f172a;
+    text-align: center;
+}
+
+.onboarding-card form,
+.payment-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.onboarding-card label,
+.payment-card label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: #334155;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.auth-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 20px;
+    padding: 4px;
+    background: #f1f5f9;
+    border-radius: 8px;
+}
+
+.auth-tabs button,
+.text-button,
+.password-wrap button,
+.copy-card {
+    border: 0;
+    cursor: pointer;
+}
+
+.auth-tabs button {
+    padding: 9px;
+    border-radius: 6px;
+    color: #64748b;
+    background: transparent;
+}
+
+.auth-tabs button.active {
+    color: #0f172a;
+    background: #fff;
+    box-shadow: 0 1px 3px #cbd5e1;
+    font-weight: 700;
+}
+
+.password-wrap {
+    position: relative;
+}
+
+.password-wrap .login-input {
+    padding-right: 82px;
+}
+
+.password-wrap button {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #0369a1;
+    background: transparent;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.password-toggle {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border-radius: 50%;
+}
+
+.tariff-preview,
+.payment-box {
+    padding: 12px;
+    border-radius: 8px;
+    background: #eff6ff;
+    color: #1e3a8a;
+}
+
+.tariff-preview small {
+    display: block;
+    margin-top: 5px;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.special-tariff-link {
+    color: #0369a1;
+    font-size: 12px;
+    text-align: center;
+    text-decoration: none;
+}
+
+.special-tariff-link:hover {
+    text-decoration: underline;
+}
+
+.checkbox-label {
+    flex-direction: row !important;
+    align-items: center;
+    font-weight: 500 !important;
+}
+
+.checkbox-label input {
+    width: 16px;
+    height: 16px;
+}
+
+.success-message {
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    border: 1px solid #bbf7d0;
+    border-radius: 6px;
+    color: #166534;
+    background: #f0fdf4;
+    font-size: 14px;
+}
+
+.flow-note {
+    margin: 0 0 14px;
+    color: #475569;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.payment-card {
+    max-width: 470px;
+}
+
+.payment-box {
+    margin-bottom: 16px;
+    color: #334155;
+}
+
+.payment-box p {
+    margin: 0 0 8px;
+}
+
+.payment-box small {
+    display: block;
+    margin-top: 8px;
+}
+
+.copy-card {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    color: #0f172a;
+    background: #fff;
+    font-weight: 700;
+}
+
+.copy-card span {
+    display: block;
+    margin-top: 4px;
+    color: #0369a1;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.payment-link {
+    margin-bottom: 12px;
+    text-align: center;
+    text-decoration: none;
+}
+
+.file-label input {
+    padding: 8px 0;
+}
+
+.text-button {
+    width: 100%;
+    margin-top: 14px;
+    padding: 8px;
+    color: #0369a1;
+    background: transparent;
 }
 
 .login-subtitle {

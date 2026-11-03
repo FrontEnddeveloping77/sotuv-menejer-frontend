@@ -282,6 +282,7 @@ const DashboardPage = () => {
         if (window.confirm("Tizimdan chiqishni tasdiqlaysizmi?")) {
             clearDashboardCache();
             localStorage.removeItem('token');
+            window.dispatchEvent(new Event('auth-changed'));
             navigate('/login');
         }
     };
@@ -323,6 +324,7 @@ const DashboardPage = () => {
             if (status === 401) {
                 clearDashboardCache();
                 localStorage.removeItem('token');
+                window.dispatchEvent(new Event('auth-changed'));
                 navigate('/login', { replace: true });
                 return;
             }

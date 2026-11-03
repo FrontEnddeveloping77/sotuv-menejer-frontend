@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
@@ -17,12 +17,21 @@ function RequireAuth({ children }) {
     return children;
 }
 
-function App() {
-    const token = localStorage.getItem('token');
+function AppRoutes() {
+    const [token, setToken] = useState(() => localStorage.getItem('token'));
+
+    useEffect(() => {
+        const syncAuth = () => setToken(localStorage.getItem('token'));
+        window.addEventListener('storage', syncAuth);
+        window.addEventListener('auth-changed', syncAuth);
+        return () => {
+            window.removeEventListener('storage', syncAuth);
+            window.removeEventListener('auth-changed', syncAuth);
+        };
+    }, []);
 
     return (
-        <Router>
-            <Routes>
+        <Routes>
                 <Route
                     path="/"
                     element={token ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />}
@@ -43,7 +52,7 @@ function App() {
                 <Route
                     path="/dashboard"
                     element={
-                        localStorage.getItem('token') ? (
+                        token ? (
                             <DashboardPage />
                         ) : (
                             <Navigate to="/login" replace />
@@ -52,7 +61,14 @@ function App() {
                 />
 
                 <Route path="*" element={<Navigate to="/login" replace />} />
-            </Routes>
+        </Routes>
+    );
+}
+
+function App() {
+    return (
+        <Router>
+            <AppRoutes />
         </Router>
     );
 }
